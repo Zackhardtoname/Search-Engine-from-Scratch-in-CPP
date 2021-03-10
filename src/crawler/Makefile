@@ -48,7 +48,7 @@ OBJECTS     = $(SOURCES:%.cpp=%.o)
 PERF_FILE = perf.data*
 
 #Default Flags (we prefer -std=c++17 but Mac/Xcode/Clang doesn't support)
-CXXFLAGS = -std=c++1z -pedantic #-Werror -Wconversion -Wall -Wextra
+CXXFLAGS = -std=c++1z -pedantic -I../stl/include #-Werror -Wconversion -Wall -Wextra
 
 LINK_FLAGS = -lssl
 
