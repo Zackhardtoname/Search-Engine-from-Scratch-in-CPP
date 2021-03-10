@@ -1,2 +1,6 @@
 # VSCode Config Files
 .vscode/
+
+# Executables
+src/crawler/*.o
+src/crawler/crawler
