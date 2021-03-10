@@ -2,5 +2,5 @@
 .vscode/
 
 # Executables
-src/crawler/*.o
+*.o
 src/crawler/crawler
