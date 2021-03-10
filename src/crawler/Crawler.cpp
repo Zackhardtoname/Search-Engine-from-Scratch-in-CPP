@@ -15,7 +15,7 @@
 // TODO: get the main() working!
 // TODO: setup a Makefile (Emerson)
 
-// TODO: make it so that we abort on lengthy response
+// TODO: make it so that we abort on lengthy response, and/or timeout
 // TODO: redirection
 // TODO: robots.txt parser
 // TODO: setup build file for test
@@ -26,7 +26,8 @@ String FetchHtml(const ParsedUrl &url) {
     int sockFd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     assert(sockFd != -1);
     int status = connect(sockFd, addr->ai_addr, addr->ai_addrlen);
-    assert(status == 0);
+    if (status != 0)
+        throw NetworkException("cannot connect()");
 
     // Prepare a GET message
     String getRequest =
@@ -44,7 +45,8 @@ String FetchHtml(const ParsedUrl &url) {
     if (strcmp(url.Service, "http") == 0) {
         for (int sent = 0; sent < getRequest.size();) {
             int n = send(sockFd, getRequest.data() + sent, getRequest.size() - sent, 0);
-            assert(n > 0 && "error in send()"); // TODO: handle broken pipe
+            if (n <= 0)
+                throw NetworkException();
             sent += n;
         }
 
@@ -61,7 +63,8 @@ String FetchHtml(const ParsedUrl &url) {
 
         for (int sent = 0; sent < getRequest.size();) {
             int n = SSL_write(ssl, getRequest.data() + sent, getRequest.size() - sent);
-            assert(n > 0 && "error in SSL_write()"); // TODO: handle broken pipe
+            if (n <= 0)
+                throw NetworkException();
             sent += n;
         }
 
@@ -73,13 +76,13 @@ String FetchHtml(const ParsedUrl &url) {
         SSL_free(ssl);
         SSL_CTX_free(ctx);
     } else {
-        assert(false); // TODO: handle unsupported proto
+        throw std::runtime_error("protocol not supported");
     }
 
     freeaddrinfo(addr);
 
     close(sockFd);
-
+    // TODO: RAII all these resources
     return response;
 }
 
