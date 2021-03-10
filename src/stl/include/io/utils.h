@@ -13,7 +13,7 @@
 
 constexpr size_t MAX_HOSTNAME_LEN = 255;
 
-agr::String AddrToString( const sockaddr_storage &addr, socklen_t addrLen );
+scb::String AddrToString(const sockaddr_storage &addr, socklen_t addrLen );
 
 void SetTCPNoDelay( int fd );
 

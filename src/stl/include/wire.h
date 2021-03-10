@@ -8,7 +8,7 @@
 #include "String.h"
 #include <cstdint>
 
-using agr::String;
+using scb::String;
 
 // Format:
 // %b: a signed byte

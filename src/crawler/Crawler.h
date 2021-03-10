@@ -7,7 +7,7 @@
 
 #include "../stl/include/String.h"
 
-using agr::String;
+using scb::String;
 
 class FetchResult {
 public:

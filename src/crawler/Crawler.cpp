@@ -34,7 +34,8 @@ String FetchHtml(const ParsedUrl &url) {
             " HTTP/1.1\r\n"
             "Host: " + url.Host + " \r\n" +
             "User-Agent: LinuxGetUrl/2.0 zackLt@umich.edu (Linux)\r\n"
-            "Accept: */*\r\n"
+            "Accept-Language: en-US,en;q=0.5\r\n"
+            "Accept: text/html\r\n"
             "Accept-Encoding: identity\r\n"
             "Connection: close\r\n\r\n";
 
