@@ -10,6 +10,7 @@
 
 #include "ParsedUrl.h"
 #include "Crawler.h"
+#include "ParsedHttpResponse.h"
 
 // TODO: get the main() working!
 // TODO: setup a Makefile (Emerson)
@@ -25,8 +26,8 @@ String FetchHtml(const ParsedUrl &url) {
     addrinfo *addr = QueryHost(url.Host, strlen(url.Port) == 0 ? url.Service : url.Port);
     int sockFd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     assert(sockFd != -1);
-    int connFd = connect(sockFd, addr->ai_addr, addr->ai_addrlen);
-    assert(connFd != 0);
+    int status = connect(sockFd, addr->ai_addr, addr->ai_addrlen);
+    assert(status == 0);
 
     // Prepare a GET message
     String getRequest =
@@ -43,7 +44,7 @@ String FetchHtml(const ParsedUrl &url) {
     char buffer[10240];
     if (strcmp(url.Service, "http") == 0) {
         for (int sent = 0; sent < getRequest.size();) {
-            int n = send(connFd, getRequest.data() + sent, getRequest.size() - sent, 0);
+            int n = send(sockFd, getRequest.data() + sent, getRequest.size() - sent, 0);
             assert(n > 0 && "error in send()"); // TODO: handle broken pipe
             sent += n;
         }
@@ -83,11 +84,14 @@ String FetchHtml(const ParsedUrl &url) {
     return response;
 }
 
-// Replying on the compiler not to reuse strings
-FetchResult fetch(const String &urlString) {
-}
-
 int main(int argc, char **argv) {
-
+    ParsedUrl url("http://google.com");
+    String resp = FetchHtml(url);
+    ParsedHttpResponse parsedResp(resp);
+    std::cout << "code: " << parsedResp.Code << '\n'
+              << "location: " << parsedResp.Location << '\n'
+              << "lang: " << parsedResp.Language << '\n'
+              << "vvvv body vvvv" << '\n'
+              << parsedResp.Body;
     return 0;
 }
