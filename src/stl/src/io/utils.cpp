@@ -7,7 +7,7 @@
 
 #include "../../include/io/utils.h"
 
-using agr::String;
+using scb::String;
 
 String AddrToString( const sockaddr_storage &addr, socklen_t addrLen )
    {

@@ -5,30 +5,18 @@
 #ifndef CRAWLER_REQUESTER_H
 #define CRAWLER_REQUESTER_H
 
+#include <stdexcept>
+
 #include "../stl/include/String.h"
 
-using agr::String;
+using scb::String;
 
-class FetchResult {
-public:
-    // The final url the crawler actually uses
-    ParsedUrl url;
-    int statusCode;
-    std::string language;
-    std::string responseHeader;
-    std::string responseBody;
+struct NetworkException : std::runtime_error {
+    NetworkException() : std::runtime_error("network error") {};
 
-    FetchResult(const ParsedUrl &url,
-                int statusCode, std::string language,
-                std::string responseHeader, std::string responseBody)
-            : url(url), statusCode(statusCode),
-              language(std::move(language)), responseHeader(std::move(responseHeader)),
-              responseBody(std::move(responseBody)) {}
+    explicit NetworkException(const char *s) : std::runtime_error(s) {};
 };
 
-std::string FetchHtml(const ParsedUrl *url);
+String FetchHtml(const ParsedUrl *url);
 
-FetchResult fetch(const String &urlString);
-
-[[noreturn]] void run();
 #endif //CRAWLER_REQUESTER_H
