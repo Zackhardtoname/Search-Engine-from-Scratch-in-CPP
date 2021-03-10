@@ -12,9 +12,9 @@
 using scb::String;
 
 struct NetworkException : std::runtime_error {
-    NetworkException() : std::runtime_error("network error");
+    NetworkException() : std::runtime_error("network error") {};
 
-    NetworkException(const char *s) : std::runtime_error(s);
+    explicit NetworkException(const char *s) : std::runtime_error(s) {};
 };
 
 String FetchHtml(const ParsedUrl *url);
