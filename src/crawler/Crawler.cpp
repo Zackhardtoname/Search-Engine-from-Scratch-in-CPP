@@ -19,6 +19,7 @@
 // TODO: redirection
 // TODO: robots.txt parser
 // TODO: setup build file for test
+// TODO: error handling, catch the exception thrown
 
 String FetchHtml(const ParsedUrl &url) {
     // Create and connect a socket.
@@ -87,7 +88,8 @@ String FetchHtml(const ParsedUrl &url) {
 }
 
 int main(int argc, char **argv) {
-    ParsedUrl url("http://google.com");
+//    ParsedUrl url("http://www.google.com");
+    ParsedUrl url("http://anglesharp.azurewebsites.net/Chunked");
     String resp = FetchHtml(url);
     std::cout << resp << "\n";
     ParsedHttpResponse parsedResp(resp);

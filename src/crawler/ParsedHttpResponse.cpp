@@ -78,12 +78,16 @@ ParsedHttpResponse::ParsedHttpResponse(const String &resp) {
             throw HttpParserError("malformed chunk length");
         }
 
+        // Another common way to signal terminal chunk
+        if(chunkLen == 0)
+            break;
+
         int chunkStart = lenEnd + 2;
         if (chunkStart + chunkLen >= resp.length())
             throw HttpParserError("malformed chunked body");
 
         Body += resp.substr(chunkStart, chunkLen);
-        bodyStart = chunkStart + chunkLen;
+        bodyStart = chunkStart + chunkLen + 2; // +2 because chunk ends with \r\n as well
     }
 }
 
