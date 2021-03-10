@@ -45,6 +45,8 @@ ParsedHttpResponse::ParsedHttpResponse(const String &resp) {
                 throw HttpParserError("encoding not supported");
             if (encoding == "chunked")
                 chunked = true;
+        } else if (headerLine.hasPrefix(CONTENT_TYPE_HEADER)) {
+            ContentType = parseHeaderValue(headerLine, CONTENT_TYPE_HEADER);
         }
 
         headerStart = lineEnd;

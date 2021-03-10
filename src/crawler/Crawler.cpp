@@ -15,9 +15,8 @@
 // TODO: get the main() working!
 // TODO: setup a Makefile (Emerson)
 
+// TODO: make it so that we abort on lengthy response
 // TODO: redirection
-// TODO: chunked result
-// TODO: parse HTTP
 // TODO: robots.txt parser
 // TODO: setup build file for test
 
@@ -87,6 +86,7 @@ String FetchHtml(const ParsedUrl &url) {
 int main(int argc, char **argv) {
     ParsedUrl url("http://google.com");
     String resp = FetchHtml(url);
+    std::cout << resp << "\n";
     ParsedHttpResponse parsedResp(resp);
     std::cout << "code: " << parsedResp.Code << '\n'
               << "location: " << parsedResp.Location << '\n'
