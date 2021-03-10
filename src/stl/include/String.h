@@ -115,7 +115,7 @@ class String
 
       [[nodiscard]] int find( const char *other, int start = 0 ) const
          {
-         return find( String( other ) );
+         return find( String( other ), start );
          }
 
       [[nodiscard]] bool hasPrefix( const String &other ) const
