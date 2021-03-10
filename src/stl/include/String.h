@@ -118,6 +118,16 @@ class String
          return find( String( other ) );
          }
 
+      [[nodiscard]] bool hasPrefix( const String &other ) const
+         {
+         if ( size() < other.size() )
+            return false;
+         for ( int i = 0;  i < other.size();  i++ )
+            if ( str[ i ] != other[ i ] )
+               return false;
+         return true;
+         }
+
       char &operator[]( size_t i ) const
          {
          return str[ i ];
