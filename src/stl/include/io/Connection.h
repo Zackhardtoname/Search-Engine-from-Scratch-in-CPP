@@ -9,6 +9,8 @@
 #include "Timer.h"
 #include "String.h"
 
+using agr::String;
+
 class Connection : public EventListener {
     String sendBuf;
     // If I can write without being blocked.

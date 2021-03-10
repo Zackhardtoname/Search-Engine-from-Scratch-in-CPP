@@ -9,6 +9,7 @@
 // ideas from the gcc github, but they are hard to read.
 // some ideas may be wrong, but i have tested and they work well enough.
 // well enough being as good as or better for many operations.
+namespace agr {
 template <typename T> class Vector
    {
       static constexpr int GROWTH_FACTOR = 4;
@@ -481,5 +482,5 @@ template <typename T> class Vector
          array = tempArray;
          }
    };
-
+}
 #endif // STL_VECTOR_H

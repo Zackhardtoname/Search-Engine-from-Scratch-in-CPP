@@ -8,6 +8,8 @@
 #include "String.h"
 #include <cstdint>
 
+using agr::String;
+
 // Format:
 // %b: a signed byte
 // %s: short, 16bit signed integer

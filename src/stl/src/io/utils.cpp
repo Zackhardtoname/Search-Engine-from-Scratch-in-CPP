@@ -7,13 +7,15 @@
 
 #include "../../include/io/utils.h"
 
+using agr::String;
+
 String AddrToString( const sockaddr_storage &addr, socklen_t addrLen )
    {
    std::string host( MAX_HOSTNAME_LEN, '\0' );
    std::string service( MAX_HOSTNAME_LEN, '\0' );
    int status =
       getnameinfo( reinterpret_cast<const sockaddr *>( &addr ), addrLen,
-                   host.data(), MAX_HOSTNAME_LEN, service.data(),
+                   (char*)(host.data()), MAX_HOSTNAME_LEN, (char*)service.data(),
                    MAX_HOSTNAME_LEN, NI_NAMEREQD | NI_NUMERICSERV );
    if ( status == 0 )
       return String( host.c_str() ) + ":" + String( service.c_str() );

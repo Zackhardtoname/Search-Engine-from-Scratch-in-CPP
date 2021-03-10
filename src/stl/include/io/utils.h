@@ -9,11 +9,11 @@
 #include <netdb.h>
 #include <netinet/tcp.h>
 
-#include "String.h"
+#include "../String.h"
 
 constexpr size_t MAX_HOSTNAME_LEN = 255;
 
-String AddrToString( const sockaddr_storage &addr, socklen_t addrLen );
+agr::String AddrToString( const sockaddr_storage &addr, socklen_t addrLen );
 
 void SetTCPNoDelay( int fd );
 

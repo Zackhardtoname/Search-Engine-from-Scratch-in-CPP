@@ -1,9 +1,8 @@
 //
-// Created by youh on 3/2/21.
+// Created by youh on 3/9/21.
 //
 
 #include <cstring>
-
 #include "ParsedUrl.h"
 
 ParsedUrl::ParsedUrl(const char *url) {
@@ -53,8 +52,4 @@ ParsedUrl::ParsedUrl(const char *url) {
         Path = p;
     } else
         Host = Path = p;
-}
-
-ParsedUrl::~ParsedUrl() {
-    delete[] pathBuffer;
 }

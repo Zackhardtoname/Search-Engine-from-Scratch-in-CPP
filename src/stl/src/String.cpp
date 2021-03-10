@@ -1,12 +1,13 @@
 //
-// Created by youh on 2/24/21.
+// Created by youh on 3/9/21.
 //
 
 #include "String.h"
 
-std::ostream &operator<<( std::ostream &os, String &s )
+std::ostream &operator<<( std::ostream &os, const String &s )
 {
-    for ( char i : s )
-        os << i;
+    os << "";
+    for ( auto character : s )
+        os << character;
     return os;
 }
