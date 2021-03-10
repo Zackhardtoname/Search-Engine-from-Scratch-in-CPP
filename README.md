@@ -1,0 +1,5 @@
+### Style for Everything:
+We will go by our conventions for now and then reformat to the class style when we are close to finished.
+
+### TODOS:
+Add TODOS wherever we will need to change/update things later! Consider keeping a list of them at the top of each file(that is what we are doing for the crawler) to make sure we don't forget anything. For example, we are adding a TODO to handle all the thrown exceptions from the crawler code once we have multiple threads/workers running it.
