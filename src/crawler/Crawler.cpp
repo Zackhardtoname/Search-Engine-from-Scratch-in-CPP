@@ -13,11 +13,7 @@
 #include "Crawler.h"
 #include "ParsedHttpResponse.h"
 
-// TODO: get the main() working!
-// TODO: setup a Makefile (Emerson)
-
 // TODO: make it so that we abort on lengthy response, and/or timeout
-// TODO: robots.txt parser
 // TODO: setup build file for test
 // TODO: error handling, catch the exception thrown
 
