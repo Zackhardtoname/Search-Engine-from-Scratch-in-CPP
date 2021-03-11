@@ -4,7 +4,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "../stl/include/io/utils.h"
+#include "io/utils.h"
+#include "RAII.h"
 #include <iostream>
 #include <utility>
 
@@ -23,8 +24,12 @@
 String HttpGet(const ParsedUrl &url) {
     // Create and connect a socket.
     addrinfo *addr = QueryHost(url.Host, strlen(url.Port) == 0 ? url.Service : url.Port);
+    Defer freeAddrinfo([&]() { freeaddrinfo(addr); });
+
     int sockFd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     assert(sockFd != -1);
+    Defer closeSocket([&]() { close(sockFd); });
+
     int status = connect(sockFd, addr->ai_addr, addr->ai_addrlen);
     if (status != 0)
         throw NetworkException("cannot connect()");
@@ -61,6 +66,12 @@ String HttpGet(const ParsedUrl &url) {
         SSL_set_fd(ssl, sockFd);
         SSL_connect(ssl);
 
+        Defer deferDestructSSL([&]() {
+            SSL_shutdown(ssl);
+            SSL_free(ssl);
+            SSL_CTX_free(ctx);
+        });
+
         for (int sent = 0; sent < getRequest.size();) {
             int n = SSL_write(ssl, getRequest.data() + sent, getRequest.size() - sent);
             if (n <= 0)
@@ -71,18 +82,10 @@ String HttpGet(const ParsedUrl &url) {
         int got;
         while ((got = SSL_read(ssl, buffer, sizeof(buffer))))
             response += String(buffer, got);
-
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
-        SSL_CTX_free(ctx);
     } else {
         throw std::runtime_error("protocol not supported");
     }
 
-    freeaddrinfo(addr);
-
-    close(sockFd);
-    // TODO: RAII all these resources
     return response;
 }
 
