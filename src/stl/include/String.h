@@ -4,6 +4,7 @@
 
 #include "Vector.h"
 #include <iostream>
+#include <limits>
 
 namespace scb
    {

@@ -1,13 +1,3 @@
-#include <cassert>
-#include <netdb.h>
-#include <openssl/ssl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include "../stl/include/io/utils.h"
-#include <iostream>
-#include <utility>
-
 #include "ParsedUrl.h"
 #include "Crawler.h"
 #include "ParsedHttpResponse.h"
