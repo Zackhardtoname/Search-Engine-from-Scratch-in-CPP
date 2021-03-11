@@ -16,12 +16,11 @@
 // TODO: setup a Makefile (Emerson)
 
 // TODO: make it so that we abort on lengthy response, and/or timeout
-// TODO: redirection
 // TODO: robots.txt parser
 // TODO: setup build file for test
 // TODO: error handling, catch the exception thrown
 
-String FetchHtml(const ParsedUrl &url) {
+String HttpGet(const ParsedUrl &url) {
     // Create and connect a socket.
     addrinfo *addr = QueryHost(url.Host, strlen(url.Port) == 0 ? url.Service : url.Port);
     int sockFd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
@@ -87,16 +86,31 @@ String FetchHtml(const ParsedUrl &url) {
     return response;
 }
 
+
+ParsedHttpResponse FetchUrl(String url) {
+    for (int nRedirect = 0; nRedirect < MAX_REDIRECTION; nRedirect++) {
+        ParsedUrl parsedUrl(url.cstr());
+        String resp = HttpGet(parsedUrl);
+        ParsedHttpResponse parsedResp(resp);
+        if (parsedResp.StatusCode == "200")
+            return parsedResp;
+        if (parsedResp.StatusCode == "301" || parsedResp.StatusCode == "307" || parsedResp.StatusCode == "308")
+            url = parsedResp.Location;
+        else
+            throw HttpRequestError("status code not handled");
+        // TODO: should we, and how do we, handle HTTP 50x?
+    }
+
+    throw TooManyRedirectionError();
+}
+
 int main(int argc, char **argv) {
-//    ParsedUrl url("http://www.google.com");
-    ParsedUrl url("http://anglesharp.azurewebsites.net/Chunked");
-    String resp = FetchHtml(url);
-    std::cout << resp << "\n";
-    ParsedHttpResponse parsedResp(resp);
-    std::cout << "code: " << parsedResp.Code << '\n'
-              << "location: " << parsedResp.Location << '\n'
-              << "lang: " << parsedResp.Language << '\n'
-              << "vvvv body vvvv" << '\n'
-              << parsedResp.Body;
+    auto httpResp = FetchUrl("http://google.com"); // test redirection
+    // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); // test chunked
+    std::cout << "code: " << httpResp.StatusCode << '\n'
+              << "location: " << httpResp.Location << '\n'
+              << "lang: " << httpResp.Language << '\n'
+              << "---- body ----" << '\n'
+              << httpResp.Body;
     return 0;
 }

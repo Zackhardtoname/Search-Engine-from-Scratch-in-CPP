@@ -15,7 +15,7 @@ ParsedHttpResponse::ParsedHttpResponse(const String &resp) {
     if (codeEnd == String::npos)
         throw HttpParserError();
 
-    Code = resp.substr(codeStart, codeEnd - codeStart);
+    StatusCode = resp.substr(codeStart, codeEnd - codeStart);
 
     int headerStart = resp.find("\r\n", codeEnd);
     if (headerStart == String::npos)
