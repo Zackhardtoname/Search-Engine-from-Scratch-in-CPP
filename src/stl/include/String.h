@@ -186,8 +186,7 @@ class String
          str.back() = '\0';
          }
 
-      bool empty()
-         {
+      bool empty() const {
          return str.size() == 1;
          }
 
@@ -233,6 +232,23 @@ class String
          {
          for ( auto &character : str )
             character = tolower( character );
+         }
+
+      [[nodiscard]] char &back() const
+         {
+         return str[ length() - 1 ];
+         }
+
+      [[nodiscard]] String stripped() const
+         {
+         int start = 0;
+         for ( ;  start < length() && isspace( str[start] );  start++ )
+            ;
+
+         String result = substr( start );
+         while ( !result.empty() && isspace( result.back() ) )
+            result.popBack();
+         return result;
          }
 
    private:
