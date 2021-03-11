@@ -9,6 +9,16 @@ add_subdirectory(stl)
 add_executable(crawler-side
         crawler/Crawler.cpp
         crawler/ParsedHttpResponse.cpp
+        indexer/VLQ.cpp
         stl/src/String.cpp
         crawler/ParsedUrl.cpp)
 target_link_libraries(crawler-side stl ssl)
+
+find_package(GTest)
+
+add_executable(testVLQEncoding
+        indexer/VLQ.cpp
+        indexer/testVLQ.cpp)
+target_link_libraries(testVLQEncoding stl ssl GTest::gtest)
+gtest_discover_tests(testVLQEncoding)
+
