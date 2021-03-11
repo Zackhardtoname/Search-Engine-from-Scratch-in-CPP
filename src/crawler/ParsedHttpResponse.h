@@ -26,7 +26,7 @@ class ParsedHttpResponse {
     static String parseHeaderValue(const String &headerLine, const String &key);
 
 public:
-    String Code, Language, Location, Body, ContentType;
+    String StatusCode, Language, Location, Body, ContentType;
 
     ParsedHttpResponse(const String &resp);
 };
