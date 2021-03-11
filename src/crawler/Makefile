@@ -16,7 +16,7 @@
 EXECUTABLE  = crawler
 
 # Change 'source_files' to match the project source files
-SOURCE_FILES = Crawler.cpp ParsedUrl.cpp ../stl/src/io/utils.cpp
+SOURCE_FILES = Crawler.cpp ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ParsedHttpResponse.cpp
 
 # Change 'header_files' to match the project source files
 HEADER_FILES = Crawler.h ParsedUrl.h
@@ -48,7 +48,7 @@ OBJECTS     = $(SOURCES:%.cpp=%.o)
 PERF_FILE = perf.data*
 
 #Default Flags (we prefer -std=c++17 but Mac/Xcode/Clang doesn't support)
-CXXFLAGS = -std=c++1z -pedantic #-Werror -Wconversion -Wall -Wextra
+CXXFLAGS = -std=c++1z -pedantic -I../stl/include #-Werror -Wconversion -Wall -Wextra
 
 LINK_FLAGS = -lssl
 
