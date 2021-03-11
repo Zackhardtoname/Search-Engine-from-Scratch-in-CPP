@@ -1,21 +1,31 @@
+#include <cassert>
+#include <netdb.h>
+#include <openssl/ssl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include "io/utils.h"
+#include "RAII.h"
+#include <iostream>
+#include <utility>
+
 #include "ParsedUrl.h"
 #include "Crawler.h"
 #include "ParsedHttpResponse.h"
 
-// TODO: get the main() working!
-// TODO: setup a Makefile (Emerson)
-
 // TODO: make it so that we abort on lengthy response, and/or timeout
-// TODO: redirection
-// TODO: robots.txt parser
 // TODO: setup build file for test
 // TODO: error handling, catch the exception thrown
 
-String FetchHtml(const ParsedUrl &url) {
+String HttpGet(const ParsedUrl &url) {
     // Create and connect a socket.
     addrinfo *addr = QueryHost(url.Host, strlen(url.Port) == 0 ? url.Service : url.Port);
+    Defer freeAddrinfo([&]() { freeaddrinfo(addr); });
+
     int sockFd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     assert(sockFd != -1);
+    Defer closeSocket([&]() { close(sockFd); });
+
     int status = connect(sockFd, addr->ai_addr, addr->ai_addrlen);
     if (status != 0)
         throw NetworkException("cannot connect()");
@@ -52,6 +62,12 @@ String FetchHtml(const ParsedUrl &url) {
         SSL_set_fd(ssl, sockFd);
         SSL_connect(ssl);
 
+        Defer deferDestructSSL([&]() {
+            SSL_shutdown(ssl);
+            SSL_free(ssl);
+            SSL_CTX_free(ctx);
+        });
+
         for (int sent = 0; sent < getRequest.size();) {
             int n = SSL_write(ssl, getRequest.data() + sent, getRequest.size() - sent);
             if (n <= 0)
@@ -62,31 +78,48 @@ String FetchHtml(const ParsedUrl &url) {
         int got;
         while ((got = SSL_read(ssl, buffer, sizeof(buffer))))
             response += String(buffer, got);
-
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
-        SSL_CTX_free(ctx);
     } else {
         throw std::runtime_error("protocol not supported");
     }
 
-    freeaddrinfo(addr);
-
-    close(sockFd);
-    // TODO: RAII all these resources
     return response;
 }
 
+
+ParsedHttpResponse FetchUrl(String url) {
+    // Webpage that redirects too many times are either ads-clickfarms, or
+    // malfunctioning. We only redirect for a generous MAX_REDIRECTION number
+    // of times and stop following after that.
+    for (int nRedirect = 0; nRedirect < MAX_REDIRECTION; nRedirect++) {
+        ParsedUrl parsedUrl(url.cstr());
+        String resp = HttpGet(parsedUrl);
+        ParsedHttpResponse parsedResp(resp);
+        if (parsedResp.StatusCode == "200")
+            return parsedResp;
+        if (parsedResp.StatusCode == "301" || parsedResp.StatusCode == "307" || parsedResp.StatusCode == "308")
+            url = parsedResp.Location;
+        else
+            throw HttpRequestError("status code not handled");
+        // TODO: should we, and how do we, handle HTTP 50x?
+    }
+
+    throw TooManyRedirectionError();
+}
+
 int main(int argc, char **argv) {
-//    ParsedUrl url("http://www.google.com");
-    ParsedUrl url("http://anglesharp.azurewebsites.net/Chunked");
-    String resp = FetchHtml(url);
-    std::cout << resp << "\n";
-    ParsedHttpResponse parsedResp(resp);
-    std::cout << "code: " << parsedResp.Code << '\n'
-              << "location: " << parsedResp.Location << '\n'
-              << "lang: " << parsedResp.Language << '\n'
-              << "vvvv body vvvv" << '\n'
-              << parsedResp.Body;
+    if (argc != 2) {
+        std::cerr << "Usage: ./crawler <URL>" << std::endl;
+        return 1;
+    }
+
+    // TODO: convert this into the main controller thread that will be
+    //  calling a url on this crawler.
+    auto httpResp = FetchUrl(argv[1]);
+    // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); // test chunked
+    std::cout << "code: " << httpResp.StatusCode << '\n'
+              << "location: " << httpResp.Location << '\n'
+              << "lang: " << httpResp.Language << '\n'
+              << "---- body ----" << '\n'
+              << httpResp.Body;
     return 0;
 }
