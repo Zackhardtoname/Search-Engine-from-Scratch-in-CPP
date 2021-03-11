@@ -54,7 +54,7 @@ LINK_FLAGS = -lssl
 
 # make release - will compile "all" with $(CXXFLAGS) and the -O3 flag
 #                also defines NDEBUG so that asserts will not check
-release: CXXFLAGS += -O3 -DNDEBUG
+release: CXXFLAGS += -Ofast -DNDEBUG
 release:
 	$(CXX) $(CXXFLAGS) $(SOURCE_FILES) -o $(EXECUTABLE) $(LINK_FLAGS)
 
@@ -65,7 +65,7 @@ debug:
 	$(CXX) $(CXXFLAGS) $(SOURCE_FILES) -o $(EXECUTABLE)_debug $(LINK_FLAGS)
 
 # make profile - will compile "all" with $(CXXFLAGS) and the -g3 and -O3 flags
-profile: CXXFLAGS += -g3 -O3
+profile: CXXFLAGS += -g3 -Ofast
 profile:
 	$(CXX) $(CXXFLAGS) $(SOURCE_FILES) -o $(EXECUTABLE)_profile $(LINK_FLAGS)
 	
