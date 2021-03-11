@@ -4,7 +4,7 @@
 
 #include "String.h"
 
-std::ostream &operator<<( std::ostream &os, const String &s )
+std::ostream &agr::operator<<( std::ostream &os, const String &s )
 {
     os << "";
     for ( auto character : s )

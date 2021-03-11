@@ -1,7 +1,6 @@
 #ifndef SCOOBLE_STRING_H
 #define SCOOBLE_STRING_H
 #pragma once
-
 #include "Vector.h"
 #include <iostream>
 namespace agr
@@ -279,8 +278,6 @@ class String
    private:
       Vector<char> str;
    };
-
-std::ostream &operator<<( std::ostream &os, const String &s );
-
+    std::ostream &operator<<(std::ostream& os, const String &s);
    }      // namespace agr
 #endif // SCOOBLE_STRING_H

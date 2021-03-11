@@ -77,6 +77,8 @@ FetchResult fetch(const String &urlString) {
 }
 
 int main(int argc, char **argv) {
-
+    //quick test
+    ParsedUrl parsed_url = ParsedUrl("https://stackoverflow.com/questions/1125968/how-do-i-force-git-pull-to-overwrite-local-files");
+    std::cout << FetchHtml(parsed_url);
     return 0;
 }
