@@ -5,8 +5,16 @@
 #ifndef CRAWLER_REQUESTER_H
 #define CRAWLER_REQUESTER_H
 
-#include "../stl/include/String.h"
-
+#include "String.h"
+#include <cassert>
+#include <netdb.h>
+#include <openssl/ssl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include "io/utils.h"
+#include <iostream>
+#include <utility>
 using agr::String;
 
 class FetchResult {

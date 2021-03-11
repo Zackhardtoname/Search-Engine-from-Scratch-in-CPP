@@ -48,13 +48,13 @@ OBJECTS     = $(SOURCES:%.cpp=%.o)
 PERF_FILE = perf.data*
 
 #Default Flags (we prefer -std=c++17 but Mac/Xcode/Clang doesn't support)
-CXXFLAGS = -std=c++1z -pedantic -I../stl/include #-Werror -Wconversion -Wall -Wextra
+CXXFLAGS = -std=c++1z -funroll-loops -funsafe-math-optimizations -I../stl/include #-Werror -Wconversion -Wall -Wextra
 
 LINK_FLAGS = -lssl
 
 # make release - will compile "all" with $(CXXFLAGS) and the -O3 flag
 #                also defines NDEBUG so that asserts will not check
-release: CXXFLAGS += -O3 -DNDEBUG
+release: CXXFLAGS += -Ofast -DNDEBUG
 release:
 	$(CXX) $(CXXFLAGS) $(SOURCE_FILES) -o $(EXECUTABLE) $(LINK_FLAGS)
 
@@ -65,7 +65,7 @@ debug:
 	$(CXX) $(CXXFLAGS) $(SOURCE_FILES) -o $(EXECUTABLE)_debug $(LINK_FLAGS)
 
 # make profile - will compile "all" with $(CXXFLAGS) and the -g3 and -O3 flags
-profile: CXXFLAGS += -g3 -O3
+profile: CXXFLAGS += -g3 -Ofast
 profile:
 	$(CXX) $(CXXFLAGS) $(SOURCE_FILES) -o $(EXECUTABLE)_profile $(LINK_FLAGS)
 	
