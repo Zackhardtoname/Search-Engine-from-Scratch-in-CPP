@@ -1,4 +1,4 @@
-name: EECS 440 Linter
+name: Crawler Checks
 
 on: [push, pull_request]
 

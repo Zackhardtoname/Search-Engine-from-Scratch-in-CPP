@@ -1,3 +1,5 @@
+[![Crawler Status](https://github.com/sqd/scooble_search/actions/workflows/crawler-check.yml/badge.svg)](https://github.com/sqd/scooble_search/actions/workflows/crawler-check.yml)
+
 ### Style for Everything:
 We will go by our conventions for now and then reformat to the class style when we are close to finished.
 
