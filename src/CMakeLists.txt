@@ -9,6 +9,7 @@ add_subdirectory(stl)
 add_executable(crawler-side
         crawler/Crawler.cpp
         crawler/ParsedHttpResponse.cpp
+        crawler/Robotstxt.cpp
         stl/src/String.cpp
         crawler/ParsedUrl.cpp)
 target_link_libraries(crawler-side stl ssl)
