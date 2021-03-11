@@ -101,6 +101,9 @@ class String
 
       [[nodiscard]] int find( const String &other, int start = 0 ) const
          {
+         if ( start == npos )
+            return npos;
+
          if ( size() < other.size() + start )
             return npos;
 
@@ -114,9 +117,19 @@ class String
          return npos;
          }
 
-      [[nodiscard]] int find( const char *other, int start = 0 ) const
+      [[nodiscard]] int findLast( const String &other, int start = 0 ) const
          {
-         return find( String( other ), start );
+         start = find( other, start );
+         if ( start == npos )
+            return npos;
+
+         while ( true )
+            {
+            int next = find( other, start + 1 );
+            if ( next == npos )
+               return start;
+            start = next;
+            }
          }
 
       [[nodiscard]] bool hasPrefix( const String &other ) const
@@ -186,7 +199,8 @@ class String
          str.back() = '\0';
          }
 
-      bool empty() const {
+      bool empty() const
+         {
          return str.size() == 1;
          }
 
@@ -242,7 +256,7 @@ class String
       [[nodiscard]] String stripped() const
          {
          int start = 0;
-         for ( ;  start < length() && isspace( str[start] );  start++ )
+         for ( ;  start < length() && isspace( str[ start ] );  start++ )
             ;
 
          String result = substr( start );
