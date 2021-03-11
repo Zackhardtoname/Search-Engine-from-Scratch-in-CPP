@@ -87,6 +87,9 @@ String HttpGet(const ParsedUrl &url) {
 
 
 ParsedHttpResponse FetchUrl(String url) {
+    // Webpage that redirects too many times are either ads-clickfarms, or
+    // malfunctioning. We only redirect for a generous MAX_REDIRECTION number
+    // of times and stop following after that.
     for (int nRedirect = 0; nRedirect < MAX_REDIRECTION; nRedirect++) {
         ParsedUrl parsedUrl(url.cstr());
         String resp = HttpGet(parsedUrl);
@@ -104,7 +107,14 @@ ParsedHttpResponse FetchUrl(String url) {
 }
 
 int main(int argc, char **argv) {
-    auto httpResp = FetchUrl("http://google.com"); // test redirection
+    if (argc != 2) {
+        std::cerr << "Usage: ./crawler <URL>" << std::endl;
+        return 1;
+    }
+
+    // TODO: convert this into the main controller thread that will be
+    //  calling a url on this crawler.
+    auto httpResp = FetchUrl(argv[1]);
     // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); // test chunked
     std::cout << "code: " << httpResp.StatusCode << '\n'
               << "location: " << httpResp.Location << '\n'

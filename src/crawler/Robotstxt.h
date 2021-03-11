@@ -40,6 +40,8 @@ struct CrawlingRule {
 };
 
 /// A robots.txt wrapper class.
+/// Use .Allow() to check if a path is allowed.
+/// Use .Sitemap to retrieve the url of the sitemap if specified.
 class Robotstxt {
     Vector<CrawlingRule> rules;
 
@@ -50,6 +52,9 @@ public:
 
     explicit Robotstxt(const String &content);
 
+    /// Check if the given path is allowed by this robots.txt.
+    /// Do not pass in protocol, domain, and port.
+    /// Do pass in the query part.
     bool Allow(const String &path);
 };
 
