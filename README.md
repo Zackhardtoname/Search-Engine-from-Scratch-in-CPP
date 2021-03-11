@@ -1,5 +1,11 @@
 [![Crawler Status](https://github.com/sqd/scooble_search/actions/workflows/crawler-check.yml/badge.svg)](https://github.com/sqd/scooble_search/actions/workflows/crawler-check.yml)
 
+### Using the Custom STL:
+Make sure to include the full path of the libraries you want to include. For example, in the crawler you may need to include the string library with:
+```
+#include "../stl/include/String.h"
+```
+
 ### Style for Everything:
 We will go by our conventions for now and then reformat to the class style when we are close to finished.
 
