@@ -9,6 +9,12 @@
 6. Assign whoever you want to review it, and wait for two code reviews before merging into the master branch(this may involve several rounds of code review and additional changes).
 7. Once the branch is merged into master by a reviewer, delete the remote and local branch you used for development.
 
+### Using the Custom STL:
+Make sure to include the full path of the libraries you want to include. For example, in the crawler you may need to include the string library with:
+```
+#include "../stl/include/String.h"
+```
+
 ### Style for Everything:
 We will go by our conventions for now and then reformat to the class style when we are close to finished.
 
