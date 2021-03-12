@@ -9,6 +9,7 @@ add_subdirectory(stl)
 add_executable(crawler-side
         crawler/Crawler.cpp
         crawler/ParsedHttpResponse.cpp
+        indexer/VLQ.cpp
         crawler/Robotstxt.cpp
         stl/src/String.cpp
         crawler/ParsedUrl.cpp)
@@ -22,3 +23,10 @@ add_executable(testRobotstxt
         crawler/Robotstxt.cpp)
 target_link_libraries(testRobotstxt stl ssl GTest::gtest)
 gtest_discover_tests(testRobotstxt)
+
+add_executable(testVLQEncoding
+        indexer/VLQ.cpp
+        indexer/testVLQ.cpp)
+target_link_libraries(testVLQEncoding stl ssl GTest::gtest)
+gtest_discover_tests(testVLQEncoding)
+
