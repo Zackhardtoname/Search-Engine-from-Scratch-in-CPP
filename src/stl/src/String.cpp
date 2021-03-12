@@ -2,7 +2,7 @@
 // Created by youh on 3/9/21.
 //
 
-#include "String.h"
+#include "../include/String.h"
 
 std::ostream &scb::operator<<( std::ostream &os, const scb::String &s )
 {

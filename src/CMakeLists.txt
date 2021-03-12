@@ -10,11 +10,19 @@ add_executable(crawler-side
         crawler/Crawler.cpp
         crawler/ParsedHttpResponse.cpp
         indexer/VLQ.cpp
+        crawler/Robotstxt.cpp
         stl/src/String.cpp
         crawler/ParsedUrl.cpp)
 target_link_libraries(crawler-side stl ssl)
 
 find_package(GTest)
+
+add_executable(testRobotstxt
+        crawler/testRobotstxt.cpp
+        stl/src/String.cpp
+        crawler/Robotstxt.cpp)
+target_link_libraries(testRobotstxt stl ssl GTest::gtest)
+gtest_discover_tests(testRobotstxt)
 
 add_executable(testVLQEncoding
         indexer/VLQ.cpp
