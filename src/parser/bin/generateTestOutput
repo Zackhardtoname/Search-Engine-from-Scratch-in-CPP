@@ -1,0 +1,26 @@
+#!/bin/bash
+#set -x
+
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+reset=$(tput sgr0)
+
+# Handle arguments
+NO_MAKE=0
+if [ $# -eq 1 ]; then
+    echo "Running make clean..."
+    make clean &> /dev/null
+    echo "Complete."
+    echo "Running make..."
+    make > /dev/null || exit 1
+    echo "Complete."
+    ./hw3 b $1 > tests/correctTestOutputs/${1%%.*}.Base.correct.txt
+    ./hw3 a $1 > tests/correctTestOutputs/${1%%.*}.Links.correct.txt
+    ./hw3 t $1 > tests/correctTestOutputs/${1%%.*}.TitleWords.correct.txt
+    ./hw3 w $1 > tests/correctTestOutputs/${1%%.*}.Words.correct.txt
+    mv $1 tests/htmlParserTests/
+else
+    >&2 echo "Correct usage: $0 (Filename.html)"
+    exit 1
+fi
+

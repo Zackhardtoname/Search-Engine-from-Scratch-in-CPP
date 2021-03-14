@@ -1,0 +1,75 @@
+#!/bin/bash
+#set -x
+
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+reset=$(tput sgr0)
+
+# TODO Set the TEST_OUTPUT_FOLDER and TESTS variables to match your
+# respective test folders
+TEST_OUTPUT_FOLDER="tests/correctTestOutputs/"
+TESTS=tests/htmlParserTests/*
+
+# Handle arguments
+NO_MAKE=0
+if [ $# -gt 0 ]; then
+    if [ $1 = "-n" ]; then
+        NO_MAKE=1
+    else
+        >&2 echo "Correct usage: $0 (-n, --no-make) (test)"
+        exit 1
+    fi
+fi
+
+
+if [ "$NO_MAKE" == 0 ]; then
+    echo "Running make clean..."
+    make clean &> /dev/null
+    echo "Complete."
+    echo "Running make..."
+    make > /dev/null || exit 1
+    echo "Complete."
+fi
+
+
+for TEST in $TESTS
+do
+    # Remove everything before the last forward slash
+    TEST="${TEST##*/}"
+
+    echo "${reset}--- Testing $TEST"
+
+    # Remove everything after the first period
+    TEST="${TEST%%.*}"
+
+
+
+    # Compare the program output to the respective test case for
+    # word, title, link, and base modes.
+    WORD_OUTPUT=$(colordiff --text <(./hw3 w ${TESTS}${TEST}.html) <(cat ${TEST_OUTPUT_FOLDER}${TEST}.Words.correct.txt))
+    TITLE_OUTPUT=$(colordiff --text <(./hw3 t ${TESTS}${TEST}.html) <(cat ${TEST_OUTPUT_FOLDER}${TEST}.TitleWords.correct.txt))
+    LINK_OUTPUT=$(colordiff --text <(./hw3 a ${TESTS}${TEST}.html) <(cat ${TEST_OUTPUT_FOLDER}${TEST}.Links.correct.txt))
+    BASE_OUTPUT=$(colordiff --text <(./hw3 b ${TESTS}${TEST}.html) <(cat ${TEST_OUTPUT_FOLDER}${TEST}.Base.correct.txt))
+
+
+    if [ -n "$WORD_OUTPUT" ]
+    then
+        echo "${reset}--- ${red}WORD OUTPUT FAILED"
+        echo "$WORD_OUTPUT"
+    elif [ -n "$TITLE_OUTPUT" ]
+    then
+        echo "${reset}--- ${red}TITLE OUTPUT FAILED"
+        echo "$TITLE_OUTPUT"
+    elif [ -n "$LINK_OUTPUT" ]
+    then
+        echo "${reset}--- ${red}LINK OUTPUT FAILED"
+        echo "$LINK_OUTPUT"
+    elif [ -n "$BASE_OUTPUT" ]
+    then
+        echo "${reset}--- ${red}BASE OUTPUT FAILED"
+        echo "$BASE_OUTPUT"
+    else
+        echo "${reset}--- ${green}PASSED"
+    fi
+
+done

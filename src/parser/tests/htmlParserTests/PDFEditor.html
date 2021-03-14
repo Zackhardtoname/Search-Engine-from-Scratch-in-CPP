@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="SiteHead">
+	<script type="text/javascript">
+	var bCookiebotLoaded = false;
+	function fCookiebotOnLoad()
+	{
+		if( bCookiebotLoaded )
+		{
+			return;
+		}
+		bCookiebotLoaded = true;
+
+		pdfescapeOnReady(function()
+		{
+			var c = window.Cookiebot;
+
+			if ( !c || c.isOutsideEU || (c.consent && c.consented && ("-1" == c.consent.stamp)) )
+			{
+				pdfescapeBasicCMP(); 
+				if (console) { console.log("Non-EEA visit detected"); }
+			}
+			else
+			{
+				if (console) { console.log("EEA visit detected"); }
+			}
+		});
+	}
+
+	window.CookiebotCallback_OnAccept = function()
+	{
+		if( Cookiebot.consented ? Cookiebot.consent.statistics : Cookiebot.isOutsideEU )
+		{
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+			ga('create', 'UA-7186015-1', 'auto');
+			ga('set', 'allowAdFeatures', false);
+			ga('set', 'anonymizeIp', true);
+			ga('send', 'pageview');
+		}
+	};
+	window.CookiebotCallback_OnLoad = fCookiebotOnLoad; //CookiebotCallback_OnLoad does not fire until consent is given if dialog is going to appear
+	window.CookiebotCallback_OnDialogDisplay = fCookiebotOnLoad; //so attach it here too (it will only fire once)
+	</script>
+	<script id="Cookiebot" src="https://consent.cookiebot.com/uc.js?cbid=0a9207d1-2e4d-4a16-9fc6-71f481499b3b&framework=IAB" type="text/javascript"></script>
+<title>
+	PDFescape - Account Login
+</title><link rel="stylesheet" href="/css/ext/skeleton_001.css" /><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,700,300regular,300bold,300italic,700bold,700italic" type="text/css" /><link rel="stylesheet" href="/css/site_029.css" />
+	<script type="text/javascript" src="/js/ext/responsive-nav.1.0.34.min.js"></script>
+	<script type="text/javascript" src="/js/site_023.js"></script>
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" /><link rel="icon" href="/favicon.ico" type="image/x-icon" /><link rel="alternate" type="application/rss+xml" href="http://feeds.feedburner.com/pdfescape" /><meta name="author" content="Red Software" /><meta name="copyright" content="Copyright Red Software" /><meta name="description" content="Edit PDF files with PDFescape - an online, free PDF reader, free PDF editor &amp; free PDF form filler. View PDF documents on the web. Fill out PDF forms quickly without Adobe Acrobat. No watermarks or registration. Completely free." /><meta name="robots" content="index, follow" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta http-equiv="X-XRDS-Location" content="https://www.pdfescape.com/account/openid/xrds/" /></head>
+<body>
+
+
+	<div id="pdfe_alert" style="display:none;position:absolute;visibility:hidden"></div>
+	<div id="pdfe_alert_overlay" style="display:none;position:absolute;visibility:hidden"></div>
+
+	<div class="nav-container" id="top">
+		<div class="nav-collapse" id="nav-collapse">
+			<div class="nav-logo">
+				<a href="/?noredirect=true"><img src="/img/pdfescape-editor.png" alt="PDFescape"/></a>
+			</div>
+			<div class="nav-menu">
+				<span><a href="/what/" title="What is PDFescape?">About</a></span>
+				<span><a href="https://www.radpdf.com/" target="_blank" title="PDF Editor For ASP.NET &amp; ASP.NET Core">Developers</a></span>
+				<span><a href="https://support.pdfescape.com/" rel="nofollow" target="_blank" title="Get Support">Support</a></span>
+				<span id="nav-login"><a href="/account/login/" id="login-button">Login</a></span>
+				<span id="nav-signup" class="nav-signup nav-get-started"><a href="/signup/">Sign Up</a></span>
+				<span id="nav-usefree" class="nav-get-started"><a href="/account/unregistered/">Use Free</a></span>
+				
+			</div>
+		</div>
+		<div class="nav-toggle" id="nav-toggle">
+			<span style="top:14px"></span>
+			<span style="top:22px"></span>
+			<span style="top:30px"></span>
+		</div>
+	</div>
+	<script type="text/javascript">
+	//<![CDATA[
+	(function()
+	{
+		if( (window.navigator.userAgent.indexOf("MSIE 6") < 0) && (window.navigator.userAgent.indexOf("MSIE 7") < 0) && (window.navigator.userAgent.indexOf("MSIE 8") < 0) )
+		{
+			//start responsive-nav using the element ID, not class name because IE6 does not support document.querySelector()
+			responsiveNav("nav-collapse", {"customToggle" : "nav-toggle"});
+		}
+	})();
+	//]]>
+	</script>
+
+	<div class="body-content">
+
+		<div class="body-alert">Please login to open this file. If this file was shared with you by another PDFescape user, you can <a href="/account/unregistered/?des=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291">view it as an <span class="body-defined-word" onmouseover="pDefinitionShow(event,'unreg');" onmouseout="pDefinitionHide();">unregistered</span> user</a>.</div>
+
+	<form method="post" action="./?des=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291" id="DefaultForm">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTIwODExMjUxNTIPZBYCZg9kFgJmD2QWAgIBD2QWAgIBD2QWAgIBD2QWBAIJDw8WAh4UVmFsaWRhdGlvbkV4cHJlc3Npb24FW14oKFx3fFstISMkJSYnKis9P15fYHt8fX5dKSsoXC4oXHd8Wy0hIyQlJicqKz0/Xl9ge3x9fl0nKSspKkBcdysoWy0uXVx3KykqXC5cdysoWy0uXVx3KykqKSRkZAINDw8WBh4YQ2xpZW50VmFsaWRhdGlvbkZ1bmN0aW9uBSRiY3BoX2JjcGhfdkNhcHRjaGFSZXFfQ2xpZW50VmFsaWRhdGUeEkVuYWJsZUNsaWVudFNjcmlwdGceB0VuYWJsZWRoZGQYAQUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFgEFJWN0bDAwJGN0bDAwJGJjcGgkYmNwaCRmS2VlcE1lTG9nZ2VkSW644xss17WnoFfuq7PN2BK7T9OqKA==" />
+
+
+<script type="text/javascript">
+//<![CDATA[
+function bcph_bcph_vCaptchaReq_ClientValidate(source, arguments){arguments.IsValid = !grecaptcha || !!grecaptcha.getResponse();}pdfescapeValidatorsSetup(true);//]]>
+</script>
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="A1F85CE0" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAU3bjPsHkpE1laaoPdN5zg+mdCT56OnCJKoVZYsriHIYpkEA+yOti2mgvKObOtz3htyIuUw2WcUUasi+um0y+pVPhZMuANFGbxwveCHw+RJDhWwOyL+TisELUWhlta/uDwUVbmz" />
+		
+
+<script type="text/javascript">
+//<![CDATA[
+pdfescapeOnReady(function()
+{
+	var c = document.getElementById("bcph_bcph_fKeepMeLoggedIn");
+
+	pdfescapeAddEventListener(c, "click", function()
+	{
+		document.getElementById("login-google").href = (c.checked ? "https://accounts.google.com/o/oauth2/v2/auth?client_id=285287656284-sf06qbp1e18esj74cgdetpfpo4lraot4.apps.googleusercontent.com&response_type=code&scope=email+profile&redirect_uri=https%3a%2f%2fwww.pdfescape.com%2faccount%2fgoogle%2f&state=ko78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291.dis&openid.realm=https%3a%2f%2fwww.pdfescape.com%2f" : "https://accounts.google.com/o/oauth2/v2/auth?client_id=285287656284-sf06qbp1e18esj74cgdetpfpo4lraot4.apps.googleusercontent.com&response_type=code&scope=email+profile&redirect_uri=https%3a%2f%2fwww.pdfescape.com%2faccount%2fgoogle%2f&state=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291.dis&openid.realm=https%3a%2f%2fwww.pdfescape.com%2f");
+		document.getElementById("login-fb").href = (c.checked ? "https://www.facebook.com/v7.0/dialog/oauth?client_id=174687542577359&redirect_uri=https%3a%2f%2fwww.pdfescape.com%2faccount%2ffacebook%2f&scope=email&state=ko78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291.dis" : "https://www.facebook.com/v7.0/dialog/oauth?client_id=174687542577359&redirect_uri=https%3a%2f%2fwww.pdfescape.com%2faccount%2ffacebook%2f&scope=email&state=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291.dis");
+	});
+});
+//]]>
+</script>
+
+<div class="container">
+	<div class="fourteen columns offset-by-one ie-fourteen-columns">
+		<h1>Login to PDFescape</h1>
+	</div>
+	<div class="twelve columns offset-by-two login-column">
+		<div class="login-container">
+			<div class="login-content">
+				<div class="login-content-left">
+					<div class="login-social">
+						<a href="https://accounts.google.com/o/oauth2/v2/auth?client_id=285287656284-sf06qbp1e18esj74cgdetpfpo4lraot4.apps.googleusercontent.com&response_type=code&scope=email+profile&redirect_uri=https%3a%2f%2fwww.pdfescape.com%2faccount%2fgoogle%2f&state=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291.dis&openid.realm=https%3a%2f%2fwww.pdfescape.com%2f" target="norel" class="login-google" id="login-google">Sign In Using Google</a>
+					</div>
+					<div class="login-social">
+						<a href="https://www.facebook.com/v7.0/dialog/oauth?client_id=174687542577359&redirect_uri=https%3a%2f%2fwww.pdfescape.com%2faccount%2ffacebook%2f&scope=email&state=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291.dis" target="norel" class="login-fb" id="login-fb">Sign In Using Facebook</a>
+					</div>
+				</div>
+				<div class="login-content-right">
+					<div class="login-form">
+						<div class="login-form-email">
+							<input name="ctl00$ctl00$bcph$bcph$fEmail" maxlength="200" id="bcph_bcph_fEmail" type="email" />
+							<label for="bcph_bcph_fEmail" id="bcph_bcph_lEmail">Email</label>
+						</div>
+						<div class="login-form-password">
+							<input name="ctl00$ctl00$bcph$bcph$fPass" type="password" maxlength="200" id="bcph_bcph_fPass" />
+							<label for="bcph_bcph_fPass" id="bcph_bcph_lPass">Password</label>
+						</div>
+					</div>
+					<div class="login-lost-password">
+						<a href="/account/login/forgot_password/?des=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291">Forgot your password?</a>
+					</div>
+					<div class="login-new-account">
+						Don't have an account?<br />
+						<a href="/account/register/?des=o78E0663A7DD8295EED9B0642307E0E63C3F3241D4A3C5291">Sign up with email</a>
+					</div>
+				</div>
+			</div>
+			<div class="login-footer">
+				<div class="login-recaptcha">
+					
+				</div>
+				<div class="login-submit">
+					<input type="submit" name="ctl00$ctl00$bcph$bcph$fSubmit" value="Login" onclick="javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(&quot;ctl00$ctl00$bcph$bcph$fSubmit&quot;, &quot;&quot;, true, &quot;&quot;, &quot;&quot;, false, false))" id="bcph_bcph_fSubmit" />
+				</div>
+				<div class="login-footer-checkbox">
+					<input id="bcph_bcph_fKeepMeLoggedIn" type="checkbox" name="ctl00$ctl00$bcph$bcph$fKeepMeLoggedIn" /> <label for="bcph_bcph_fKeepMeLoggedIn" id="bcph_bcph_lKeepMeLoggedIn">Keep me logged in</label>
+				</div>
+			</div>
+		</div>
+		<div class="login-validators">
+			<div>
+				
+			</div>
+			<div>
+				
+			</div>
+			<div>
+				
+			</div>
+			<div>
+				
+			</div>
+			<div>
+				
+			</div>
+			<div>
+				
+			</div>
+		</div>
+	</div>
+</div>
+
+
+	</form>
+
+	</div>
+
+	<div class="submenu-content">
+		<div class="container">
+			<div class="four columns ie-four-columns">
+				<h4>About</h4>
+				<ul>
+					<li>
+						<a href="/what/">What is PDFescape?</a>
+					</li>
+					
+					<li>
+						<a href="/what/desktop/">PDFescape for Windows</a>
+					</li>
+					
+					<li>
+						<a href="/what/premium/">Feature Comparison</a>
+					</li>
+					<li>
+						<a href="/signup/">Pricing</a>
+					</li>
+					
+					<li>
+						<a href="http://blog.redsoftware.com/" target="_blank">Blog</a>
+					</li>
+				</ul>
+			</div>
+			<div class="four columns ie-four-columns">
+				<h4>Developers</h4>
+				<ul>
+					<li>
+						<a href="https://www.radpdf.com/" target="_blank">Direct ASP.NET and ASP.NET Core integration</a>
+					</li>
+					<li>
+						<a href="/what/linking/">Open your website's PDFs using PDFescape</a>
+					</li>
+					<li>
+						<a href="/what/publishing/">Publish PDF forms for others to fill out</a>
+					</li>
+				</ul>
+			</div>
+			<div class="four columns ie-four-columns clear-half">
+				<h4>Legal</h4>
+				<ul>
+					<li>
+						<a href="/terms/" target="_blank">Terms of Use</a>
+					</li>
+					<li>
+						<a href="/privacy/" target="_blank">Privacy Policy</a>
+					</li>
+					<li>
+						<a href="/donotsell/">Do Not Sell My Personal Information</a>
+					</li>
+					
+					<li>
+						<a href="/terms/eula/">Desktop EULA</a>
+					</li>
+					
+					<li>
+						<a href="/refunds/">Cancellation Policy</a>
+					</li>
+					<li>
+						<a href="/refunds/">Refund Policy</a>
+					</li>
+				</ul>
+			</div>
+			<div class="four columns ie-four-columns">
+				<h4>Support</h4>
+				<ul>
+					
+					<li>
+						<a href="https://support.pdfescape.com/" rel="nofollow">Contact Support</a>
+					</li>
+					
+					<li>
+						<a href="/support/uninstall/">Uninstalling Software</a>
+					</li>
+					
+					<li>
+						<a href="/contact/">Contact Information</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="footer-container">
+		<div class="footer-list">
+			<span><a href="https://twitter.com/PDFescape" target="_blank" rel="nofollow"><img alt="Twitter" src="/img/twitter.png"/></a></span>
+			<span><a href="https://www.facebook.com/pdfescape" target="_blank" rel="nofollow"><img alt="Facebook" src="/img/facebook.png"/></a></span>
+			<span><a href="https://www.youtube.com/results?search_query=pdfescape" target="_blank" rel="nofollow"><img alt="Youtube" src="/img/youtube.png"/></a></span>
+		</div>
+		<div class="footer-copyright">
+
+			PDFescape is a Red Software product -  &copy;2007-2021 Red Software
+
+		</div>
+	</div>
+</body>
+</html>
