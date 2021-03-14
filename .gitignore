@@ -4,3 +4,4 @@
 # Executables
 *.o
 src/crawler/crawler
+src/parser/parser
