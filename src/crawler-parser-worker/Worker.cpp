@@ -95,24 +95,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // TODO: convert this into the main controller thread that will be
-    //  calling a url on this crawler.
+    // TODO: Adjust endpoints to take a URL off of an mqueue and put a word index
+    // structure on a different mqueue
     auto httpResp = FetchUrl(argv[2]);
-    // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); // test chunked
-    //std::cout << "code: " << httpResp.StatusCode << '\n'
-    //          << "location: " << httpResp.Location << '\n'
-    //          << "lang: " << httpResp.Language << '\n'
-    //          << "---- body ----" << '\n'
-    //          << httpResp.Body;
     std::cout << httpResp.Body;
-
-   //size_t fileSize = 0;
-   //char *buffer = ReadFile( argv[ 1 + ( argc == 3 ) ], fileSize );
-   //if ( !buffer )
-   //   {
-   //   std::cerr << "Could not open the file." << std::endl;
-   //   exit( 1 );
-   //   }
 
    std::cout << "---------- parser output --------\n";
 
