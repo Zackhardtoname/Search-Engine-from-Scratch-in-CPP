@@ -3,7 +3,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
-#include <memory>
+#include "../../../stl/include/Unique_Pointer.h"
 #include <openssl/md5.h>
 #include <string.h>
 #include <string>
@@ -12,7 +12,7 @@ class Bloomfilter
    {
    public:
       Bloomfilter( int n, double fpr )
-          : buff{ std::make_unique<unsigned char[]>( DIGEST_LENGTH ) }
+          : buff{ make_unique<unsigned char[]>( DIGEST_LENGTH ) }
          {
          bits.resize( long( n * abs( log( fpr ) ) / ( log( 2 ) * log( 2 ) ) ),
                       0 );
@@ -59,7 +59,7 @@ class Bloomfilter
          return { *(unsigned long long *)buff.get(),
                   *(unsigned long long *)( ( buff.get() ) + 8 ) };
          }
-      const std::unique_ptr<unsigned char[]> buff;
+      const unique_ptr<unsigned char[]> buff;
    };
 
 #endif
