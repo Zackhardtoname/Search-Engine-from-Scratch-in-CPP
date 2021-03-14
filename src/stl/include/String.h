@@ -204,6 +204,11 @@ class String
          return str.size() == 1;
          }
 
+      void clear()
+         {
+         str.clear();
+         }
+
       [[nodiscard]] String substr( uint start, int len = String::npos ) const
          {
          auto endIdx =
