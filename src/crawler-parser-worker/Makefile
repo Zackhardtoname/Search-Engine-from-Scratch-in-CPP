@@ -16,10 +16,10 @@
 EXECUTABLE  = worker
 
 # Change 'source_files' to match the project source files
-SOURCE_FILES = Worker.cpp ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ParsedHttpResponse.cpp HtmlParser.cpp HtmlTags.cpp 
+SOURCE_FILES = Worker.cpp ../crawler/Crawler.cpp ../crawler/ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ../crawler/ParsedHttpResponse.cpp ../parser/HtmlParser.cpp ../parser/HtmlLexer.cpp
 
 # Change 'header_files' to match the project source files
-HEADER_FILES = Worker.h ParsedUrl.h HtmlParser.cpp HtmlTags.cpp
+HEADER_FILES = Worker.h ../crawler/Crawler.h ../crawler/ParsedUrl.h ../parser/HtmlParser.h ../parser/HtmlLexer.h
 
 #######################
 # TODO (end) #
