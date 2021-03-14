@@ -3,5 +3,6 @@
 
 # Executables
 *.o
-src/crawler/crawler
-src/parser/parser
+src/crawler/crawler*
+src/parser/parser*
+src/crawler-parser-worker/worker*
