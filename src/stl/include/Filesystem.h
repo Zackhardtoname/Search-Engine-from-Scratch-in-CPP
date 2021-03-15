@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <vector>
 
 // TODO get rid of this - will have to add std:: to lots of places here...
 using namespace std;
