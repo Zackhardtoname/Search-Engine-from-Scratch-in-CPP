@@ -17,7 +17,7 @@ target_link_libraries(crawler-side stl ssl)
 
 add_executable(indexer
         indexer/indexer.cpp
-        indexer/IndexChunk.cpp indexer/IndexChunk.h)
+        indexer/IndexChunk.cpp indexer/IndexChunk.h indexer/PorterStemming.cpp indexer/PorterStemming.h)
 
 # testing
 
@@ -36,3 +36,8 @@ add_executable(testVLQEncoding
 target_link_libraries(testVLQEncoding stl ssl GTest::gtest)
 gtest_discover_tests(testVLQEncoding)
 
+add_executable(testPorterStemming
+        indexer/testPorterStemming.cpp
+        indexer/PorterStemming.cpp)
+target_link_libraries(testPorterStemming stl GTest::gtest)
+#gtest_discover_tests(testPorterStemming)

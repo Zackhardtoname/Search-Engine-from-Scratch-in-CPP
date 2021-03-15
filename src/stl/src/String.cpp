@@ -5,9 +5,9 @@
 #include "../include/String.h"
 
 std::ostream &scb::operator<<( std::ostream &os, const scb::String &s )
-{
-    os << "";
-    for ( auto character : s )
-        os << character;
-    return os;
-}
+   {
+   os << "";
+   for ( auto character : s )
+      os << character;
+   return os;
+   }

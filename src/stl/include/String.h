@@ -142,6 +142,17 @@ class String
          return true;
          }
 
+      [[nodiscard]] bool hasSuffix( const String &suffix ) const
+         {
+         if ( size() < suffix.size() )
+            return false;
+         for ( int i = 0, base = size() - suffix.size();  i < suffix.size();
+               i++ )
+            if ( str[ base + i ] != suffix[ i ] )
+               return false;
+         return true;
+         }
+
       char &operator[]( size_t i ) const
          {
          return str[ i ];
