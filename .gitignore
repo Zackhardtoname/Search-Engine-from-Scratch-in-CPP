@@ -1,6 +1,9 @@
 # VSCode Config Files
 .vscode/
 
+# CLion
+.idea/
+
 # Executables
 *.o
 src/crawler/crawler*
