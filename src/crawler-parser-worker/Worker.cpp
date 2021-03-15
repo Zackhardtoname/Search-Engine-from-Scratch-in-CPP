@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
     char answer = 'Y';
 
     // initialize the queue attributes
+    // TODO: Figure out how to set attr.mq_msgmsg to a higher value
     attr.mq_flags = 0;
     attr.mq_maxmsg = 256;
     attr.mq_msgsize = MAX_SIZE;
