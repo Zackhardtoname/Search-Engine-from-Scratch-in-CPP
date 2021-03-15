@@ -9,7 +9,7 @@
 #include "../stl/include/io/utils.h"
 #include "../stl/include/String.h"
 
-HtmlParser::HtmlParser(scb::String buffer) {
+HtmlParser::HtmlParser(const scb::String &buffer) {
     HtmlLexer lexer(buffer);
 
     // pendingLinks: Index to Link objects that have not been finalized.
@@ -18,7 +18,7 @@ HtmlParser::HtmlParser(scb::String buffer) {
     // Since this refers to things in a vector, we have to use indices.
     std::stack<unsigned> pendingLinks;
 
-    while (lexer.HasNextToken()) {
+    while (lexer.HasNextEntity()) {
         HtmlEntity &entity = lexer.NextEntity();
 
         // I've seen people write base as both <base> and <base/>
@@ -78,7 +78,7 @@ HtmlParser::HtmlParser(scb::String buffer) {
     }
 }
 
-HtmlLexer::HtmlLexer(scb::String buffer) :
+HtmlLexer::HtmlLexer(const scb::String &buffer) :
         cursor(buffer.cstr()), bufEnd(buffer.end()) {}
 
 int HtmlLexer::peek(const unsigned offset) {
@@ -94,7 +94,7 @@ bool HtmlLexer::peekAssert(const scb::String &s) {
     return true;
 }
 
-bool HtmlLexer::HasNextToken() const {
+bool HtmlLexer::HasNextEntity() const {
     return !eof();
 }
 

@@ -119,9 +119,9 @@ struct HtmlEntity {
 class HtmlLexer {
 public:
 
-    HtmlLexer(scb::String buffer);
+    explicit HtmlLexer(const scb::String &buffer);
 
-    [[nodiscard]] bool HasNextToken() const;
+    [[nodiscard]] bool HasNextEntity() const;
 
     HtmlEntity& NextEntity();
 
@@ -147,7 +147,7 @@ protected:
     HtmlEntity curEntity;
 
     /// Peek the char under the cursor. Returns -1 if eof.
-    int peek(const unsigned offset = 0);
+    int peek(unsigned offset = 0);
 
     /// Peek and determine if the given string matches the one starting under the cursor.
     bool peekAssert(const scb::String &s);
@@ -191,7 +191,7 @@ protected:
     bool munchTagAfterTagName(std::vector<Attribute> &attrs, bool selfEnding = false);
 
     /// Munch a given char.
-    bool munchChar(const char c);
+    bool munchChar(char c);
 
     /// Munch one arbitrary char.
     bool munchAny();
@@ -207,10 +207,10 @@ protected:
     bool munchAttribute(Attribute &attr);
 
     /// Munch a quoted string with the given quotation mark.
-    bool munchQuotedString(const char mark);
+    bool munchQuotedString(char mark);
 
     /// If eof.
-    bool eof() const;
+    [[nodiscard]] bool eof() const;
 
     /// Save the current lexer state.
     Savepoint checkpoint();
@@ -246,7 +246,7 @@ public:
     // presumed HTML.  It will parse the buffer, stripping out
     // all the HTML tags and producing the list of words in body,
     // words in title, and links found on the page.
-    HtmlParser(scb::String buffer);
+    HtmlParser(const scb::String &buffer);
 protected:
 
     /// *** Parsing ***

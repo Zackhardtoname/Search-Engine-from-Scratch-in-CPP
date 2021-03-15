@@ -235,6 +235,8 @@ int main(int argc, char **argv) {
    //   exit( 1 );
    //   }
 
+   std::cout << "---------- parser output --------\n";
+
    HtmlParser parser( httpResp.Body );
    PrintParse( parser );
 
