@@ -417,3 +417,10 @@ HtmlLexer::Savepoint::~Savepoint() {
     if (!commited)
         lexer.cursor = save;
 }
+
+const Attribute * HtmlEntity::FindAttr(const String &attrName) {
+    for (const auto &attr: Attributes)
+        if (attr.first.EqualsCaseInsensitive(attrName))
+            return &attr;
+    return nullptr;
+}

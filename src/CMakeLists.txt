@@ -16,7 +16,7 @@ add_executable(crawler-side
 target_link_libraries(crawler-side stl ssl)
 
 add_executable(crawler-parser-worker
-        parser/HtmlParser.cpp
+        parser/ParsedHtml.cpp
         parser/HtmlLexer.cpp
         crawler/ParsedHttpResponse.cpp
         crawler/ParsedUrl.cpp
@@ -24,7 +24,7 @@ add_executable(crawler-parser-worker
         crawler-parser-worker/Worker.cpp
         stl/src/String.cpp
         stl/src/io/utils.cpp
-        )
+        defs.h crawler-parser-worker/EnglishDictChecker.cpp crawler-parser-worker/EnglishDictChecker.h)
 target_link_libraries(crawler-parser-worker ssl)
 
 find_package(GTest)

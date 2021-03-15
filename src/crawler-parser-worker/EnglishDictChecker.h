@@ -1,0 +1,14 @@
+//
+// Created by youh on 3/15/21.
+//
+
+#ifndef SCOOBLE_SEARCH_ENGLISHDICTCHECKER_H
+#define SCOOBLE_SEARCH_ENGLISHDICTCHECKER_H
+
+
+class EnglishDictChecker {
+
+};
+
+
+#endif //SCOOBLE_SEARCH_ENGLISHDICTCHECKER_H

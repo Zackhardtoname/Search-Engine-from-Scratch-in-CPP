@@ -1,7 +1,7 @@
 #include <filesystem>
 #include <gtest/gtest.h>
 #include <sys/mman.h>
-#include "../HtmlParser.h"
+#include "../ParsedHtml.h"
 #include "../utilities.h"
 
 namespace {
