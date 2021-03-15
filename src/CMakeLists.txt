@@ -16,10 +16,11 @@ add_executable(crawler-side
 target_link_libraries(crawler-side stl ssl)
 
 add_executable(crawler-parser-worker
-        crawler-parser-worker/HtmlParser.cpp
-        crawler-parser-worker/HtmlTags.cpp
-        crawler-parser-worker/ParsedHttpResponse.cpp
-        crawler-parser-worker/ParsedUrl.cpp
+        parser/HtmlParser.cpp
+        parser/HtmlLexer.cpp
+        crawler/ParsedHttpResponse.cpp
+        crawler/ParsedUrl.cpp
+        crawler/Crawler.cpp
         crawler-parser-worker/Worker.cpp
         stl/src/String.cpp
         stl/src/io/utils.cpp

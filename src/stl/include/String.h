@@ -266,6 +266,20 @@ class String
       Vector<char> str;
    };
 
+/// Reference to a part of a string.
+struct StringRef
+   {
+      String::Iterator Begin, End;
+
+      [[nodiscard]] scb::String Str() const;
+
+      [[nodiscard]] bool
+      EqualsCaseInsensitive( const scb::String &other ) const;
+
+      [[nodiscard]] bool Empty() const;
+
+      [[nodiscard]] unsigned Length() const;
+   };
 std::ostream &operator<<( std::ostream &os, const String &s );
 
    }      // namespace scb
