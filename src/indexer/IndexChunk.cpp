@@ -4,11 +4,15 @@
 
 #include "IndexChunk.h"
 
-void IndexChunk::ingest(IndexerIngest &injest) {
-    urls.pushBack(injest.url);
-    for (String &word: injest.words)
+void IndexChunk::Ingest(IndexerIngest &injest) {
+    for (String &word: injest.Words)
         postingLists[word].pushBack(nextId++);
-    for (String &word: injest.titleWords)
+    for (String &word: injest.TitleWords)
         postingLists[String("@") + word].pushBack(nextId++);
-    documentBoundaries.pushBack(nextId);
+    documents.pushBack(
+            {
+                    .Url = injest.Url,
+                    .Boundary = nextId
+            });
+    // TODO: update estimated size
 }

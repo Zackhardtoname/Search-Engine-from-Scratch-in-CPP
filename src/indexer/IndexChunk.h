@@ -31,14 +31,14 @@ struct Document {
 };
 
 class IndexChunk {
-    size_t estimatedSize = 0;
-
     Vector<Document> documents;
     std::unordered_map<String, Vector<unsigned>, StringHash> postingLists;
 
     unsigned nextId = 0;
 public:
-    void ingest(IndexerIngest &injest);
+    size_t estSize = 0;
+
+    void Ingest(IndexerIngest &injest);
 };
 
 

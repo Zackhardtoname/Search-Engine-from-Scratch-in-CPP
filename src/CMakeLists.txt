@@ -28,7 +28,7 @@ add_executable(crawler-parser-worker
 target_link_libraries(crawler-parser-worker ssl)
 
 add_executable(indexer
-        indexer/indexer.cpp
+        indexer/Worker.cpp
         indexer/IndexChunk.cpp indexer/IndexChunk.h indexer/PorterStemming.cpp indexer/PorterStemming.h)
 
 # testing

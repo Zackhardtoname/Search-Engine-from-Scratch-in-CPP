@@ -12,9 +12,13 @@ using scb::String;
 using scb::Vector;
 
 struct IndexerIngest {
-    Vector<String> words;
-    Vector<String> titleWords;
-    String url;
+    Vector<String> Words;
+    Vector<String> TitleWords;
+    String Url;
+
+    String Serialize();
+
+    explicit IndexerIngest(const String &s);
 };
 
 #endif //SCOOBLE_SEARCH_INDEXERINJEST_H
