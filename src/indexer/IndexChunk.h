@@ -25,11 +25,15 @@ struct StringHash {
     }
 };
 
+struct Document {
+    String Url;
+    unsigned Boundary;
+};
+
 class IndexChunk {
     size_t estimatedSize = 0;
 
-    Vector<String> urls;
-    Vector<unsigned> documentBoundaries;
+    Vector<Document> documents;
     std::unordered_map<String, Vector<unsigned>, StringHash> postingLists;
 
     unsigned nextId = 0;
