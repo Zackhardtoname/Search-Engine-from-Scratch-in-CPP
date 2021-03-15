@@ -82,7 +82,6 @@ bool HtmlLexer::munchRawTextElement() {
     curEntity.TagName.Begin = cursor + 1; // skip <
     // the five raw text elems we need to handle
     // svg is technically not, but we don't care what's inside
-    // TODO: consider treating svg as regular elems after hw3, they can have text too!
     if (munchStringCaseInsensitive("<script") ||
         munchStringCaseInsensitive("<style") ||
         munchStringCaseInsensitive("<textarea") ||
@@ -217,7 +216,7 @@ bool HtmlLexer::munchEndTag() {
     return false;
 }
 
-bool HtmlLexer::munchEndTag(StringRef tagName) {
+bool HtmlLexer::munchEndTag(const StringRef &tagName) {
     auto savepoint = checkpoint();
     Vector<Attribute> attributes; // dummy
     // end tag = </ + tagName + [   >]
@@ -259,13 +258,13 @@ bool HtmlLexer::munchStringCaseInsensitive(const scb::String &s) {
     return true;
 }
 
-bool HtmlLexer::munchStringCaseInsensitive(StringRef s) {
+bool HtmlLexer::munchStringCaseInsensitive(const StringRef &s) {
     auto savepoint = checkpoint();
     // compare each char in string to next peeked char
     // if equal, munch
     // else fail
-    for (; s.Begin != s.End; s.Begin++) {
-        if (tolower(*s.Begin) != tolower(peek()))
+    for (auto i = s.Begin; i != s.End; i++) {
+        if (tolower(*i) != tolower(peek()))
             return false;
         munchAny();
     }

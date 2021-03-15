@@ -35,7 +35,7 @@ struct HtmlEntity {
 class HtmlLexer {
 public:
 
-    explicit HtmlLexer(const scb::String &buffer);
+    explicit HtmlLexer(const String &buffer);
 
     [[nodiscard]] bool HasNextEntity() const;
 
@@ -66,7 +66,7 @@ protected:
     int peek(unsigned offset = 0);
 
     /// Peek and determine if the given string matches the one starting under the cursor.
-    bool peekAssert(const scb::String &s);
+    bool peekAssert(const String &s);
 
     /// Munch one of the six raw text elements as defined by W3.
     bool munchRawTextElement();
@@ -83,7 +83,7 @@ protected:
 
     /// Munch an end tag that must use the given tag name.
     /// tagName: mandatory tag name of the end tag, case insensitive.
-    bool munchEndTag(StringRef tagName);
+    bool munchEndTag(const StringRef &tagName);
 
     /// Munch a self-ending tag.
     bool munchSelfEndingTag();
@@ -96,10 +96,10 @@ protected:
     bool munchRawText(StringRef &s);
 
     /// Munch a given string, case-insensitively.
-    bool munchStringCaseInsensitive(const scb::String &s);
+    bool munchStringCaseInsensitive(const String &s);
 
     /// Munch a given string, case-insensitively.
-    bool munchStringCaseInsensitive(StringRef s);
+    bool munchStringCaseInsensitive(const StringRef &s);
 
     /// Munch the rest of a tag after the tag name.
     /// attrs: storage for parsed attributes.
