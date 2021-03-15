@@ -16,10 +16,7 @@ class String
 
       static constexpr int npos = std::numeric_limits<int>::max();
 
-      ~String()
-         {
-         str.clear();
-         }
+      ~String() = default;
 
       String()
          {
@@ -161,11 +158,8 @@ class String
       String &operator+=( const String &other )
          {
          // remove null termination
-         if ( !str.empty() )
-            str.popBack();
-         // add other string to it. stops problem
-         // of the mondel burrito i think its called
-         for ( int i = 0;  i < other.size() + 1;  i++ )
+         str.popBack();
+         for ( int i = 0;  i < other.str.size();  i++ )
             str.pushBack( other.str[ i ] );
 
          return *this;
@@ -187,9 +181,7 @@ class String
 
       void pushBack( char c )
          {
-         if ( !str.empty() )
-            str.popBack();
-         str.pushBack( c );
+         str.back() = c;
          str.pushBack( '\0' );
          }
 
@@ -199,8 +191,7 @@ class String
       void popBack()
          {
          str.popBack();
-         str.popBack();
-         str.pushBack( '\0' );
+         str.back() = '\0';
          }
 
       void resize( size_t len, char fill = '\0' )
@@ -213,6 +204,12 @@ class String
       bool empty() const
          {
          return str.size() == 1;
+         }
+
+      void clear()
+         {
+         str.clear();
+         str.pushBack( '\0' );
          }
 
       [[nodiscard]] String substr( uint start, int len = String::npos ) const
@@ -294,6 +291,20 @@ class String
       Vector<char> str;
    };
 
+/// Reference to a part of a string.
+struct StringRef
+   {
+      String::Iterator Begin, End;
+
+      [[nodiscard]] scb::String Str() const;
+
+      [[nodiscard]] bool
+      EqualsCaseInsensitive( const scb::String &other ) const;
+
+      [[nodiscard]] bool Empty() const;
+
+      [[nodiscard]] unsigned Length() const;
+   };
 std::ostream &operator<<( std::ostream &os, const String &s );
 
    }      // namespace scb

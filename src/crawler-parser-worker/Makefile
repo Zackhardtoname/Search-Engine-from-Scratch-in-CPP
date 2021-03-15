@@ -13,13 +13,13 @@
 # TODO (begin) #
 #######################
 # Change 'executable' to match the command for the given component
-EXECUTABLE  = parser
+EXECUTABLE  = worker
 
 # Change 'source_files' to match the project source files
-SOURCE_FILES = HtmlParserDemo.cpp HtmlParser.cpp HtmlTags.cpp
+SOURCE_FILES = Worker.cpp ../crawler/Crawler.cpp ../crawler/ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ../crawler/ParsedHttpResponse.cpp ../parser/HtmlParser.cpp ../parser/HtmlLexer.cpp
 
 # Change 'header_files' to match the project source files
-HEADER_FILES = HtmlParser.h HtmlTags.h
+HEADER_FILES = Worker.h ../crawler/Crawler.h ../crawler/ParsedUrl.h ../parser/HtmlParser.h ../parser/HtmlLexer.h
 
 #######################
 # TODO (end) #
@@ -107,9 +107,8 @@ clean:
 
 
 
-
 # these targets do not create any files
-.PHONY: all release debug profile static clean alltests partialsubmit \
-        fullsubmit ungraded sync2caen help identifier
+.PHONY: all release debug profile static clean alltests \
+        ungraded help identifier
 # disable built-in rules
 .SUFFIXES:
