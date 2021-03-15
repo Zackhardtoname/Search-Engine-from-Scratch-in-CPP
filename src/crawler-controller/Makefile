@@ -14,9 +14,11 @@
 #######################
 # Change 'executable' to match the command for the given component
 EXECUTABLE  = crawler-controller
+#EXECUTABLE  = crawler-controller
 
 # Change 'source_files' to match the project source files
-SOURCE_FILES = crawler-controller.cpp
+#SOURCE_FILES = crawler-controller.cpp
+SOURCE_FILES = seeder.cpp
 
 # Change 'header_files' to match the project source files
 HEADER_FILES = ../stl/src/include/String.h ../stl/src/include/Filesystem.h
@@ -50,7 +52,7 @@ PERF_FILE = perf.data*
 #Default Flags (we prefer -std=c++17 but Mac/Xcode/Clang doesn't support)
 CXXFLAGS = -std=c++1z -pedantic#-Werror -Wconversion -Wall -Wextra
 
-LINK_FLAGS = -lssl
+LINK_FLAGS = -lssl -lrt
 
 # make release - will compile "all" with $(CXXFLAGS) and the -O3 flag
 #                also defines NDEBUG so that asserts will not check
