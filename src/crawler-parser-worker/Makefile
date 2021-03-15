@@ -50,7 +50,7 @@ PERF_FILE = perf.data*
 #Default Flags (we prefer -std=c++17 but Mac/Xcode/Clang doesn't support)
 CXXFLAGS = -std=c++1z -pedantic#-Werror -Wconversion -Wall -Wextra
 
-LINK_FLAGS = -lssl
+LINK_FLAGS = -lssl -lrt
 
 # make release - will compile "all" with $(CXXFLAGS) and the -O3 flag
 #                also defines NDEBUG so that asserts will not check
