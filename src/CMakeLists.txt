@@ -40,4 +40,4 @@ add_executable(testPorterStemming
         indexer/testPorterStemming.cpp
         indexer/PorterStemming.cpp)
 target_link_libraries(testPorterStemming stl GTest::gtest)
-#gtest_discover_tests(testPorterStemming)
+gtest_discover_tests(testPorterStemming)

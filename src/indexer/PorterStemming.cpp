@@ -19,7 +19,7 @@ namespace porter {
                     labels[i] = 'v';
                     break;
                 case 'y':
-                    if (i != 0 && word[i - 1] == 'c')
+                    if (i != 0 && labels[i - 1] == 'c')
                         labels[i] = 'v';
                     break;
             }
@@ -49,7 +49,16 @@ namespace porter {
         return m;
     }
 
-    bool replaceSuffixIfMeasure(String &word, const String &suffix, const String &rpl, int m) {
+    bool staro(const String &stem) {
+        if (stem.length() < 3)
+            return false;
+        auto labels = label(stem);
+        int i = labels.length() - 3;
+        return labels[i] == 'c' && labels[i + 1] == 'v' && labels[i + 2] == 'c' &&
+               !(stem[i + 2] == 'w' || stem[i + 2] == 'x' || stem[i + 2] == 'y');
+    }
+
+    bool suffixMeasure(String &word, const String &suffix, const String &rpl, int m) {
         if (word.hasSuffix(suffix)) {
             String stem = word.substr(0, word.length() - suffix.length());
             if (measure(stem) > m) {
@@ -84,7 +93,7 @@ namespace porter {
     }
 
     bool step1b(String &word) {
-        if (replaceSuffixIfMeasure(word, "eed", "ee"))
+        if (suffixMeasure(word, "eed", "ee"))
             return false;
         if (word.hasSuffix("ed")) {
             String stem = word.substr(0, word.length() - 2);
@@ -93,6 +102,7 @@ namespace porter {
                 word.popBack();
                 return true;
             }
+            return false;
         }
         if (word.hasSuffix("ing")) {
             String stem = word.substr(0, word.length() - 3);
@@ -102,6 +112,7 @@ namespace porter {
                 word.popBack();
                 return true;
             }
+            return false;
         }
         return false;
     }
@@ -131,22 +142,8 @@ namespace porter {
             }
         }
 
-        if (measure(word) == 1) {
-            String labels = label(word);
-            if (labels.length() >= 3) {
-                int i = labels.length() - 3;
-                if (labels[i] == 'c' && labels[i + 1] == 'v' && labels[i + 2] == 'c')
-                    switch (word[i + 2]) {
-                        case 'w':
-                        case 'x':
-                        case 'y':
-                            break;
-                        default:
-                            word.pushBack('e');
-                            return;
-                    }
-            }
-        }
+        if (measure(word) == 1 && staro(word))
+            word.pushBack('e');
     }
 
     void step1c(String &word) {
@@ -158,112 +155,110 @@ namespace porter {
     }
 
     void step2(String &word) {
-        if (replaceSuffixIfMeasure(word, "ational", "ate"))
+        if (suffixMeasure(word, "ational", "ate"))
             return;
-        if (replaceSuffixIfMeasure(word, "tional", "tion"))
+        if (suffixMeasure(word, "tional", "tion"))
             return;
-        if (replaceSuffixIfMeasure(word, "enci", "ence"))
+        if (suffixMeasure(word, "enci", "ence"))
             return;
-        if (replaceSuffixIfMeasure(word, "anci", "ance"))
+        if (suffixMeasure(word, "anci", "ance"))
             return;
-        if (replaceSuffixIfMeasure(word, "izer", "ize"))
+        if (suffixMeasure(word, "izer", "ize"))
             return;
-        if (replaceSuffixIfMeasure(word, "logi", "log"))
+        if (suffixMeasure(word, "logi", "log"))
             return;
-        if (replaceSuffixIfMeasure(word, "bli", "ble"))
+        if (suffixMeasure(word, "bli", "ble"))
             return;
-        if (replaceSuffixIfMeasure(word, "alli", "al"))
+        if (suffixMeasure(word, "alli", "al"))
             return;
-        if (replaceSuffixIfMeasure(word, "entli", "ent"))
+        if (suffixMeasure(word, "entli", "ent"))
             return;
-        if (replaceSuffixIfMeasure(word, "eli", "e"))
+        if (suffixMeasure(word, "eli", "e"))
             return;
-        if (replaceSuffixIfMeasure(word, "ousli", "ous"))
+        if (suffixMeasure(word, "ousli", "ous"))
             return;
-        if (replaceSuffixIfMeasure(word, "ization", "ize"))
+        if (suffixMeasure(word, "ization", "ize"))
             return;
-        if (replaceSuffixIfMeasure(word, "ation", "ate"))
+        if (suffixMeasure(word, "ation", "ate"))
             return;
-        if (replaceSuffixIfMeasure(word, "ator", "ate"))
+        if (suffixMeasure(word, "ator", "ate"))
             return;
-        if (replaceSuffixIfMeasure(word, "alism", "al"))
+        if (suffixMeasure(word, "alism", "al"))
             return;
-        if (replaceSuffixIfMeasure(word, "iveness", "ive"))
+        if (suffixMeasure(word, "iveness", "ive"))
             return;
-        if (replaceSuffixIfMeasure(word, "fulness", "ful"))
+        if (suffixMeasure(word, "fulness", "ful"))
             return;
-        if (replaceSuffixIfMeasure(word, "ousness", "ous"))
+        if (suffixMeasure(word, "ousness", "ous"))
             return;
-        if (replaceSuffixIfMeasure(word, "aliti", "al"))
+        if (suffixMeasure(word, "aliti", "al"))
             return;
-        if (replaceSuffixIfMeasure(word, "iviti", "ive"))
+        if (suffixMeasure(word, "iviti", "ive"))
             return;
-        if (replaceSuffixIfMeasure(word, "biliti", "ble"))
+        if (suffixMeasure(word, "biliti", "ble"))
             return;
     }
 
     void step3(String &word) {
-        if (replaceSuffixIfMeasure(word, "icate", "ic"))
+        if (suffixMeasure(word, "icate", "ic"))
             return;
-        if (replaceSuffixIfMeasure(word, "ative", ""))
+        if (suffixMeasure(word, "ative", ""))
             return;
-        if (replaceSuffixIfMeasure(word, "alize", "al"))
+        if (suffixMeasure(word, "alize", "al"))
             return;
-        if (replaceSuffixIfMeasure(word, "iciti", "ic"))
+        if (suffixMeasure(word, "iciti", "ic"))
             return;
-        if (replaceSuffixIfMeasure(word, "ical", "ic"))
+        if (suffixMeasure(word, "ical", "ic"))
             return;
-        if (replaceSuffixIfMeasure(word, "ful", ""))
+        if (suffixMeasure(word, "ful", ""))
             return;
-        if (replaceSuffixIfMeasure(word, "ness", ""))
+        if (suffixMeasure(word, "ness", ""))
             return;
     }
 
     void step4(String &word) {
-        if (replaceSuffixIfMeasure(word, "al", "", 1))
+        if (suffixMeasure(word, "al", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ance", "", 1))
+        if (suffixMeasure(word, "ance", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ence", "", 1))
+        if (suffixMeasure(word, "ence", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "er", "", 1))
+        if (suffixMeasure(word, "er", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ic", "", 1))
+        if (suffixMeasure(word, "ic", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "able", "", 1))
+        if (suffixMeasure(word, "able", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ible", "", 1))
+        if (suffixMeasure(word, "ible", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ant", "", 1))
+        if (suffixMeasure(word, "ant", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ement", "", 1))
+        if (suffixMeasure(word, "ement", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ment", "", 1))
+        if (suffixMeasure(word, "ment", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ent", "", 1))
+        if (suffixMeasure(word, "ent", "", 1))
             return;
         if (word.hasSuffix("ion")) {
             String stem = word.substr(0, word.length() - 3);
-            if (stem.back() == 's' || stem.back() == 't') {
-                if (measure(stem) > 1) {
+            if (stem.back() == 's' || stem.back() == 't')
+                if (measure(stem) > 1)
                     word = stem;
-                    return;
-                }
-            }
+            return;
         }
-        if (replaceSuffixIfMeasure(word, "ou", "", 1))
+        if (suffixMeasure(word, "ou", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ism", "", 1))
+        if (suffixMeasure(word, "ism", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ate", "", 1))
+        if (suffixMeasure(word, "ate", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "iti", "", 1))
+        if (suffixMeasure(word, "iti", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ous", "", 1))
+        if (suffixMeasure(word, "ous", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ive", "", 1))
+        if (suffixMeasure(word, "ive", "", 1))
             return;
-        if (replaceSuffixIfMeasure(word, "ize", "", 1))
+        if (suffixMeasure(word, "ize", "", 1))
             return;
     }
 
@@ -283,14 +278,8 @@ namespace porter {
             return;
 
         // m == 1
-        auto labels = label(stem);
-        if (labels.length() >= 3) {
-            int i = labels.length() - 3;
-            if (labels[i] == 'c' && labels[i + 1] == 'v' && labels[i + 2] == 'c')
-                return;
-        }
-
-        word.popBack();
+        if (!staro(stem))
+            word.popBack();
     }
 
     void step5b(String &word) {

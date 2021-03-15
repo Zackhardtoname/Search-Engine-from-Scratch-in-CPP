@@ -16,7 +16,11 @@ namespace porter {
 
     int measure(const String &word);
 
-    bool replaceSuffixIfMeasure(String &word, const String &suffix, const String &rpl, int m = 0);
+    // the *o construct
+    bool staro(const String& stem);
+
+    // the common construct of (m>x) S1 -> S2
+    bool suffixMeasure(String &word, const String &suffix, const String &rpl, int m = 0);
 
     void step1a(String &word);
 
