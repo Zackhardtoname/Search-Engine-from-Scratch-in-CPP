@@ -2,6 +2,11 @@
 // Created by youh on 3/14/21.
 //
 
+#include <iostream>
+
+#include "Crawler.h"
+#include "ParsedUrl.h"
+
 int main(int argc, char **argv) {
     if (argc != 2) {
         std::cerr << "Usage: ./crawler <URL>" << std::endl;
