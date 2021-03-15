@@ -265,6 +265,20 @@ class String
          return result;
          }
 
+      uint64_t hash() const
+         {
+         // FNV-1 hash
+         uint64_t result = 0xcbf29ce484222325u;
+         uint8_t *pos = reinterpret_cast<uint8_t *>( str.data() );
+         uint8_t *beyond = reinterpret_cast<uint8_t *>( str.data() + size() );
+         while ( pos < beyond )
+            {
+            result *= 0x00000100000001B3u;
+            result ^= *( pos++ );
+            }
+         return result;
+         }
+
    private:
       Vector<char> str;
    };

@@ -15,6 +15,12 @@ add_executable(crawler-side
         crawler/ParsedUrl.cpp)
 target_link_libraries(crawler-side stl ssl)
 
+add_executable(indexer
+        indexer/indexer.cpp
+        indexer/IndexChunk.cpp indexer/IndexChunk.h)
+
+# testing
+
 find_package(GTest)
 
 add_executable(testRobotstxt
