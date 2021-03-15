@@ -15,6 +15,18 @@ add_executable(crawler-side
         crawler/ParsedUrl.cpp)
 target_link_libraries(crawler-side stl ssl)
 
+add_executable(crawler-parser-worker
+        parser/HtmlParser.cpp
+        parser/HtmlLexer.cpp
+        crawler/ParsedHttpResponse.cpp
+        crawler/ParsedUrl.cpp
+        crawler/Crawler.cpp
+        crawler-parser-worker/Worker.cpp
+        stl/src/String.cpp
+        stl/src/io/utils.cpp
+        )
+target_link_libraries(crawler-parser-worker ssl)
+
 find_package(GTest)
 
 add_executable(testRobotstxt

@@ -17,6 +17,7 @@
 
 #include "../stl/include/String.h"
 #include "ParsedHttpResponse.h"
+#include "ParsedUrl.h"
 
 using scb::String;
 
