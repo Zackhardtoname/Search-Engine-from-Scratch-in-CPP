@@ -114,6 +114,29 @@ class String
          return npos;
          }
 
+      [[nodiscard]] String replace( size_t pos, size_t len, String str2 )
+         {
+         if ( pos < npos )
+            {
+            while ( len > 0 )
+                {
+                str.erase( pos );
+                --len;
+                if ( str[ pos ] == npos )
+                    {
+                    break;
+                    }
+                }
+            len = 0;
+            for( auto c : str2 )
+                {
+                str.insert( pos + len, str2[ len ] );
+                ++len;
+                }
+            }
+         return *this;
+         }
+
       [[nodiscard]] int findLast( const String &other, int start = 0 ) const
          {
          start = find( other, start );
