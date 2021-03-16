@@ -237,6 +237,9 @@ class String
 
       [[nodiscard]] String substr( uint start, int len = String::npos ) const
          {
+         if ( start >= size() )
+            return String();
+
          auto endIdx =
             len == npos ? size()
                         : std::min( static_cast<ulong>( start + len ), size() );
