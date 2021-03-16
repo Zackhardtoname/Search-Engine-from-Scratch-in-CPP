@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Set the mqueue maximum size to 1000 messages
+sudo bash -c "echo 1000 > /proc/sys/fs/mqueue/msg_max"
