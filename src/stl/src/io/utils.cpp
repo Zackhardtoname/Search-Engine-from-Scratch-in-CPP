@@ -32,7 +32,7 @@ void SetTCPNoDelay( int fd )
 addrinfo *QueryHost( const char *host, const char *service )
    {
    addrinfo hint = { /*ai_flag*/ 0,
-                     /*ai_family*/ AF_UNSPEC,
+                     /*ai_family*/ AF_INET,
                      /*ai_socktype*/ SOCK_STREAM,
                      /*ai_protocol*/ IPPROTO_TCP,
                      /*ai_addrlen*/ sizeof( addrinfo ),
@@ -41,7 +41,10 @@ addrinfo *QueryHost( const char *host, const char *service )
                      /*ai_next*/ nullptr };
    addrinfo *addrResult = nullptr;
    int status = getaddrinfo( host, service, &hint, &addrResult );
-   assert( status == 0 && "error in getaddrinfo()" );
+   if( status != 0) {
+       printf("getaddrinfo(%s:%s): %s\n", host, service, strerror(status));
+       throw std::runtime_error("getaddrinfo() error");
+   }
    return addrResult;
    }
 

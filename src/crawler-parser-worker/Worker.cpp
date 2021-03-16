@@ -60,6 +60,7 @@ int main(int argc, char **argv) {
             ParsedUrl pageUrl(buf);
             for (Link &link: parsedHtml.Links) {
                 String normalizedUrl = pageUrl.Normalize(link.Href);
+                assert(normalizedUrl.hasPrefix("http://") || normalizedUrl.hasPrefix("https://"));
                 mq_send(newLinks, normalizedUrl.data(), normalizedUrl.size(), 0);
             }
         } catch (std::exception &s) {

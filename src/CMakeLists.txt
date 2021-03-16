@@ -6,6 +6,19 @@ find_package(OpenSSL REQUIRED)
 
 add_subdirectory(stl)
 
+add_executable(crawlerCmdline
+        parser/ParsedHtml.cpp
+        parser/HtmlLexer.cpp
+        crawler/ParsedHttpResponse.cpp
+        crawler/ParsedUrl.cpp
+        crawler/Crawler.cpp
+        stl/src/String.cpp
+        stl/src/io/utils.cpp
+        crawler/CrawlerCmdline.cpp
+        indexer/PorterStemming.cpp
+        )
+target_link_libraries(crawlerCmdline ssl rt crypto)
+
 add_executable(crawler-parser-worker
         parser/ParsedHtml.cpp
         parser/HtmlLexer.cpp
@@ -18,7 +31,7 @@ add_executable(crawler-parser-worker
         crawler-parser-worker/Worker.cpp
         indexer/PorterStemming.cpp
         )
-target_link_libraries(crawler-parser-worker ssl rt)
+target_link_libraries(crawler-parser-worker ssl rt crypto)
 
 add_executable(dummy-filter
         filter/DummyFilterWorker.cpp

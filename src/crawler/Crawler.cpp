@@ -1,12 +1,14 @@
 #include <cassert>
 #include <netdb.h>
 #include <openssl/ssl.h>
+#include <openssl/err.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "../stl/include/io/utils.h"
 #include "../stl/include/RAII.h"
 #include <iostream>
+#include <string>
 #include <utility>
 
 #include "ParsedUrl.h"
@@ -16,6 +18,16 @@
 // TODO: make it so that we abort on lengthy response, and/or timeout
 // TODO: setup build file for test
 // TODO: error handling, catch the exception thrown
+
+std::string getOpenSSLError() {
+    BIO *bio = BIO_new(BIO_s_mem());
+    ERR_print_errors(bio);
+    char *buf;
+    size_t len = BIO_get_mem_data(bio, &buf);
+    std::string ret(buf, len);
+    BIO_free(bio);
+    return ret;
+}
 
 String HttpGet(const ParsedUrl &url) {
     // Create and connect a socket.
@@ -70,8 +82,10 @@ String HttpGet(const ParsedUrl &url) {
 
         for (int sent = 0; sent < getRequest.size();) {
             int n = SSL_write(ssl, getRequest.data() + sent, getRequest.size() - sent);
-            if (n <= 0)
+            if (n <= 0) {
+                std::cout << getOpenSSLError() << std::endl;
                 throw NetworkException();
+            }
             sent += n;
         }
 
@@ -96,10 +110,13 @@ ParsedHttpResponse FetchUrl(String url) {
         ParsedHttpResponse parsedResp(resp);
         if (parsedResp.StatusCode == "200")
             return parsedResp;
-        if (parsedResp.StatusCode == "301" || parsedResp.StatusCode == "307" || parsedResp.StatusCode == "308")
-            url = parsedResp.Location;
-        else
+        if (parsedResp.StatusCode == "301" || parsedResp.StatusCode == "302" || parsedResp.StatusCode == "307" ||
+            parsedResp.StatusCode == "308")
+            url = parsedUrl.Normalize(parsedResp.Location);
+        else {
+            printf("status: %s\n", parsedResp.StatusCode.cstr());
             throw HttpRequestError("status code not handled");
+        }
         // TODO: should we, and how do we, handle HTTP 50x?
     }
 
