@@ -32,6 +32,11 @@ add_executable(indexer
         indexer/PorterStemming.cpp
         )
 
+add_executable(CheckMQs
+        utils/CheckMQs.cpp
+        )
+target_link_libraries(CheckMQs rt)
+
 # testing
 
 find_package(GTest)
