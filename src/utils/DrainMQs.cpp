@@ -11,7 +11,7 @@ int main() {
     mqd_t frontier = mq_open(FRONTIER_MQ, O_RDONLY | O_NONBLOCK);
     assert(frontier != -1 && "mq_open() failed");
 
-    mqd_t newLinks = mq_open(NEW_LINKS_QUEUE, O_RDONLY) | O_NONBLOCK;
+    mqd_t newLinks = mq_open(NEW_LINKS_QUEUE, O_RDONLY | O_NONBLOCK);
     assert(frontier != -1 && "mq_open() failed");
 
     char buf[MAX_URL_LEN + 1];

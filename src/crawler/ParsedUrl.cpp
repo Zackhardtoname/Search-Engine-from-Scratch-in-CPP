@@ -37,27 +37,33 @@ ParsedUrl::ParsedUrl(const String &url) {
     hostStart = i;
     for (; i < CompleteUrl.size() && CompleteUrl[i] != '?'; i++);
     Path = CompleteUrl.substr(hostStart, i - hostStart);
+    if (Path.empty())
+        Path = "/";
 }
 
 String ParsedUrl::Normalize(const String &path) {
-    if(path.hasPrefix("mailto:") || path.hasPrefix("tel:"))
+    if (path.hasPrefix("mailto:") || path.hasPrefix("tel:"))
         return ""; // not crawlable
     // edge case
     if (path.empty())
-        return CompleteUrl;
+        return Service + "://" + HostPort;
     // if fully qualified
     if (path.hasPrefix("http://") || path.hasPrefix("https://"))
-        return path;
+        return ParsedUrl(path).CompleteUrl;
 
-    // if absolute path
-    if (path.front() == '/')
-        return Service + "://" + HostPort + path;
-
-    // relative path
-    String result = Service + "://" + HostPort + Path;
-    if (result.back() != '/')
-        result.pushBack('/');
-    result += path;
-
-    return ParsedUrl(result).CompleteUrl;
+    // if relative path, we only handle this case and not
+    // those nefarious "../" kinda stuffs
+    if (path.hasPrefix("./")) {
+        String result = Service + "://" + HostPort + Path;
+        if (result.back() != '/')
+            result.pushBack('/');
+        result += path;
+        return ParsedUrl(result).CompleteUrl;
+    } else {
+        // absolute path
+        if (path.front() == '/')
+            return Service + "://" + HostPort + path;
+        else
+            return Service + "://" + HostPort + "/" + path;
+    }
 }
