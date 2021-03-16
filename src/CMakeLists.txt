@@ -22,6 +22,7 @@ target_link_libraries(crawler-parser-worker ssl rt)
 
 add_executable(dummy-filter
         filter/DummyFilterWorker.cpp
+        stl/src/String.cpp
         )
 target_link_libraries(dummy-filter rt)
 

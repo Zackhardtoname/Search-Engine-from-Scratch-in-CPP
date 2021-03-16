@@ -28,40 +28,45 @@ int main(int argc, char **argv) {
         assert(sz != -1 && "mq_receive() failed");
         buf[sz] = '\0';
 
-        auto httpResp = FetchUrl(buf);
+        std::cout << "crawling: " << buf << std::endl;
 
-        std::cout << "crawled: " << buf << std::endl;
+        try {
+            auto httpResp = FetchUrl(buf);
 
-        // filter out non-english page by HTTP
-        if (!httpResp.Language.empty() && !httpResp.Language.hasPrefix("en"))
+            // filter out non-english page by HTTP
+            if (!httpResp.Language.empty() && !httpResp.Language.hasPrefix("en"))
+                continue;
+
+            ParsedHtml parsedHtml(httpResp.Body);
+            // filter out non-english page by HTML
+            if (!parsedHtml.Language.empty() && !parsedHtml.Language.hasPrefix("en"))
+                continue;
+
+            // apply porter stemming here, since we are going to apply
+            // the transformation eventually anyway, we might as well reuse
+            // some of that work.
+            for (String &word: parsedHtml.Words)
+                word = PorterStem(word);
+            for (String &word: parsedHtml.TitleWords)
+                word = PorterStem(word);
+
+            // check dictionary for language
+            if (!englishDictChecker.Check(parsedHtml))
+                continue;
+
+            // TODO: post parsedHtml to the indexer queue
+
+            // post URLs to the bloom filter queue
+            ParsedUrl pageUrl(buf);
+            for (Link &link: parsedHtml.Links) {
+                String normalizedUrl = pageUrl.Normalize(link.Href);
+                mq_send(newLinks, normalizedUrl.data(), normalizedUrl.size(), 0);
+            }
+        } catch (std::exception &s) {
+            // we're not going to recover anyway
+            std::cout << "failed: " << s.what() << std::endl;
             continue;
-
-        ParsedHtml parsedHtml(httpResp.Body);
-        // filter out non-english page by HTML
-        if (!parsedHtml.Language.empty() && !parsedHtml.Language.hasPrefix("en"))
-            continue;
-
-        // apply porter stemming here, since we are going to apply
-        // the transformation eventually anyway, we might as well reuse
-        // some of that work.
-        for (String &word: parsedHtml.Words)
-            word = PorterStem(word);
-        for (String &word: parsedHtml.TitleWords)
-            word = PorterStem(word);
-
-        // check dictionary for language
-        if (!englishDictChecker.Check(parsedHtml))
-            continue;
-
-        // TODO: post parsedHtml to the indexer queue
-
-        // post URLs to the bloom filter queue
-        ParsedUrl pageUrl(buf);
-        for (Link &link: parsedHtml.Links) {
-            String normalizedUrl = pageUrl.Normalize(link.Href);
-            mq_send(newLinks, normalizedUrl.data(), normalizedUrl.size(), 0);
         }
-        sleep(1); // TODO: testing only
     }
 
     return 0;
