@@ -47,7 +47,7 @@ String ParsedUrl::Normalize(const String &path) {
         return Service + "://" + HostPort + path;
 
     // relative path
-    String result = Service + "://" + Path;
+    String result = Service + "://" + HostPort + Path;
     if (result.back() != '/')
         result.pushBack('/');
     result += path;

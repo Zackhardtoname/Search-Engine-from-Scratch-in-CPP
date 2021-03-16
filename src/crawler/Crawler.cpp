@@ -19,7 +19,7 @@
 
 String HttpGet(const ParsedUrl &url) {
     // Create and connect a socket.
-    addrinfo *addr = QueryHost(url.Host, strlen(url.Port) == 0 ? url.Service : url.Port);
+    addrinfo *addr = QueryHost(url.Host.cstr(), url.Port.length() == 0 ? url.Service.cstr() : url.Port.cstr());
     Defer freeAddrinfo([&]() { freeaddrinfo(addr); });
 
     int sockFd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
@@ -32,7 +32,7 @@ String HttpGet(const ParsedUrl &url) {
 
     // Prepare a GET message
     String getRequest =
-            String("GET /") + url.Path +
+            String("GET ") + url.Path +
             " HTTP/1.1\r\n"
             "Host: " + url.Host + " \r\n" +
             "User-Agent: LinuxGetUrl/2.0 zackLt@umich.edu (Linux)\r\n"
@@ -43,7 +43,7 @@ String HttpGet(const ParsedUrl &url) {
 
     String response;
     char buffer[10240];
-    if (strcmp(url.Service, "http") == 0) {
+    if (url.Service == "http") {
         for (int sent = 0; sent < getRequest.size();) {
             int n = send(sockFd, getRequest.data() + sent, getRequest.size() - sent, 0);
             if (n <= 0)
@@ -54,7 +54,7 @@ String HttpGet(const ParsedUrl &url) {
         int got;
         while ((got = recv(sockFd, buffer, sizeof(buffer), 0)))
             response += String(buffer, got);
-    } else if (strcmp(url.Service, "https") == 0) {
+    } else if (url.Service == "https") {
         SSL_library_init();
         SSL_CTX *ctx = SSL_CTX_new(TLS_method());
         SSL *ssl = SSL_new(ctx);

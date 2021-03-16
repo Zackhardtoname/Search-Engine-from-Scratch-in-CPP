@@ -27,7 +27,7 @@ ParsedHtml::ParsedHtml(const String &buffer) {
         // So handle both here.
         if (entity.TagName.EqualsCaseInsensitive("base") && Base.empty()) {
             if (auto *attr = entity.FindAttr("href"))
-                Base = attr->second.Str();
+                Base = attr->second.Str().stripped();
             continue;
         }
 
@@ -52,7 +52,7 @@ ParsedHtml::ParsedHtml(const String &buffer) {
                 if (entity.TagName.EqualsCaseInsensitive("a")) {
                     String href;
                     if (auto *attr = entity.FindAttr("href"))
-                        href = attr->second.Str();
+                        href = attr->second.Str().stripped();
                     pendingLinks.pushBack((unsigned) Links.size());
                     Links.emplaceBack(href);
                 }

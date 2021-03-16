@@ -13,10 +13,10 @@ using scb::Vector;
 
 class Link {
 public:
-    String URL;
+    String Href;
     Vector<String> AnchorText;
 
-    explicit Link(String URL) : URL(std::move(URL)) {}
+    explicit Link(String URL) : Href(std::move(URL)) {}
 };
 
 /// A Html Parser

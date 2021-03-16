@@ -6,15 +6,6 @@ find_package(OpenSSL REQUIRED)
 
 add_subdirectory(stl)
 
-add_executable(crawler-side
-        crawler/Crawler.cpp
-        crawler/ParsedHttpResponse.cpp
-        indexer/VLQ.cpp
-        crawler/Robotstxt.cpp
-        stl/src/String.cpp
-        crawler/ParsedUrl.cpp)
-target_link_libraries(crawler-side stl ssl)
-
 add_executable(crawler-parser-worker
         parser/ParsedHtml.cpp
         parser/HtmlLexer.cpp
@@ -23,15 +14,23 @@ add_executable(crawler-parser-worker
         crawler/Crawler.cpp
         stl/src/String.cpp
         stl/src/io/utils.cpp
-#        crawler-parser-worker/WorkerCmdline.cpp
+        #        crawler-parser-worker/WorkerCmdline.cpp
         crawler-parser-worker/Worker.cpp
-        crawler-parser-worker/EnglishDictChecker.cpp
+        indexer/PorterStemming.cpp
         )
 target_link_libraries(crawler-parser-worker ssl rt)
 
+add_executable(dummy-filter
+        filter/DummyFilterWorker.cpp
+        )
+target_link_libraries(dummy-filter rt)
+
 add_executable(indexer
         indexer/Worker.cpp
-        indexer/IndexChunk.cpp indexer/IndexChunk.h indexer/PorterStemming.cpp indexer/PorterStemming.h)
+        indexer/IndexChunk.cpp
+        indexer/IndexChunk.h
+        indexer/PorterStemming.cpp
+        )
 
 # testing
 
