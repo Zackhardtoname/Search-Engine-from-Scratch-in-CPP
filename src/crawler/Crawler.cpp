@@ -105,7 +105,7 @@ ParsedHttpResponse FetchUrl(String url) {
     // malfunctioning. We only redirect for a generous MAX_REDIRECTION number
     // of times and stop following after that.
     for (int nRedirect = 0; nRedirect < MAX_REDIRECTION; nRedirect++) {
-        ParsedUrl parsedUrl(url.cstr());
+        ParsedUrl parsedUrl(url);
         String resp = HttpGet(parsedUrl);
         ParsedHttpResponse parsedResp(resp);
         if (parsedResp.StatusCode == "200")

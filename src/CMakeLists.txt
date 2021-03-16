@@ -51,6 +51,11 @@ add_executable(CheckMQs
         )
 target_link_libraries(CheckMQs rt)
 
+add_executable(DrainMQs
+        utils/DrainMQs.cpp
+        )
+target_link_libraries(DrainMQs rt)
+
 # testing
 
 find_package(GTest)
