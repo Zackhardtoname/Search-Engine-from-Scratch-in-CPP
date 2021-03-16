@@ -16,10 +16,10 @@
 EXECUTABLE  = worker
 
 # Change 'source_files' to match the project source files
-SOURCE_FILES = Worker.cpp ../crawler/Crawler.cpp ../crawler/ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ../crawler/ParsedHttpResponse.cpp ../parser/HtmlParser.cpp ../parser/HtmlLexer.cpp
+SOURCE_FILES = WorkerCmdline.cpp ../crawler/Crawler.cpp ../crawler/ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ../crawler/ParsedHttpResponse.cpp ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp
 
 # Change 'header_files' to match the project source files
-HEADER_FILES = Worker.h ../crawler/Crawler.h ../crawler/ParsedUrl.h ../parser/HtmlParser.h ../parser/HtmlLexer.h
+HEADER_FILES = WorkerCmdline.h ../crawler/Crawler.h ../crawler/ParsedUrl.h ../parser/ParsedHtml.h ../parser/HtmlLexer.h
 
 #######################
 # TODO (end) #
@@ -50,7 +50,7 @@ PERF_FILE = perf.data*
 #Default Flags (we prefer -std=c++17 but Mac/Xcode/Clang doesn't support)
 CXXFLAGS = -std=c++1z -pedantic#-Werror -Wconversion -Wall -Wextra
 
-LINK_FLAGS = -lssl
+LINK_FLAGS = -lssl -lrt
 
 # make release - will compile "all" with $(CXXFLAGS) and the -O3 flag
 #                also defines NDEBUG so that asserts will not check

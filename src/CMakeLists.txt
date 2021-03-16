@@ -21,7 +21,7 @@ add_executable(crawler-parser-worker
         crawler/ParsedHttpResponse.cpp
         crawler/ParsedUrl.cpp
         crawler/Crawler.cpp
-        crawler-parser-worker/Worker.cpp
+        crawler-parser-worker/WorkerCmdline.cpp
         stl/src/String.cpp
         stl/src/io/utils.cpp
         defs.h crawler-parser-worker/EnglishDictChecker.cpp crawler-parser-worker/EnglishDictChecker.h)

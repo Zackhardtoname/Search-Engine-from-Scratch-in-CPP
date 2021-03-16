@@ -16,7 +16,7 @@
 EXECUTABLE  = crawler
 
 # Change 'source_files' to match the project source files
-SOURCE_FILES = Crawler.cpp ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ParsedHttpResponse.cpp CrawlerMain.cpp
+SOURCE_FILES = Crawler.cpp ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ParsedHttpResponse.cpp CrawlerCmdline.cpp
 
 # Change 'header_files' to match the project source files
 HEADER_FILES = Crawler.h ParsedUrl.h
