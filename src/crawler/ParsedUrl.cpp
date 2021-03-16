@@ -5,51 +5,65 @@
 #include <cstring>
 #include "ParsedUrl.h"
 
-ParsedUrl::ParsedUrl(const char *url) {
-    // Assumes url points to static text but
-    // does not check.
+ParsedUrl::ParsedUrl(const String &url) {
+    // anything after pound is meaningless as page URL
+    int pound = url.find("#");
+    if (pound == String::npos)
+        CompleteUrl = url;
+    else
+        CompleteUrl = url.substr(0, pound);
 
-    CompleteUrl = url;
+    // Service
+    int i = 0;
+    for (; i < CompleteUrl.size() && CompleteUrl[i] != ':'; i++);
+    Service = CompleteUrl.substr(0, i);
 
-    pathBuffer = new char[strlen(url) + 1];
-    const char *f;
-    char *t;
-    for (t = pathBuffer, f = url; *t++ = *f++;);
+    // Host
+    i += 3;
+    int hostStart = i;
+    for (; i < CompleteUrl.size() && CompleteUrl[i] != ':' && CompleteUrl[i] != '/'; i++);
+    Host = CompleteUrl.substr(hostStart, i - hostStart);
 
-    Service = pathBuffer;
+    // Port
+    if (i < CompleteUrl.size() && CompleteUrl[i] == ':') {
+        int portStart = i + 1;
+        for (; i < CompleteUrl.size() && CompleteUrl[i] != '/'; i++);
+        Port = CompleteUrl.substr(portStart, i - portStart);
+    }
 
-    const char Colon = ':', Slash = '/';
-    char *p;
-    for (p = pathBuffer; *p && *p != Colon; p++);
+    HostPort = CompleteUrl.substr(hostStart, i - hostStart);
 
-    if (*p) {
-        // Mark the end of the Service.
-        *p++ = 0;
+    // Path
+    hostStart = i;
+    for (; i < CompleteUrl.size() && CompleteUrl[i] != '?'; i++);
+    Path = CompleteUrl.substr(hostStart, i - hostStart);
+    if (Path.empty())
+        Path = "/";
+}
 
-        if (*p == Slash)
-            p++;
-        if (*p == Slash)
-            p++;
+String ParsedUrl::Normalize(const String &path) {
+    if (path.hasPrefix("mailto:") || path.hasPrefix("tel:"))
+        return ""; // not crawlable
+    // edge case
+    if (path.empty())
+        return Service + "://" + HostPort;
+    // if fully qualified
+    if (path.hasPrefix("http://") || path.hasPrefix("https://"))
+        return ParsedUrl(path).CompleteUrl;
 
-        Host = p;
-
-        for (; *p && *p != Slash && *p != Colon; p++);
-
-        if (*p == Colon) {
-            // Port specified.  Skip over the colon and
-            // the port number.
-            *p++ = 0;
-            Port = +p;
-            for (; *p && *p != Slash; p++);
-        } else
-            Port = p;
-
-        if (*p)
-            // Mark the end of the Host and Port.
-            *p++ = 0;
-
-        // Whatever remains is the Path.
-        Path = p;
-    } else
-        Host = Path = p;
+    // if relative path, we only handle this case and not
+    // those nefarious "../" kinda stuffs
+    if (path.hasPrefix("./")) {
+        String result = Service + "://" + HostPort + Path;
+        if (result.back() != '/')
+            result.pushBack('/');
+        result += path;
+        return ParsedUrl(result).CompleteUrl;
+    } else {
+        // absolute path
+        if (path.front() == '/')
+            return ParsedUrl(Service + "://" + HostPort + path).CompleteUrl;
+        else
+            return ParsedUrl(Service + "://" + HostPort + "/" + path).CompleteUrl;
+    }
 }

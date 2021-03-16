@@ -3,6 +3,8 @@
 //
 
 #include <iostream>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 #include "Crawler.h"
 #include "ParsedUrl.h"
@@ -13,8 +15,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // TODO: convert this into the main controller thread that will be
-    //  calling a url on this crawler.
+    SSL_load_error_strings();
+    ERR_load_crypto_strings();
+
+//    auto httpResp = FetchUrl("https://republic.co/gumroad");
     auto httpResp = FetchUrl(argv[1]);
     // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); // test chunked
     std::cout << "code: " << httpResp.StatusCode << '\n'
@@ -24,4 +28,3 @@ int main(int argc, char **argv) {
               << httpResp.Body;
     return 0;
 }
-

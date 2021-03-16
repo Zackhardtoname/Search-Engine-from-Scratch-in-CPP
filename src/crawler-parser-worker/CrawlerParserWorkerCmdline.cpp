@@ -16,7 +16,7 @@
 #include "../crawler/ParsedUrl.h"
 #include "../crawler/Crawler.h"
 #include "../crawler/ParsedHttpResponse.h"
-#include "../parser/HtmlParser.h"
+#include "../parser/ParsedHtml.h"
 #include "common.h"
 
 enum class Options
@@ -29,32 +29,32 @@ enum class Options
 
 Options option = Options::PrintWords;
 
-void PrintParse( HtmlParser &parser )
+void PrintParse( ParsedHtml &parsedHtml )
    {
    switch ( option )
       {
       case Options::PrintWords:
-         for ( auto w : parser.words )
+         for ( auto w : parsedHtml.Words )
             std::cout << w << std::endl;
          break;
 
       case Options::PrintTitleWords:
-         for ( auto w : parser.titleWords )
+         for ( auto w : parsedHtml.TitleWords )
             std::cout << w << std::endl;
          break;
 
       case Options::PrintLinks:
-         for ( auto link : parser.links )
+         for ( auto link : parsedHtml.Links )
             {
             std::cout << link.URL << " ( ";
-            for ( auto w : link.anchorText )
+            for ( auto w : link.AnchorText )
                std::cout << w << " ";
             std::cout << ")" << std::endl;
             }
          break;
 
       case Options::PrintBase:
-         std::cout << parser.base << std::endl;
+         std::cout << parsedHtml.Base << std::endl;
       }
    }
 
@@ -144,12 +144,12 @@ int main(int argc, char **argv) {
 
         // Crawl and Parse the URL popped from the message queue
         auto httpResp = FetchUrl(buffer);
-        HtmlParser parser( httpResp.Body );
+        ParsedHtml parsedHtml(httpResp.Body );
         //PrintParse( parser );
 
         // After parsing the original URL, send every URL within its HTML
         // to the message queue
-        for(auto link : parser.links) {
+        for(auto link : parsedHtml.Links) {
             // First check if the message queue is full, and break if it is
             struct mq_attr *cur_attr = &attr;
             mq_getattr(mq, cur_attr);
