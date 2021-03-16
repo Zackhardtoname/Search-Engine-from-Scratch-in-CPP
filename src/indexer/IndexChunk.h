@@ -39,6 +39,8 @@ public:
     size_t estSize = 0;
 
     void Ingest(IndexerIngest &injest);
+
+    void Persist();
 };
 
 
