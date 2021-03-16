@@ -68,7 +68,7 @@ String HttpGet(const ParsedUrl &url) {
             response += String(buffer, got);
     } else if (url.Service == "https") {
         SSL_library_init();
-        SSL_CTX *ctx = SSL_CTX_new(TLS_method());
+        SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
         SSL *ssl = SSL_new(ctx);
 
         SSL_set_fd(ssl, sockFd);

@@ -62,8 +62,8 @@ String ParsedUrl::Normalize(const String &path) {
     } else {
         // absolute path
         if (path.front() == '/')
-            return Service + "://" + HostPort + path;
+            return ParsedUrl(Service + "://" + HostPort + path).CompleteUrl;
         else
-            return Service + "://" + HostPort + "/" + path;
+            return ParsedUrl(Service + "://" + HostPort + "/" + path).CompleteUrl;
     }
 }
