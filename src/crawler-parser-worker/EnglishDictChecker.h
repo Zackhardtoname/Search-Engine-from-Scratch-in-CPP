@@ -7,7 +7,14 @@
 
 
 class EnglishDictChecker {
+public:
+    bool Check(const ParsedHtml &parsedHtml) {
+        return true;
+    }
 
+    EnglishDictChecker(const char* refFile) {
+
+    }
 };
 
 
