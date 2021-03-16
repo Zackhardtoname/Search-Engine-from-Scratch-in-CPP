@@ -5,51 +5,51 @@
 #include <cstring>
 #include "ParsedUrl.h"
 
-ParsedUrl::ParsedUrl(const char *url) {
-    // Assumes url points to static text but
-    // does not check.
-
+ParsedUrl::ParsedUrl(const String &url) {
     CompleteUrl = url;
 
-    pathBuffer = new char[strlen(url) + 1];
-    const char *f;
-    char *t;
-    for (t = pathBuffer, f = url; *t++ = *f++;);
+    // Service
+    int i = 0;
+    for (; i < url.size() && url[i] != ':'; i++);
+    Service = url.substr(0, i);
 
-    Service = pathBuffer;
+    // Host
+    i += 3;
+    int hostStart = i;
+    for (; i < url.size() && url[i] != ':' && url[i] != '/'; i++);
+    Host = url.substr(hostStart, i - hostStart);
 
-    const char Colon = ':', Slash = '/';
-    char *p;
-    for (p = pathBuffer; *p && *p != Colon; p++);
+    // Port
+    if (i < url.size() && url[i] == ':') {
+        int portStart = i + 1;
+        for (; i < url.size() && url[i] != '/'; i++);
+        Port = url.substr(portStart, i - portStart);
+    }
 
-    if (*p) {
-        // Mark the end of the Service.
-        *p++ = 0;
+    HostPort = url.substr(hostStart, i - hostStart);
 
-        if (*p == Slash)
-            p++;
-        if (*p == Slash)
-            p++;
+    // Path
+    hostStart = i;
+    for (; i < url.size() && url[i] != '?'; i++);
+    Path = url.substr(hostStart, i - hostStart);
+}
 
-        Host = p;
+String ParsedUrl::Normalize(const String &path) {
+    // edge case
+    if (path.empty())
+        return CompleteUrl;
+    // if fully qualified
+    if (path.hasPrefix("http://") || path.hasPrefix("https://"))
+        return path;
 
-        for (; *p && *p != Slash && *p != Colon; p++);
+    // if absolute path
+    if (path.front() == '/')
+        return Service + "://" + HostPort + path;
 
-        if (*p == Colon) {
-            // Port specified.  Skip over the colon and
-            // the port number.
-            *p++ = 0;
-            Port = +p;
-            for (; *p && *p != Slash; p++);
-        } else
-            Port = p;
-
-        if (*p)
-            // Mark the end of the Host and Port.
-            *p++ = 0;
-
-        // Whatever remains is the Path.
-        Path = p;
-    } else
-        Host = Path = p;
+    // relative path
+    String result = Service + "://" + Path;
+    if (result.back() != '/')
+        result.pushBack('/');
+    result += path;
+    return result;
 }

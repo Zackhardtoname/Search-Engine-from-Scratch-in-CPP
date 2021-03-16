@@ -5,20 +5,19 @@
 #ifndef CRAWLER_PARSEDURL_H
 #define CRAWLER_PARSEDURL_H
 
+#include "../stl/include/String.h"
+
+using scb::String;
 
 class ParsedUrl {
 public:
-    const char *CompleteUrl;
-    char *Service, *Host, *Port, *Path;
+    String CompleteUrl;
+    String Service, Host, Port, HostPort, Path;
 
-    explicit ParsedUrl(const char *url);
+    explicit ParsedUrl(const String &url);
 
-    ~ParsedUrl() {
-        delete[] pathBuffer;
-    }
-
-private:
-    char *pathBuffer;
+    // Normalize the given path with this URL
+    String Normalize(const String &path);
 };
 
 
