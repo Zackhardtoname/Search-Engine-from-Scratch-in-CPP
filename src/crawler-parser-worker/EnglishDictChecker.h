@@ -12,11 +12,12 @@
 #include "../parser/ParsedHtml.h"
 #include "../stl/include/String.h"
 #include "../indexer/IndexChunk.h"
+#include "../indexer/PorterStemming.h"
 
 using scb::String;
 
 class EnglishDictChecker {
-    constexpr static float ENGLISH_THRESHOLD = 0.6;
+    constexpr static float ENGLISH_THRESHOLD = 0.35;
 
     std::unordered_set<String, StringHash> vocab;
 public:
@@ -28,11 +29,14 @@ public:
         return hit > parsedHtml.Words.size() * ENGLISH_THRESHOLD;
     }
 
-    explicit EnglishDictChecker(const char *refFile) {
-        std::fstream f(refFile);
+    explicit EnglishDictChecker(const char *vocabFile) {
+        std::fstream f(vocabFile);
         std::string word;
-        while (f >> word)
-            vocab.insert(String(word.c_str()));
+        while (f >> word) {
+            String stem = PorterStem(String(word.c_str()));
+            vocab.insert(stem);
+        }
+        assert(!vocab.empty() && "empty vocabulary");
     }
 };
 
