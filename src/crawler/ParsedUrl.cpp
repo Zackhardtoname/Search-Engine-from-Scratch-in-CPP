@@ -40,6 +40,8 @@ ParsedUrl::ParsedUrl(const String &url) {
 }
 
 String ParsedUrl::Normalize(const String &path) {
+    if(path.hasPrefix("mailto:") || path.hasPrefix("tel:"))
+        throw std::invalid_argument("Uncrawlable link");
     // edge case
     if (path.empty())
         return CompleteUrl;

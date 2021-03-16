@@ -5,10 +5,10 @@
 # TODO (begin) #
 #######################
 # Change 'executable' to match the command for the given component
-EXECUTABLE  = worker
+EXECUTABLE  = crawler-parser-worker
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = Worker.cpp ../crawler/Crawler.cpp ../crawler/ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ../crawler/ParsedHttpResponse.cpp ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp
+SOURCE_FILES = CrawlerParserWorker.cpp ../crawler/Crawler.cpp ../crawler/ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ../crawler/ParsedHttpResponse.cpp ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp ../indexer/PorterStemming.cpp
 
 #######################
 # TODO (end) #
@@ -24,7 +24,7 @@ OBJECTS =  $(SOURCE_FILES:.cpp=.o)
 CXXFLAGS = -std=c++1z -pedantic -Ofast#-Werror -Wconversion -Wall -Wextra
 
 # Libararies needed to link, including ssl and mqueue
-LINK_FLAGS = -lssl -lrt
+LINK_FLAGS = -lssl -lrt -lcrypto
 
 # make all - set as default command run
 all: $(SOURCE_FILES) $(EXECUTABLE)

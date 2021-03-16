@@ -28,7 +28,7 @@ add_executable(crawler-parser-worker
         stl/src/String.cpp
         stl/src/io/utils.cpp
         #        crawler-parser-worker/WorkerCmdline.cpp
-        crawler-parser-worker/Worker.cpp
+        crawler-parser-worker/CrawlerParserWorker.cpp
         indexer/PorterStemming.cpp
         )
 target_link_libraries(crawler-parser-worker ssl rt crypto)

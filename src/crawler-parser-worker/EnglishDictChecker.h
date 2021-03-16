@@ -24,7 +24,7 @@ public:
     bool Check(const ParsedHtml &parsedHtml) {
         int hit = 0;
         for (String &word: parsedHtml.Words)
-            if (vocab.contains(word))
+            if (vocab.count(word))
                 hit++;
         return hit > parsedHtml.Words.size() * ENGLISH_THRESHOLD;
     }
