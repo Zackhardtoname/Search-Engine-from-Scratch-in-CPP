@@ -24,7 +24,7 @@ OBJECTS =  $(SOURCE_FILES:.cpp=.o)
 CXXFLAGS = -std=c++1z -pedantic -Ofast#-Werror -Wconversion -Wall -Wextra
 
 # Libararies needed to link, including ssl and mqueue
-LINK_FLAGS = -lssl -lrt
+LINK_FLAGS = -lssl -lrt -lcrypto
 
 # make all - set as default command run
 all: $(SOURCE_FILES) $(EXECUTABLE)
