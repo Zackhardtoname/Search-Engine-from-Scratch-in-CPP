@@ -77,7 +77,7 @@ int main() {
                     assert(false && "mq_send() failed");
             } else {
                 std::cout << "posted: " << url << std::endl;
-                sleep(1); // TODO: testing only
+                sleep(1); // TODO: delete this after we have crawl rate control
             }
         }
 

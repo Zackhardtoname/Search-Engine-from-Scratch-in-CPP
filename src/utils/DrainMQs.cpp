@@ -25,4 +25,9 @@ int main() {
         buf[sz] = '\0';
         std::cout << "new links: " << buf << std::endl;
     }
+
+    mq_close(frontier);
+    mq_close(newLinks);
+    mq_unlink(FRONTIER_MQ);
+    mq_unlink(NEW_LINKS_QUEUE);
 }

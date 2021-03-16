@@ -17,7 +17,8 @@
 
 // TODO: make it so that we abort on lengthy response, and/or timeout
 // TODO: setup build file for test
-// TODO: error handling, catch the exception thrown
+// TODO: make it so that we abort on binary (i.e. non html or text) response
+
 
 std::string getOpenSSLError() {
     BIO *bio = BIO_new(BIO_s_mem());
