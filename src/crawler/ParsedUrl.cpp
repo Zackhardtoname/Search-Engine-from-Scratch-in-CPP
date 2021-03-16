@@ -6,32 +6,37 @@
 #include "ParsedUrl.h"
 
 ParsedUrl::ParsedUrl(const String &url) {
-    CompleteUrl = url;
+    // anything after pound is meaningless as page URL
+    int pound = url.find("#");
+    if (pound == String::npos)
+        CompleteUrl = url;
+    else
+        CompleteUrl = url.substr(0, pound);
 
     // Service
     int i = 0;
-    for (; i < url.size() && url[i] != ':'; i++);
-    Service = url.substr(0, i);
+    for (; i < CompleteUrl.size() && CompleteUrl[i] != ':'; i++);
+    Service = CompleteUrl.substr(0, i);
 
     // Host
     i += 3;
     int hostStart = i;
-    for (; i < url.size() && url[i] != ':' && url[i] != '/'; i++);
-    Host = url.substr(hostStart, i - hostStart);
+    for (; i < CompleteUrl.size() && CompleteUrl[i] != ':' && CompleteUrl[i] != '/'; i++);
+    Host = CompleteUrl.substr(hostStart, i - hostStart);
 
     // Port
-    if (i < url.size() && url[i] == ':') {
+    if (i < CompleteUrl.size() && CompleteUrl[i] == ':') {
         int portStart = i + 1;
-        for (; i < url.size() && url[i] != '/'; i++);
-        Port = url.substr(portStart, i - portStart);
+        for (; i < CompleteUrl.size() && CompleteUrl[i] != '/'; i++);
+        Port = CompleteUrl.substr(portStart, i - portStart);
     }
 
-    HostPort = url.substr(hostStart, i - hostStart);
+    HostPort = CompleteUrl.substr(hostStart, i - hostStart);
 
     // Path
     hostStart = i;
-    for (; i < url.size() && url[i] != '?'; i++);
-    Path = url.substr(hostStart, i - hostStart);
+    for (; i < CompleteUrl.size() && CompleteUrl[i] != '?'; i++);
+    Path = CompleteUrl.substr(hostStart, i - hostStart);
 }
 
 String ParsedUrl::Normalize(const String &path) {
@@ -51,5 +56,6 @@ String ParsedUrl::Normalize(const String &path) {
     if (result.back() != '/')
         result.pushBack('/');
     result += path;
-    return result;
+
+    return ParsedUrl(result).CompleteUrl;
 }
