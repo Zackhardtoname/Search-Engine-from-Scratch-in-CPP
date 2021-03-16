@@ -119,20 +119,20 @@ class String
          if ( pos < npos )
             {
             while ( len > 0 )
-                {
-                str.erase( pos );
-                --len;
-                if ( str[ pos ] == npos )
-                    {
-                    break;
-                    }
-                }
+               {
+               str.erase( pos );
+               --len;
+               if ( str[ pos ] == npos )
+                  {
+                  break;
+                  }
+               }
             len = 0;
-            for( auto c : str2 )
-                {
-                str.insert( pos + len, str2[ len ] );
-                ++len;
-                }
+            for ( auto c : str2 )
+               {
+               str.insert( pos + len, str2[ len ] );
+               ++len;
+               }
             }
          return *this;
          }
@@ -237,6 +237,9 @@ class String
 
       [[nodiscard]] String substr( uint start, int len = String::npos ) const
          {
+         if ( start >= size() )
+            return String();
+
          auto endIdx =
             len == npos ? size()
                         : std::min( static_cast<ulong>( start + len ), size() );
@@ -277,6 +280,11 @@ class String
          {
          for ( auto &character : str )
             character = tolower( character );
+         }
+
+      [[nodiscard]] char &front() const
+         {
+         return str[ 0 ];
          }
 
       [[nodiscard]] char &back() const

@@ -241,7 +241,7 @@ namespace porter {
             return;
         if (word.hasSuffix("ion")) {
             String stem = word.substr(0, word.length() - 3);
-            if (stem.back() == 's' || stem.back() == 't')
+            if (!stem.empty() && (stem.back() == 's' || stem.back() == 't'))
                 if (measure(stem) > 1)
                     word = stem;
             return;
