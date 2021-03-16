@@ -27,6 +27,12 @@ add_executable(crawler-parser-worker
         defs.h crawler-parser-worker/EnglishDictChecker.cpp crawler-parser-worker/EnglishDictChecker.h)
 target_link_libraries(crawler-parser-worker ssl)
 
+add_executable(indexer
+        indexer/Worker.cpp
+        indexer/IndexChunk.cpp indexer/IndexChunk.h indexer/PorterStemming.cpp indexer/PorterStemming.h)
+
+# testing
+
 find_package(GTest)
 
 add_executable(testRobotstxt
@@ -42,3 +48,8 @@ add_executable(testVLQEncoding
 target_link_libraries(testVLQEncoding stl ssl GTest::gtest)
 gtest_discover_tests(testVLQEncoding)
 
+add_executable(testPorterStemming
+        indexer/testPorterStemming.cpp
+        indexer/PorterStemming.cpp)
+target_link_libraries(testPorterStemming stl GTest::gtest)
+gtest_discover_tests(testPorterStemming)
