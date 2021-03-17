@@ -11,13 +11,14 @@
 #include <fstream>
 #include <stdlib.h>
 #include <mqueue.h>
+#include <cassert>
 
 
 #include "../crawler/ParsedUrl.h"
 #include "../crawler/Crawler.h"
 #include "../crawler/ParsedHttpResponse.h"
 #include "../parser/ParsedHtml.h"
-#include "common.h"
+#include "../defs.h"
 
 enum class Options
    {
@@ -46,7 +47,7 @@ void PrintParse( ParsedHtml &parsedHtml )
       case Options::PrintLinks:
          for ( auto link : parsedHtml.Links )
             {
-            std::cout << link.URL << " ( ";
+            std::cout << link.Href << " ( ";
             for ( auto w : link.AnchorText )
                std::cout << w << " ";
             std::cout << ")" << std::endl;
@@ -105,24 +106,24 @@ int main(int argc, char **argv) {
 
     mqd_t mq;
     struct mq_attr attr;
-    char buffer[MAX_SIZE + 1];
+    char buffer[MAX_URL_LEN + 1];
     char answer = 'Y';
 
     // initialize the queue attributes
     // TODO: Figure out how to set attr.mq_msgmsg to a higher value
     attr.mq_flags = 0;
     attr.mq_maxmsg = 256;
-    attr.mq_msgsize = MAX_SIZE;
+    attr.mq_msgsize = MAX_URL_LEN;
     attr.mq_curmsgs = 0;
 
     // create the message queue
-    mq = mq_open(QUEUE_NAME, O_CREAT | O_RDWR, 0644, &attr);
-    CHECK((mqd_t)-1 != mq);
+    mq = mq_open(FRONTIER_MQ, O_CREAT | O_RDWR, 0644, &attr);
+    assert((mqd_t)-1 != mq);
 
     // Clear the message queue and reset it
     if(argc > 3) {
-        CHECK((mqd_t)-1 != mq_close(mq));
-        CHECK((mqd_t)-1 != mq_unlink(QUEUE_NAME));
+        assert((mqd_t)-1 != mq_close(mq));
+        assert((mqd_t)-1 != mq_unlink(FRONTIER_MQ));
         std::cout << "Ran cleanup for mqueue. Rerun worker now.\n";
         return 0;
     }
@@ -130,15 +131,15 @@ int main(int argc, char **argv) {
     // Add the passed in URL as the first link on the message queue
     // TODO: Have this read off a seperate message queue that the parent process
     // initializes with a seed list of URLs
-    CHECK(0 <= mq_send(mq, argv[2], MAX_SIZE, 0));
+    assert(0 <= mq_send(mq, argv[2], MAX_URL_LEN, 0));
 
     do {
     
         ssize_t bytes_read;
 
         // receive first URL on the mq
-        bytes_read = mq_receive(mq, buffer, MAX_SIZE, NULL);
-        CHECK(bytes_read >= 0);
+        bytes_read = mq_receive(mq, buffer, MAX_URL_LEN, NULL);
+        assert(bytes_read >= 0);
         buffer[bytes_read] = '\0';
         std::cout << "url read from MQ: " << buffer << std::endl;
 
@@ -153,8 +154,8 @@ int main(int argc, char **argv) {
             // First check if the message queue is full, and break if it is
             struct mq_attr *cur_attr = &attr;
             mq_getattr(mq, cur_attr);
-            CHECK((mqd_t)-1 != mq);
-            CHECK(cur_attr != nullptr);
+            assert((mqd_t)-1 != mq);
+            assert(cur_attr != nullptr);
             if(cur_attr->mq_curmsgs == attr.mq_maxmsg) {
                 std::cout << "Message queue has reached the max capacity of " << attr.mq_maxmsg << std::endl;
                 break;
@@ -162,17 +163,17 @@ int main(int argc, char **argv) {
 
             // Error handling since the parser doesn't format each link correctly
             // TODO: Handle more cases here and consider moving this logic to the Parser
-            if(link.URL.substr(0, 4) != "http") {
+            if(link.Href.substr(0, 4) != "http") {
                 // If missing the http characters, this is likely a subdomain of the current
                 // page we are on
-                link.URL = String(buffer) + link.URL;
+                link.Href = String(buffer) + link.Href;
             }
-            int space_position = link.URL.find(" ");
+            int space_position = link.Href.find(" ");
             while(space_position != String::npos) {
                 // If there are spaces in the URL, replace with the space string "%20" for
                 // the GET requests to render correctly in the Crawler code
-                link.URL = link.URL.replace( space_position, 1, "%20" );
-                space_position = link.URL.find(" ");
+                link.Href = link.Href.replace( space_position, 1, "%20" );
+                space_position = link.Href.find(" ");
             }
 
             // Add the reformatted URL to the message queue
@@ -181,8 +182,8 @@ int main(int argc, char **argv) {
             // TODO: Add the URL to a seperate message queue that will be handled with the
             // bloom filter/robots.txt process to check if the URL should be placed back
             // on the frontier message queue (the mq that this process reads from)
-            CHECK(0 <= mq_send(mq, link.URL.cstr(), MAX_SIZE, 0));
-            std::cout << "url added: " << link.URL << std::endl;
+            assert(0 <= mq_send(mq, link.Href.cstr(), MAX_URL_LEN, 0));
+            std::cout << "url added: " << link.Href << std::endl;
         }
 
         // Prompt user to parse the next URL on the message queue
@@ -193,8 +194,8 @@ int main(int argc, char **argv) {
    
     std::cout << "Parsing stopped, shutting down the worker.\n";
     // cleanup
-    CHECK((mqd_t)-1 != mq_close(mq));
-    CHECK((mqd_t)-1 != mq_unlink(QUEUE_NAME));
+    assert((mqd_t)-1 != mq_close(mq));
+    assert((mqd_t)-1 != mq_unlink(FRONTIER_MQ));
 
    return 0;
 }
