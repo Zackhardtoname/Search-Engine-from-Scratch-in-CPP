@@ -6,7 +6,7 @@
 #include <string>
 
 #include "PorterStemming.h"
-#include "../stl/include/String.h"
+#include "../stl/String.h"
 #include "gtest/gtest.h"
 
 TEST(PorterStemmingTest, CheckNLTKTestCase) {

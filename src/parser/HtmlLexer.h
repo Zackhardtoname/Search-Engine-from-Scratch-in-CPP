@@ -5,7 +5,7 @@
 #ifndef SCOOBLE_SEARCH_HTMLLEXER_H
 #define SCOOBLE_SEARCH_HTMLLEXER_H
 
-#include "../stl/include/String.h"
+#include "../stl/String.h"
 
 using scb::String;
 using scb::StringRef;

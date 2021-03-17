@@ -5,8 +5,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "../stl/include/io/utils.h"
-#include "../stl/include/RAII.h"
+#include "../stl/utils.h"
+#include "../stl/RAII.h"
 #include <iostream>
 #include <string>
 #include <utility>
@@ -14,6 +14,7 @@
 #include "ParsedUrl.h"
 #include "Crawler.h"
 #include "ParsedHttpResponse.h"
+#include "../stl/UniquePointer.h"
 
 // TODO: make it so that we abort on lengthy response, and/or timeout
 // TODO: setup build file for test

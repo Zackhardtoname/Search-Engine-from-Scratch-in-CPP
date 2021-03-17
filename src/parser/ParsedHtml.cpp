@@ -4,8 +4,8 @@
 #include <cassert>
 #include <unordered_map>
 #include <iostream>
-#include "../stl/include/io/utils.h"
-#include "../stl/include/String.h"
+#include "../stl/utils.h"
+#include "../stl/String.h"
 
 #include "ParsedHtml.h"
 #include "HtmlLexer.h"

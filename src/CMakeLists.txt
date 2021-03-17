@@ -4,7 +4,7 @@ project(scooble_search)
 set(CMAKE_CXX_STANDARD 20)
 find_package(OpenSSL REQUIRED)
 
-add_subdirectory(stl)
+add_subdirectory(crawler)
 
 add_executable(crawlerCmdline
         parser/ParsedHtml.cpp
@@ -12,8 +12,8 @@ add_executable(crawlerCmdline
         crawler/ParsedHttpResponse.cpp
         crawler/ParsedUrl.cpp
         crawler/Crawler.cpp
-        stl/src/String.cpp
-        stl/src/io/utils.cpp
+        stl/String.cpp
+        stl/utils.cpp
         crawler/CrawlerCmdline.cpp
         indexer/PorterStemming.cpp
         )
@@ -25,8 +25,8 @@ add_executable(crawler-parser-worker
         crawler/ParsedHttpResponse.cpp
         crawler/ParsedUrl.cpp
         crawler/Crawler.cpp
-        stl/src/String.cpp
-        stl/src/io/utils.cpp
+        stl/String.cpp
+        stl/utils.cpp
         #        crawler-parser-worker/WorkerCmdline.cpp
         crawler-parser-worker/CrawlerParserWorker.cpp
         indexer/PorterStemming.cpp
@@ -35,7 +35,7 @@ target_link_libraries(crawler-parser-worker ssl rt crypto)
 
 add_executable(dummy-filter
         filter/DummyFilterWorker.cpp
-        stl/src/String.cpp
+        stl/String.cpp
         )
 target_link_libraries(dummy-filter rt)
 
@@ -62,7 +62,7 @@ find_package(GTest)
 
 add_executable(testRobotstxt
         crawler/testRobotstxt.cpp
-        stl/src/String.cpp
+        stl/String.cpp
         crawler/Robotstxt.cpp)
 target_link_libraries(testRobotstxt stl ssl GTest::gtest)
 gtest_discover_tests(testRobotstxt)

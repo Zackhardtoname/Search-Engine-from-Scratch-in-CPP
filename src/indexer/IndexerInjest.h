@@ -5,8 +5,8 @@
 #ifndef SCOOBLE_SEARCH_INDEXERINJEST_H
 #define SCOOBLE_SEARCH_INDEXERINJEST_H
 
-#include "../stl/include/String.h"
-#include "../stl/include/Vector.h"
+#include "../stl/String.h"
+#include "../stl/Vector.h"
 
 using scb::String;
 using scb::Vector;

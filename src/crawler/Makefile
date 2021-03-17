@@ -8,7 +8,7 @@
 EXECUTABLE  = crawler
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = CrawlerCmdline.cpp Crawler.cpp ParsedUrl.cpp ../stl/src/io/utils.cpp ../stl/src/String.cpp ParsedHttpResponse.cpp ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp
+SOURCE_FILES = CrawlerCmdline.cpp Crawler.cpp ParsedUrl.cpp ../stl/utils.cpp ../stl/String.cpp ParsedHttpResponse.cpp ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp
 
 #######################
 # TODO (end) #

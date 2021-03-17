@@ -8,8 +8,8 @@
 #include <cstddef>
 #include <unordered_map>
 
-#include "../stl/include/String.h"
-#include "../stl/include/Vector.h"
+#include "../stl/String.h"
+#include "../stl/Vector.h"
 #include "IndexerInjest.h"
 
 constexpr static size_t INDEX_CHUNK_TARGET_SIZE = 100 * 1024 * 1024; // 100 Megabytes
