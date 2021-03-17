@@ -10,12 +10,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "../stl/include/io/utils.h"
+#include "../stl/utils.h"
 #include <iostream>
 #include <utility>
 #include <stdexcept>
 
-#include "../stl/include/String.h"
+#include "../stl/String.h"
 #include "ParsedHttpResponse.h"
 #include "ParsedUrl.h"
 

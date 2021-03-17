@@ -3,7 +3,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
-#include "../../../stl/include/Unique_Pointer.h"
+#include "../../../stl/UniquePointer.h"
 #include <openssl/md5.h>
 #include <string.h>
 #include <string>

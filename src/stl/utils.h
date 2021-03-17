@@ -9,7 +9,7 @@
 #include <netdb.h>
 #include <netinet/tcp.h>
 
-#include "../String.h"
+#include "String.h"
 
 constexpr size_t MAX_HOSTNAME_LEN = 255;
 

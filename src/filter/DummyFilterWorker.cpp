@@ -11,8 +11,8 @@
 #include <unistd.h>
 #include <set>
 #include <string>
-#include "../stl/include/io/utils.h"
-#include "../stl/include/RAII.h"
+#include "../stl/utils.h"
+#include "../stl/RAII.h"
 #include <iostream>
 #include <utility>
 #include <fstream>
@@ -24,8 +24,8 @@
 #include "../crawler/ParsedHttpResponse.h"
 #include "../parser/ParsedHtml.h"
 #include "../defs.h"
-#include "../stl/include/String.h"
-#include "../stl/include/Vector.h"
+#include "../stl/String.h"
+#include "../stl/Vector.h"
 
 using scb::String;
 using scb::Vector;
