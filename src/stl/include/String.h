@@ -114,6 +114,29 @@ class String
          return npos;
          }
 
+      [[nodiscard]] String replace( size_t pos, size_t len, String str2 )
+         {
+         if ( pos < npos )
+            {
+            while ( len > 0 )
+               {
+               str.erase( pos );
+               --len;
+               if ( str[ pos ] == npos )
+                  {
+                  break;
+                  }
+               }
+            len = 0;
+            for ( auto c : str2 )
+               {
+               str.insert( pos + len, str2[ len ] );
+               ++len;
+               }
+            }
+         return *this;
+         }
+
       [[nodiscard]] int findLast( const String &other, int start = 0 ) const
          {
          start = find( other, start );
@@ -135,6 +158,17 @@ class String
             return false;
          for ( int i = 0;  i < other.size();  i++ )
             if ( str[ i ] != other[ i ] )
+               return false;
+         return true;
+         }
+
+      [[nodiscard]] bool hasSuffix( const String &suffix ) const
+         {
+         if ( size() < suffix.size() )
+            return false;
+         for ( int i = 0, base = size() - suffix.size();  i < suffix.size();
+               i++ )
+            if ( str[ base + i ] != suffix[ i ] )
                return false;
          return true;
          }
@@ -203,6 +237,9 @@ class String
 
       [[nodiscard]] String substr( uint start, int len = String::npos ) const
          {
+         if ( start >= size() )
+            return String();
+
          auto endIdx =
             len == npos ? size()
                         : std::min( static_cast<ulong>( start + len ), size() );
@@ -245,6 +282,11 @@ class String
             character = tolower( character );
          }
 
+      [[nodiscard]] char &front() const
+         {
+         return str[ 0 ];
+         }
+
       [[nodiscard]] char &back() const
          {
          return str[ length() - 1 ];
@@ -259,6 +301,20 @@ class String
          String result = substr( start );
          while ( !result.empty() && isspace( result.back() ) )
             result.popBack();
+         return result;
+         }
+
+      uint64_t hash() const
+         {
+         // FNV-1 hash
+         uint64_t result = 0xcbf29ce484222325u;
+         uint8_t *pos = reinterpret_cast<uint8_t *>( str.data() );
+         uint8_t *beyond = reinterpret_cast<uint8_t *>( str.data() + size() );
+         while ( pos < beyond )
+            {
+            result *= 0x00000100000001B3u;
+            result ^= *( pos++ );
+            }
          return result;
          }
 

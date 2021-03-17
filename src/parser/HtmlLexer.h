@@ -28,10 +28,21 @@ struct HtmlEntity {
     /// Used by RawTextElement only. The text I contained.
     StringRef InnerText;
     Vector<Attribute> Attributes;
+
+    const Attribute * FindAttr(const String& attrName);
 };
 
 
 /// A Html Lexer
+///
+/// The munch* series functions try to munch the given HTML structure,
+/// and return true on success. If failure (return false), the cursor
+/// is guaranteed to remain unchanged.
+/// For munch* functions with a sink (a output-storage passed in as a
+/// reference), the content of these sinks are undefined if munch fails.
+/// This is so that the munch* functions don't need to maintain and pass
+/// around burdensome inner storage. And if munch fails, these output-storage
+/// are not used anyway.
 class HtmlLexer {
 public:
 

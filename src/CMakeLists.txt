@@ -6,26 +6,57 @@ find_package(OpenSSL REQUIRED)
 
 add_subdirectory(stl)
 
-add_executable(crawler-side
-        crawler/Crawler.cpp
-        crawler/ParsedHttpResponse.cpp
-        indexer/VLQ.cpp
-        crawler/Robotstxt.cpp
-        stl/src/String.cpp
-        crawler/ParsedUrl.cpp)
-target_link_libraries(crawler-side stl ssl)
-
-add_executable(crawler-parser-worker
-        parser/HtmlParser.cpp
+add_executable(crawlerCmdline
+        parser/ParsedHtml.cpp
         parser/HtmlLexer.cpp
         crawler/ParsedHttpResponse.cpp
         crawler/ParsedUrl.cpp
         crawler/Crawler.cpp
-        crawler-parser-worker/Worker.cpp
         stl/src/String.cpp
         stl/src/io/utils.cpp
+        crawler/CrawlerCmdline.cpp
+        indexer/PorterStemming.cpp
         )
-target_link_libraries(crawler-parser-worker ssl)
+target_link_libraries(crawlerCmdline ssl rt crypto)
+
+add_executable(crawler-parser-worker
+        parser/ParsedHtml.cpp
+        parser/HtmlLexer.cpp
+        crawler/ParsedHttpResponse.cpp
+        crawler/ParsedUrl.cpp
+        crawler/Crawler.cpp
+        stl/src/String.cpp
+        stl/src/io/utils.cpp
+        #        crawler-parser-worker/WorkerCmdline.cpp
+        crawler-parser-worker/CrawlerParserWorker.cpp
+        indexer/PorterStemming.cpp
+        )
+target_link_libraries(crawler-parser-worker ssl rt crypto)
+
+add_executable(dummy-filter
+        filter/DummyFilterWorker.cpp
+        stl/src/String.cpp
+        )
+target_link_libraries(dummy-filter rt)
+
+add_executable(indexer
+        indexer/Worker.cpp
+        indexer/IndexChunk.cpp
+        indexer/IndexChunk.h
+        indexer/PorterStemming.cpp
+        )
+
+add_executable(CheckMQs
+        utils/CheckMQs.cpp
+        )
+target_link_libraries(CheckMQs rt)
+
+add_executable(DrainMQs
+        utils/DrainMQs.cpp
+        )
+target_link_libraries(DrainMQs rt)
+
+# testing
 
 find_package(GTest)
 
@@ -42,3 +73,8 @@ add_executable(testVLQEncoding
 target_link_libraries(testVLQEncoding stl ssl GTest::gtest)
 gtest_discover_tests(testVLQEncoding)
 
+add_executable(testPorterStemming
+        indexer/testPorterStemming.cpp
+        indexer/PorterStemming.cpp)
+target_link_libraries(testPorterStemming stl GTest::gtest)
+gtest_discover_tests(testPorterStemming)
