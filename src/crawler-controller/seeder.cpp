@@ -7,7 +7,9 @@
 #include <sys/wait.h>
 #include <cstring>
 #include <cassert>
-#include "../../src/stl/include/Filesystem.h"
+#include "../stl/Filesystem.h"
+#include "../stl/utils.h"
+#include "../stl/RAII.h"
 #include "../defs.h"
 
 void seed(int argc) {
@@ -25,9 +27,9 @@ void seed(int argc) {
 
    char FileNameBuff[FILENAME_MAX];
    getcwd(FileNameBuff, FILENAME_MAX );
-   string cwd (FileNameBuff);
-   string seedPath = cwd + "/data/us_top_100.txt";
-   const char * seedPathCStr = seedPath.c_str();
+   scb::String cwd (FileNameBuff);
+   scb::String seedPath = cwd + "/data/us_top_100.txt";
+   const char * seedPathCStr = seedPath.cstr();
    char * seedStart;
    char * seedEnd;
    mapfile(&seedPathCStr, &seedStart, &seedEnd);
@@ -46,12 +48,13 @@ void seed(int argc) {
       }
       *URLBuffPtr = '\0';
 
-      string message = string(URLBuff);
-      if (message.substr(0, 4) != "http") {
-         message = "http://www." + message + "\0";
-      }
+      scb::String message = scb::String(URLBuff);
+      // Leaving this if statement out since this is handled in CrawlerParserWorker.cpp (for now)
+      //if (message.substr(0, 4) != "http") {
+      //   message = "http://www." + message + "\0";
+      //}
 
-      assert(0 <= mq_send(frontier, message.c_str(), MAX_URL_LEN, 0));
+      assert(0 <= mq_send(frontier, message.cstr(), MAX_URL_LEN, 0));
       std::cout << "Queued message: " << message << std::endl;
 
       seedFilePtr++;

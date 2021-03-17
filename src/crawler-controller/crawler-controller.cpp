@@ -4,14 +4,12 @@
 #include <cstdlib>
 #include <assert.h>
 #include <sys/wait.h>
-#include <cstring>
-#include <vector>
+#include "../stl/utils.h"
+#include "../stl/RAII.h"
 #include "../defs.h"
 
-using namespace std;
-
 int main(int argc, char **argv) {
-   if ( !( ( argc >= 2 ) ) )
+   if ( argc < 2 )
    {
       std::cerr << "Usage: ./crawler-controller child-process-file-path child-process-args\n";
       std::cerr << "It starts a number of child processes and makes sure they are alive\n";
@@ -21,7 +19,8 @@ int main(int argc, char **argv) {
 
    std::cout << "crawler controller starting" << "\n";
 
-   std::vector<pid_t> processIdVec;
+   scb::Vector<pid_t> processIdVec;
+   processIdVec.resize(NUM_CRAWLERS);
    char * processFileName = argv[1];
    bool initalLoop = true;
 
@@ -34,25 +33,20 @@ int main(int argc, char **argv) {
             if (waitpid(processIdVec[i], &waitStatus, WNOHANG) == 0) {
                continue;
             }
-            cout << "child has exited with status = " << WEXITSTATUS( waitStatus ) << endl;
+            std::cout << "child has exited with status = " << WEXITSTATUS( waitStatus ) << std::endl;
          }
          
          pid_t processId = fork( );
 
          if (processId) {
             // parent process
-            if (initalLoop) {
-               processIdVec.push_back(processId);
-            }
-            else {
-               processIdVec[i] = processId;
-            }
+            processIdVec[i] = processId;
          }
          else
          {
             // child process
             argv++; // get rid of filename of the controller; optionally we can change it to the filename of the child file
-            cout << "starting crawler " << i << endl;
+            std::cout << "starting crawler " << i << std::endl;
             execvp( processFileName, argv );
             // Don't add code here because it will never run
          }         
