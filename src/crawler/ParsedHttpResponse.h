@@ -7,7 +7,7 @@
 
 #include <stdexcept>
 
-#include "../stl/include/String.h"
+#include "../stl/String.h"
 
 using scb::String;
 

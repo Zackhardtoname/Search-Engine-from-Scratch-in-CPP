@@ -10,7 +10,7 @@
 #include <unordered_set>
 
 #include "../parser/ParsedHtml.h"
-#include "../stl/include/String.h"
+#include "../stl/String.h"
 #include "../indexer/IndexChunk.h"
 #include "../indexer/PorterStemming.h"
 

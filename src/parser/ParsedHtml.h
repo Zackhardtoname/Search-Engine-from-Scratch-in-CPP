@@ -3,9 +3,9 @@
 
 #include <utility>
 
-#include "../stl/include/io/utils.h"
-#include "../stl/include/String.h"
-#include "../stl/include/Vector.h"
+#include "../stl/utils.h"
+#include "../stl/String.h"
+#include "../stl/Vector.h"
 
 using scb::String;
 using scb::StringRef;
