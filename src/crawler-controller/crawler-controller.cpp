@@ -6,31 +6,57 @@
 #include <sys/wait.h>
 #include <cstring>
 #include <vector>
-
-const int mqMSGSize = 2048;
-const int maxNumCharInUrl = 200;
-const int priority = 0;
-const int numCrawlers = 4; // TODO change to 2000 or something in production
+#include "../defs.h"
 
 using namespace std;
 
 int main(int argc, char **argv) {
-   std::vector<pid_t> processIdVec;
+   std::cout << "crawler controller starting" << "\n";
 
-   pid_t processId = fork( );
-   if ( processId ){
-      // parent process
-      int waitStatus;
-      waitpid( processId, &waitStatus, 0 );
-      cout << "child has exited with status = " << WEXITSTATUS( waitStatus )
-           << endl;}
-   else
-   {
-   // child process
-      argv++;
-      cout << "child starting " << *argv << endl;
-      execvp( *argv, argv );
-      cout << "this never prints" << endl;
+   std::vector<pid_t> processIdVec;
+   char processFileName[] = "./test_random_sleeper.o";
+   bool initalLoop = true;
+
+   while (true) {
+      for (int i = 0; i < NUM_CRAWLERS; ++i) {
+         int waitStatus;
+
+         if (!initalLoop) {
+            // timed wait for child process
+            bool isAlive = false;
+            while(waitpid(processIdVec[i], &waitStatus, WNOHANG) == 0) {
+               sleep(1);
+               isAlive = true;
+            }
+            if (isAlive) {
+               continue;
+            }
+
+            cout << "child has exited with status = " << WEXITSTATUS( waitStatus ) << endl;
+         }
+         
+         pid_t processId = fork( );
+
+         if (processId) {
+            // parent process
+            if (initalLoop) {
+               processIdVec.push_back(processId);
+            }
+            else {
+               processIdVec[i] = processId;
+            }
+         }
+         else
+         {
+            // child process
+            argv++; // get rid of filename of the controller; optionally we can change it to the filename of the child file
+            cout << "child starting " << processId << endl;
+            execvp( processFileName, argv );
+            // Don't add code here because it will never run
+         }         
+      }
+
+      initalLoop = false;
    }
 
    return 0;

@@ -8,5 +8,6 @@
 static constexpr const char *FRONTIER_MQ = "/frontier";
 static constexpr const char *NEW_LINKS_QUEUE = "/links";
 static constexpr int MAX_URL_LEN = 1000; // TODO: consider making this smaller
+static constexpr int NUM_CRAWLERS = 4; // TODO: will make it 2000 or something
 
 #endif //SCOOBLE_SEARCH_DEFS_H
