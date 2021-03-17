@@ -8,4 +8,4 @@
 *.o
 src/crawler/crawler*
 src/parser/parser*
-src/crawler-parser-worker/worker*
+src/crawler-parser-worker/crawler-parser-worker*
