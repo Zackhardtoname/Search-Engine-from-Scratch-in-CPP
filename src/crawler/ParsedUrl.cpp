@@ -57,7 +57,7 @@ String ParsedUrl::Normalize(const String &path) {
         String result = Service + "://" + HostPort + Path;
         if (result.back() != '/')
             result.pushBack('/');
-        result += path;
+        result += path.substr(2);
         return ParsedUrl(result).CompleteUrl;
     } else {
         // absolute path
