@@ -11,10 +11,16 @@
 using namespace std;
 
 int main(int argc, char **argv) {
+   if ( !( ( argc >= 2 ) ) )
+   {
+      std::cerr << "Usage: ./crawler-controller child-process-file-path child-process-args\n";
+      std::cerr << "It starts a number of child processes and makes sure they are alive\n";
+   }
+
    std::cout << "crawler controller starting" << "\n";
 
    std::vector<pid_t> processIdVec;
-   char processFileName[] = "./test_random_sleeper.o";
+   char * processFileName = argv[1];
    bool initalLoop = true;
 
    while (true) {
