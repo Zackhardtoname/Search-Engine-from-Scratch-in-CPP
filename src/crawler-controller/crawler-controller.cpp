@@ -15,6 +15,8 @@ int main(int argc, char **argv) {
    {
       std::cerr << "Usage: ./crawler-controller child-process-file-path child-process-args\n";
       std::cerr << "It starts a number of child processes and makes sure they are alive\n";
+      
+      return 1;
    }
 
    std::cout << "crawler controller starting" << "\n";

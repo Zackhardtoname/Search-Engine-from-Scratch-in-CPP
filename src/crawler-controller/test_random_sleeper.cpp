@@ -10,6 +10,9 @@ int main(int argc, char *argv[])
 {
     std::cout << "alive" << '\n';
 
+    for(int i = 0; i < argc; ++i)
+        std::cout << "received " << argv[i] << '\n';
+
     // This is needed along with the next seed to get true randomness for each run
     srand ( time(NULL) );
     std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
@@ -17,7 +20,7 @@ int main(int argc, char *argv[])
     std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
 
     std::cout << "died after " << dist(eng) << '\n';
-    
+
     // random bad return code, conveniently indicating time slept
     return dist(eng);
 }
