@@ -30,17 +30,10 @@ int main(int argc, char **argv) {
          int waitStatus;
 
          if (!initalLoop) {
-            // timed wait for child process
-            bool isAlive = false;
-            while(waitpid(processIdVec[i], &waitStatus, WNOHANG) == 0) {
-               sleep(1);
-               isAlive = true;
-            }
-            if (isAlive) {
+            // check if child process is alive
+            if (waitpid(processIdVec[i], &waitStatus, WNOHANG) == 0) {
                continue;
             }
-
-            
             cout << "child has exited with status = " << WEXITSTATUS( waitStatus ) << endl;
          }
          
