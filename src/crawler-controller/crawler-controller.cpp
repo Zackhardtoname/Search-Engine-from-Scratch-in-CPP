@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
                continue;
             }
 
+            
             cout << "child has exited with status = " << WEXITSTATUS( waitStatus ) << endl;
          }
          
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
          {
             // child process
             argv++; // get rid of filename of the controller; optionally we can change it to the filename of the child file
-            cout << "child starting " << processId << endl;
+            cout << "starting crawler " << i << endl;
             execvp( processFileName, argv );
             // Don't add code here because it will never run
          }         

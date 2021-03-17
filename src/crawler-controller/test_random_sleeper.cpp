@@ -19,4 +19,7 @@ int main(int argc, char *argv[])
     std::mt19937_64 eng{std::random_device{}()};  // or seed however you want
     std::uniform_int_distribution<> dist{5, 10};
     std::this_thread::sleep_for(std::chrono::seconds{dist(eng)});
+
+    // random bad return code, conveniently indicating time slept
+    return dist(eng);
 }
