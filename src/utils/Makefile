@@ -1,14 +1,14 @@
 ## EECS 440 Makefile
-## Auther: Emerson Pfeiffer (epfeiffe)
+## Author: Emerson Pfeiffer (epfeiffe)
 
 #######################
 # TODO (begin) #
 #######################
 # Change 'executable' to match the command for the given component
-EXECUTABLE  = create-mq
+EXECUTABLE  = handle-mq
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = CreateMQs.cpp
+SOURCE_FILES = HandleMQs.cpp
 #######################
 # TODO (end) #
 #######################
@@ -26,17 +26,7 @@ CXXFLAGS = -std=c++1z -pedantic -Ofast #-Werror -Wconversion -Wall -Wextra
 LINK_FLAGS = -lssl -lrt -lcrypto
 
 # make create - set as default command run
-create: $(SOURCE_FILES) $(EXECUTABLE)
-
-# make delete
-delete: EXECUTABLE = delete-mq
-delete:
-	$(CXX) $(CXXFLAGS) DeleteMQs.cpp -o $(EXECUTABLE) $(LINK_FLAGS)
-
-# make check
-check: EXECUTABLE = check-mq
-check:
-	$(CXX) $(CXXFLAGS) CheckMQs.cpp -o $(EXECUTABLE) $(LINK_FLAGS)
+all: $(SOURCE_FILES) $(EXECUTABLE)
 
 # make debug - will compile sources with $(CXXFLAGS) and the -g3 flag
 #              also defines DEBUG, so "#ifdef DEBUG /*...*/ #endif" works
@@ -60,12 +50,12 @@ endif
 
 # make clean - remove .o files, executables, tarball
 clean:
-	rm -f *.o $(EXECUTABLE) check-mq delete-mq $(EXECUTABLE)_debug
+	rm -f *.o $(EXECUTABLE) $(EXECUTABLE)_debug
 	rm -Rf *.dSYM
 
 
 # these targets do not create any files
-.PHONY: create delete debug clean
+.PHONY: all debug clean
 
 # disable built-in rules
 .SUFFIXES:
