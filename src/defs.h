@@ -11,8 +11,8 @@ static constexpr long GB = 1024 * MB; // 1 GB
 
 static constexpr const char *FRONTIER_MQ = "/frontier";
 static constexpr const char *NEW_LINKS_QUEUE = "/links";
-static constexpr const char *PARSED_DOCS_QUEUE = "/parsed_docs";
 static constexpr int MAX_URL_LEN = 1000; // TODO: consider making these smaller
 static constexpr long PARSED_DOCS_QUEUE_MAX_MSGSIZE = 4 * MB; // 4 MB
+static constexpr int NUM_CRAWLERS = 4; // TODO: will make it 2000 or something
 
 #endif //SCOOBLE_SEARCH_DEFS_H

@@ -14,19 +14,22 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+//#include <vector>
+#include "../stl/utils.h"
+#include "../stl/RAII.h"
 
 // TODO get rid of this - will have to add std:: to lots of places here...
-using namespace std;
+//using namespace std;
 
 enum FileType {
-   socket,
-   symbolicLink,
-   regularFile,
-   blockDevice,
-   directory,
-   characterDevice,
+   Socket,
+   SymbolicLink,
+   RegularFile,
+   BlockDevice,
+   Directory,
+   CharacterDevice,
    FIFO,
-   unknown
+   Unknown
 };
 
 char *ReadFile(char *filename, size_t &fileSize) {
@@ -35,7 +38,7 @@ char *ReadFile(char *filename, size_t &fileSize) {
 
    // Attempt to Create an istream and seek to the end
    // to get the size.
-   ifstream ifs(filename, ios::ate | ios::binary);
+   std::ifstream ifs(filename, std::ios::ate | std::ios::binary);
    if (!ifs.is_open())
       return nullptr;
    fileSize = static_cast<size_t>(ifs.tellg());
@@ -46,7 +49,7 @@ char *ReadFile(char *filename, size_t &fileSize) {
    // Seek back to the beginning of the file, read it into
    // the buffer, then return the buffer.
    ifs.seekg(0);
-   ifs.read(buffer, static_cast<streamsize>(fileSize));
+   ifs.read(buffer, static_cast<std::streamsize>(fileSize));
    return buffer;
 }
 
@@ -54,21 +57,21 @@ char *ReadFile(char *filename, size_t &fileSize) {
 FileType getFiletype(mode_t mode) {
    switch (mode & S_IFMT) {
       case S_IFSOCK:
-         return socket;
+         return Socket;
       case S_IFLNK:
-         return symbolicLink;
+         return SymbolicLink;
       case S_IFREG:
-         return regularFile;
+         return RegularFile;
       case S_IFBLK:
-         return blockDevice;
+         return BlockDevice;
       case S_IFDIR:
-         return directory;
+         return Directory;
       case S_IFCHR:
-         return characterDevice;
+         return CharacterDevice;
       case S_IFIFO:
          return FIFO;
       default:
-         return unknown;
+         return Unknown;
    }
 }
 
@@ -76,27 +79,27 @@ bool DotName(const char *name) {
    return name[0] == '.' && (name[1] == 0 || (name[1] == '.' && name[2] == 0));
 }
 
-void ListDirectory(const string &filePath, vector <string> &files, const int maxDepth,
+void ListDirectory(scb::String &filePath, scb::Vector <scb::String> &files, const int maxDepth,
                    bool fileNameOnly = false) {
-   DIR *handle = opendir(filePath.c_str());
+   DIR *handle = opendir(filePath.cstr());
 
    if (handle) {
       struct dirent *entry;
       entry = readdir(handle);
       while (entry) {
          struct stat statbuf;
-         string childPath = filePath + '/';
+         scb::String childPath = filePath + scb::String("/");
          childPath += entry->d_name;
-         if (stat(childPath.c_str(), &statbuf))
-            cerr << "stat of " << filePath << " failed, errno = " << errno << endl;
+         if (stat(childPath.cstr(), &statbuf))
+            std::cerr << "stat of " << filePath << " failed, errno = " << errno << std::endl;
          else {
-            if (getFiletype(statbuf.st_mode) == regularFile) {
-               files.push_back(fileNameOnly ? entry->d_name : childPath);
+            if (getFiletype(statbuf.st_mode) == RegularFile) {
+               files.pushBack(fileNameOnly ? entry->d_name : childPath);
             }
 
             // potentially add file type info
             // Filetype(statbuf.st_mode)
-            else if (getFiletype(statbuf.st_mode) == directory) {
+            else if (getFiletype(statbuf.st_mode) == Directory) {
                if (!DotName(entry->d_name) &&
                    (maxDepth > 0 || maxDepth == -1)) {
                   ListDirectory(childPath, files, maxDepth < 0 ? -1 : maxDepth - 1,
@@ -109,7 +112,7 @@ void ListDirectory(const string &filePath, vector <string> &files, const int max
          entry = readdir(handle);
       }
       closedir(handle);
-   } else cerr << "open handle failed, errno = " << errno;
+   } else std::cerr << "open handle failed, errno = " << errno;
 }
 
 size_t FileSize(int f) {
