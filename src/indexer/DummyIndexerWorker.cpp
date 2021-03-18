@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
         // if still within target dump size
         while (curSize < targetSize) {
             // get a message from mq
-            ssize_t msgSize = mq_receive(parsedDocsQueue, buffer, PARSED_DOCS_QUEUE_MAX_MSGSIZE, nullptr);
+            ssize_t msgSize = mq_receive(parsedDocsQueue, buffer + sizeof(int32_t), PARSED_DOCS_QUEUE_MAX_MSGSIZE, nullptr);
             assert(msgSize != -1 && "mq_receive() failed");
             *header = static_cast<int32_t>(msgSize);
 
