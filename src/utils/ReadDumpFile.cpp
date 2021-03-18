@@ -16,12 +16,16 @@ int main(int argc, char **argv) {
 
     FILE *f = fopen(argv[1], "r");
     for (int i = 0;; i++) {
-        if (feof(f)) {
-            std::cout << "<eof>" << std::endl;
-            return 0;
-        }
         char sizeBuf[4];
-        assert(fread(sizeBuf, 1, 4, f) == 4 && "corrupted");
+        switch (fread(sizeBuf, 1, 4, f)) {
+            case 0:
+                std::cout << "<eof>" << std::endl;
+                return 0;
+            case 4:
+                break;
+            default:
+                assert(false && "corrupted");
+        }
         int32_t lenMsg = *reinterpret_cast<int32_t *>(sizeBuf);
         std::string msg(lenMsg, '\0');
         assert(fread(msg.data(), 1, lenMsg, f) == lenMsg && "corrupted");
