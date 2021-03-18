@@ -8,12 +8,9 @@
 #include <cassert>
 #include "../defs.h"
 
-static constexpr long TARGET_SIZE = 2 * GB;
-
 /// This dummy index worker takes a message from the parsed document message
 /// queue, and store all the contents into file with this compact format:
 /// [len_msg i32][msg][len_msg i32][msg]...
-/// About 2 GB (configurable) a piece.
 int main(int argc, char **argv) {
     if (argc != 2) {
         std::cout << "usage: " << argv[0] << " [target size in KB]" << std::endl;
@@ -42,7 +39,7 @@ int main(int argc, char **argv) {
         char buffer[sizeof(int32_t) + PARSED_DOCS_QUEUE_MAX_MSGSIZE];
         auto *header = reinterpret_cast<int32_t *>(buffer);
         // if still within target dump size
-        while (curSize < TARGET_SIZE) {
+        while (curSize < targetSize) {
             // get a message from mq
             ssize_t msgSize = mq_receive(parsedDocsQueue, buffer, PARSED_DOCS_QUEUE_MAX_MSGSIZE, nullptr);
             assert(msgSize != -1 && "mq_receive() failed");
