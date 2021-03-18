@@ -25,22 +25,25 @@ struct StringHash {
     }
 };
 
-struct Document {
-    String Url;
-    unsigned Boundary;
+class SyncEntry {
+    unsigned seekOffsetDelta;
+    unsigned postLocationDelta;
+};
+
+class PostingList {
+    Vector<SyncEntry> syncTable;
+    Vector<unsigned> posts;
 };
 
 class IndexChunk {
-    Vector<Document> documents;
-    std::unordered_map<String, Vector<unsigned>, StringHash> postingLists;
+    Vector<String> urls;
+    std::unordered_map<String, PostingList, StringHash> postingLists;
 
     unsigned nextId = 0;
 public:
     size_t estSize = 0;
 
-    void Ingest(IndexerIngest &injest);
-
-    void Persist();
+    void writeToDisk();
 };
 
 

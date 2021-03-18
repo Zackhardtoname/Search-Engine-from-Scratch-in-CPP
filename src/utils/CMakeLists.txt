@@ -17,4 +17,8 @@ add_executable(ReadDumpFile
         ReadDumpFile.cpp
         )
 
+add_executable(ReadChunk
+        ReadChunk.cpp
+)
+
 # testing

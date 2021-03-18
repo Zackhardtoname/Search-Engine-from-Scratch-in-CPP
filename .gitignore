@@ -9,3 +9,12 @@
 src/crawler/crawler*
 src/parser/parser*
 src/crawler-parser-worker/crawler-parser-worker*
+
+# Chunk and dump files from indexer
+*.dump
+*.chunk
+
+# CMake
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
