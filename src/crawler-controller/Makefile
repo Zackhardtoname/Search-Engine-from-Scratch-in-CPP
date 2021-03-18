@@ -8,8 +8,7 @@
 EXECUTABLE  = crawler-controller
 
 # Change 'source_files' to match the component source files needed
-# SOURCE_FILES = crawler-controller.cpp 
-SOURCE_FILES = crawler-controller.cpp
+SOURCE_FILES = CrawlerController.cpp
 #######################
 # TODO (end) #
 #######################
