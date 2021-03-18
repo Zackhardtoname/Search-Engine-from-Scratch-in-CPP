@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(OpenSSL REQUIRED)
 
 add_subdirectory(crawler)
+add_subdirectory(indexer)
+add_subdirectory(utils)
 
 add_executable(crawlerCmdline
         parser/ParsedHtml.cpp
@@ -39,22 +41,6 @@ add_executable(dummy-filter
         )
 target_link_libraries(dummy-filter rt)
 
-add_executable(indexer
-        indexer/Worker.cpp
-        indexer/IndexChunk.cpp
-        indexer/IndexChunk.h
-        indexer/PorterStemming.cpp
-        )
-
-add_executable(CheckMQs
-        utils/CheckMQs.cpp
-        )
-target_link_libraries(CheckMQs rt)
-
-add_executable(DrainMQs
-        utils/DrainMQs.cpp
-        )
-target_link_libraries(DrainMQs rt)
 
 # testing
 
