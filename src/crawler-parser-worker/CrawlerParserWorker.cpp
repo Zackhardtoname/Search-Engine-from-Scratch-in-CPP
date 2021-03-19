@@ -15,10 +15,10 @@ int main(int argc, char **argv) {
     // If we want to go with multiple queues with different priorities,
     //    add flag O_NONBLOCK and poll from them.
     mqd_t frontier = mq_open(FRONTIER_MQ, O_RDONLY);
-    //assert(frontier != -1 && "mq_open() failed");
+    assert(frontier != -1 && "mq_open() failed");
 
     mqd_t newLinks = mq_open(NEW_LINKS_QUEUE, O_WRONLY);
-    //assert(newLinks != -1 && "mq_open() failed");
+    assert(newLinks != -1 && "mq_open() failed");
 
     EnglishDictChecker englishDictChecker("english.dict");
 
