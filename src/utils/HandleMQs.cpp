@@ -15,12 +15,10 @@ void handleMqueue(int argc, char **argv, scb::String operation) {
         mqd_t mqueue;
         const char *mqueueName;
         // Delete the message queue listed
-        if ( scb::String(argv[i]) == "frontier" ) {
+        if ( scb::String(argv[i]) == "frontier" )
             mqueueName = FRONTIER_MQ;
-        }
-        else if ( scb::String(argv[i]) == "newLinks" ) {
+        else if ( scb::String(argv[i]) == "newLinks" )
             mqueueName = NEW_LINKS_QUEUE;
-        }
         else {
             std::cout << argv[i] << " is not a valid mqueue. Shutting down." << std::endl;
             return;
@@ -34,8 +32,8 @@ void handleMqueue(int argc, char **argv, scb::String operation) {
                 std::cout << argv[i] << " mqueue already exists, skipping for now" << std::endl;
                 continue;
             }
-            
-            struct mq_attr attr;
+
+            mq_attr attr{};
             // initialize the queue attributes
             // TODO: Figure out how to set attr.mq_maxmsg to a higher value
             // TODO: Consider tweaking these attributes for each individual queue type
@@ -50,51 +48,45 @@ void handleMqueue(int argc, char **argv, scb::String operation) {
             assert(mqueue != -1 && "mq_open() failed");
             std::cout << argv[i] << " mqueue successfully created!" << std::endl;
 
-        }
-        else if ( operation == "check" ) {
+        } else if (operation == "check") {
 
-            struct mq_attr attr;
+            mq_attr attr{};
             mqueue = mq_open(mqueueName, O_RDONLY, 0644, &attr);
-            if ( mqueue == -1 ) {
+            if (mqueue == -1) {
                 std::cout << "mq_open() failed for " << argv[i] << " since it may not have been created" << std::endl;
                 continue;
             }
 
-            struct mq_attr *cur_attr = &attr;
-            mq_getattr(mqueue, cur_attr);
-            assert((mqd_t)-1 != mqueue);
-            std::cout << argv[i] << " mqueue has " << cur_attr->mq_curmsgs << "/" << cur_attr->mq_msgsize  << " elements" << std::endl;
+            mq_getattr(mqueue, &attr);
+            std::cout << argv[i] << " mqueue has " << attr.mq_curmsgs << "/" << attr.mq_maxmsg << " elements"
+                      << std::endl;
 
-        }
-        else if ( operation == "delete" ) {
+        } else if (operation == "delete") {
 
-            struct mq_attr attr;
-            mqueue = mq_open(mqueueName, O_RDONLY | O_NONBLOCK, 0644, &attr);
-            if ( mqueue == -1 ) {
+            mqueue = mq_open(mqueueName, O_RDONLY | O_NONBLOCK);
+            if (mqueue == -1) {
                 std::cout << "mq_open() failed for " << argv[i] << " since it may not have been created" << std::endl;
                 continue;
             }
             // TODO: Use a longer MAX_URL_LEN for the parsed index mqueue
-            struct mq_attr *cur_attr = &attr;
-            mq_getattr(mqueue, cur_attr);
-            char *buf = new char[cur_attr->mq_msgsize + 1];
+            mq_attr attr{};
+            mq_getattr(mqueue, &attr);
+            char *buf = new char[attr.mq_msgsize];
             int sz;
-            while ((sz = mq_receive(mqueue, buf, cur_attr->mq_msgsize, nullptr)) != -1) {
-                buf[sz] = '\0';
-                std::cout << "removed from " << argv[i] << ":  " << buf << std::endl;
+            while ((sz = mq_receive(mqueue, buf, attr.mq_msgsize, nullptr)) != -1) {
+                std::cout << "removed from " << argv[i] << ":  ";
+                for (int j = 0; j < sz; j++)
+                    std::cout << buf[j];
+                std::cout << std::endl;
             }
             delete[] buf;
-        }
-        else {
-            std::cout << operation.cstr() << " is not a valid operation. Shutting down." << std::endl;
-            return;
-        }
 
-
-        if ( operation == "delete" ) {
             // Remove the mqueue from the system
             mq_unlink(mqueueName);
             std::cout << argv[i] << " mqueue successfully deleted!" << std::endl;
+        } else {
+            std::cout << operation.cstr() << " is not a valid operation. Shutting down." << std::endl;
+            exit(1);
         }
     }
 }
