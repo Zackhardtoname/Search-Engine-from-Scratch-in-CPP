@@ -17,7 +17,10 @@ Make sure to include the full path of the libraries you want to include. For exa
 
 ### Style for Everything:
 Make sure that you format your changes according to the style guide with [this tool](https://github.com/sqd/eecs440-format).
-In short, to format a few files, run: `path-to-clang-format-440 --style=EECS440 -i file1.cpp file2.h`
+In short:
+
+To format a few files, run: `path-to-clang-format-440 --style=EECS440 -i file1.cpp file2.h`
+
 To format a whole directory (this could be slow): `find path_to_you_directory -name '*.cpp' -o -name '*.o' | xargs path-to-clang-format-440 --style=EECS440 -i`
 
 ### TODOS:
