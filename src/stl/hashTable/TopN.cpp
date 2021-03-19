@@ -8,15 +8,13 @@
 // Individual pairs are to be C-strings as keys and size_t's
 // as values.
 
-#include "HashTable.h"
 #include "TopN.h"
+#include "HashTable.h"
 
 using namespace std;
 
-
-using Hash = HashTable< const char *, size_t >;
-using Pair = Tuple< const char *, size_t >;
-
+using Hash = HashTable<const char *, size_t>;
+using Pair = Tuple<const char *, size_t>;
 
 Pair **TopN( Hash *hashtable, int N )
    {

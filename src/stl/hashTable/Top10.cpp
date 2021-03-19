@@ -2,19 +2,18 @@
 
 // Nicole Hamilton  nham@umich.edu
 
-#include <fstream>
-#include <vector>
-#include <string>
-#include <cstring>
-#include "HashTable.h"
 #include "Common.h"
+#include "HashTable.h"
 #include "Timer.h"
 #include "TopN.h"
+#include <cstring>
+#include <fstream>
+#include <string>
+#include <vector>
 
 using namespace std;
 
-
-void Usage( )
+void Usage()
    {
    cout <<
 
@@ -29,10 +28,8 @@ void Usage( )
    exit( 0 );
    }
 
-
-using Hash = HashTable< const char *, size_t >;
-using Pair = Tuple< const char *, size_t >;
-
+using Hash = HashTable<const char *, size_t>;
+using Pair = Tuple<const char *, size_t>;
 
 void PrintTop10( Hash *hashtable )
    {
@@ -44,11 +41,11 @@ void PrintTop10( Hash *hashtable )
 
       cout << "Finding top 10" << endl;
 
-      time.Start( );
+      time.Start();
       top10 = TopN( hashtable, 10 );
-      time.Finish( );
+      time.Finish();
 
-      time.PrintElapsed( );
+      time.PrintElapsed();
       }
    else
       top10 = TopN( hashtable, 10 );
@@ -58,21 +55,20 @@ void PrintTop10( Hash *hashtable )
    for ( int i = 0;  i < 10 && ( p = top10[ i ] );  i++ )
       cout << p->value << "   " << p->key << endl;
 
-   delete [ ] top10;
+   delete[] top10;
    }
-
 
 int main( int argc, char **argv )
    {
    if ( argc < 2 )
-      Usage( );
+      Usage();
 
-   vector< string > words;
+   vector<string> words;
 
    CollectWordsIn( argc, argv, words );
 
    Hash *hashtable = BuildHashTable( words );
-   hashtable->Optimize( );
+   hashtable->Optimize();
 
    PrintTop10( hashtable );
 

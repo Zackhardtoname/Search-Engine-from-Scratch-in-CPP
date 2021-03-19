@@ -3,28 +3,31 @@
 //
 
 #include <iostream>
-#include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/ssl.h>
 
 #include "Crawler.h"
 #include "ParsedUrl.h"
 
-int main(int argc, char **argv) {
-    if (argc != 2) {
-        std::cerr << "Usage: ./crawler <URL>" << std::endl;
-        return 1;
-    }
+int main( int argc, char **argv )
+   {
+   if ( argc != 2 )
+      {
+      std::cerr << "Usage: ./crawler <URL>" << std::endl;
+      return 1;
+      }
 
-    SSL_load_error_strings();
-    ERR_load_crypto_strings();
+   SSL_load_error_strings();
+   ERR_load_crypto_strings();
 
-//    auto httpResp = FetchUrl("https://republic.co/gumroad");
-    auto httpResp = FetchUrl(argv[1]);
-    // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); // test chunked
-    std::cout << "code: " << httpResp.StatusCode << '\n'
-              << "location: " << httpResp.Location << '\n'
-              << "lang: " << httpResp.Language << '\n'
-              << "---- body ----" << '\n'
-              << httpResp.Body;
-    return 0;
-}
+   //    auto httpResp = FetchUrl("https://republic.co/gumroad");
+   auto httpResp = FetchUrl( argv[ 1 ] );
+   // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); //
+   // test chunked
+   std::cout << "code: " << httpResp.StatusCode << '\n'
+             << "location: " << httpResp.Location << '\n'
+             << "lang: " << httpResp.Language << '\n'
+             << "---- body ----" << '\n'
+             << httpResp.Body;
+   return 0;
+   }

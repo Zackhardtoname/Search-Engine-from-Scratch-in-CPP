@@ -4,27 +4,32 @@
 
 #include "VLQ.h"
 
-String VLQ::Encode(uint64_t x) {
-    String result;
-    do {
-        auto thisDigit = static_cast<uint8_t>(x & mask);
-        // if not done yet
-        if (x & ~mask)
-            thisDigit |= ~mask;
-        result.pushBack(thisDigit);
+String VLQ::Encode( uint64_t x )
+   {
+   String result;
+   do
+      {
+      auto thisDigit = static_cast<uint8_t>( x & mask );
+      // if not done yet
+      if ( x & ~mask )
+         thisDigit |= ~mask;
+      result.pushBack( thisDigit );
 
-        x >>= 7;
-    } while (x);
+      x >>= 7;
+      }
+   while ( x );
 
-    return result;
-}
+   return result;
+   }
 
-uint64_t VLQ::Decode(const String &s) {
-    unsigned shift = 0;
-    uint64_t result = 0;
-    for (uint8_t c: s) {
-        result |= (static_cast<uint64_t>(c & mask) << shift);
-        shift += 7;
-    }
-    return result;
-}
+uint64_t VLQ::Decode( const String &s )
+   {
+   unsigned shift = 0;
+   uint64_t result = 0;
+   for ( uint8_t c : s )
+      {
+      result |= ( static_cast<uint64_t>( c & mask ) << shift );
+      shift += 7;
+      }
+   return result;
+   }

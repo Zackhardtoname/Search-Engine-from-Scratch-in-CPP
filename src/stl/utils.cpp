@@ -13,10 +13,10 @@ String AddrToString( const sockaddr_storage &addr, socklen_t addrLen )
    {
    std::string host( MAX_HOSTNAME_LEN, '\0' );
    std::string service( MAX_HOSTNAME_LEN, '\0' );
-   int status =
-      getnameinfo( reinterpret_cast<const sockaddr *>( &addr ), addrLen,
-                   (char*)(host.data()), MAX_HOSTNAME_LEN, (char*)service.data(),
-                   MAX_HOSTNAME_LEN, NI_NAMEREQD | NI_NUMERICSERV );
+   int status = getnameinfo( reinterpret_cast<const sockaddr *>( &addr ),
+                             addrLen, (char *)( host.data() ), MAX_HOSTNAME_LEN,
+                             (char *)service.data(), MAX_HOSTNAME_LEN,
+                             NI_NAMEREQD | NI_NUMERICSERV );
    if ( status == 0 )
       return String( host.c_str() ) + ":" + String( service.c_str() );
    return gai_strerror( status );
@@ -41,10 +41,11 @@ addrinfo *QueryHost( const char *host, const char *service )
                      /*ai_next*/ nullptr };
    addrinfo *addrResult = nullptr;
    int status = getaddrinfo( host, service, &hint, &addrResult );
-   if( status != 0) {
-       printf("getaddrinfo(%s:%s): %s\n", host, service, strerror(status));
-       throw std::runtime_error("getaddrinfo() error");
-   }
+   if ( status != 0 )
+      {
+      printf( "getaddrinfo(%s:%s): %s\n", host, service, strerror( status ) );
+      throw std::runtime_error( "getaddrinfo() error" );
+      }
    return addrResult;
    }
 
