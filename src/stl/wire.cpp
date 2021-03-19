@@ -3,13 +3,13 @@
 //
 
 #include <cassert>
-#include <memory>
 #include <limits>
+#include <memory>
 
 #include "wire.h"
 
-Serializer::Serializer(String fmt )
-    : format( std::move( fmt ) ), itFormat(format.begin() )
+Serializer::Serializer( String fmt )
+    : format( std::move( fmt ) ), itFormat( format.begin() )
    {
    }
 
@@ -19,7 +19,7 @@ void Serializer::PutInt( int64_t x )
    switch ( *( itFormat++ ) )
       {
       case 'b':
-          buffer.pushBack(x);
+         buffer.pushBack( x );
          break;
       case 's':
          {
@@ -50,14 +50,14 @@ void Serializer::PutString( const String &x )
    switch ( *( itFormat++ ) )
       {
       case 'a':
-         assert(x.size() <= std::numeric_limits<uint8_t>::max() &&
-                "string too long" );
-              buffer.pushBack(x.size());
+         assert( x.size() <= std::numeric_limits<uint8_t>::max() &&
+                 "string too long" );
+         buffer.pushBack( x.size() );
          break;
       case 'A':
          {
-         assert(x.size() <= std::numeric_limits<uint16_t>::max() &&
-                "string too long" );
+         assert( x.size() <= std::numeric_limits<uint16_t>::max() &&
+                 "string too long" );
          uint16_t len = x.size();
          buffer += "12";
          *reinterpret_cast<uint16_t *>( buffer.data() + buffer.size() - 2 ) =
@@ -76,9 +76,9 @@ String &Serializer::Get()
    return buffer;
    }
 
-Deserializer::Deserializer(String fmt, const String &buf )
-    : format( std::move( fmt ) ), buffer( buf ), itFormat(format.begin() ),
-      itBuffer(buffer.cbegin() )
+Deserializer::Deserializer( String fmt, const String &buf )
+    : format( std::move( fmt ) ), buffer( buf ), itFormat( format.begin() ),
+      itBuffer( buffer.cbegin() )
    {
    }
 
@@ -151,7 +151,7 @@ int Deserializer::BytesConsumed()
    return itBuffer - buffer.begin();
    }
 
-void Deserializer::Rearm(String fmt )
+void Deserializer::Rearm( String fmt )
    {
    this->format = std::move( fmt );
    itFormat = this->format.begin();

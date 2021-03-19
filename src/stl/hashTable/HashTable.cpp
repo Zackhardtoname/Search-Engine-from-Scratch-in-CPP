@@ -3,21 +3,20 @@
 // Nicole Hamilton  nham@umich.edu
 
 #include <cassert>
-#include <iostream>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <string>
-#include <cstring>
 #include <vector>
 
-#include "HashTable.h"
 #include "Common.h"
+#include "HashTable.h"
 #include "Timer.h"
 
 using namespace std;
 
-
-void Usage( )
+void Usage()
    {
    cout <<
 
@@ -33,10 +32,8 @@ void Usage( )
    exit( 0 );
    }
 
-
-using Hash = HashTable< const char *, size_t >;
-using Pair = Tuple< const char *, size_t >;
-
+using Hash = HashTable<const char *, size_t>;
+using Pair = Tuple<const char *, size_t>;
 
 void Search( const Hash *hashtable )
    {
@@ -45,18 +42,17 @@ void Search( const Hash *hashtable )
    string word;
    while ( cin >> word )
       {
-      const Pair *p = hashtable->Find( word.c_str( ) );
+      const Pair *p = hashtable->Find( word.c_str() );
       cout << ( p ? p->value : 0 ) << "   " << word << endl;
       }
    }
 
-
 int main( int argc, char **argv )
    {
    if ( argc < 2 )
-      Usage( );
+      Usage();
 
-   vector< string > words;
+   vector<string> words;
 
    CollectWordsIn( argc, argv, words );
 
@@ -65,37 +61,37 @@ int main( int argc, char **argv )
       cout << "Building HashTable" << endl;
 
       Timer time;
-      time.Start( );
+      time.Start();
 
       Hash *hashtable = BuildHashTable( words );
 
-      time.Finish( );
-      time.PrintElapsed( );
+      time.Finish();
+      time.PrintElapsed();
 
       cout << "Optimizing HashTable" << endl;
 
-      time.Start( );
+      time.Start();
 
-      hashtable->Optimize( );
+      hashtable->Optimize();
 
-      time.Finish( );
-      time.PrintElapsed( );
+      time.Finish();
+      time.PrintElapsed();
 
-      time.Start( );
+      time.Start();
 
       cout << "Enter search words:" << endl;
 
       Search( hashtable );
 
-      time.Finish( );
-      time.PrintElapsed( );
+      time.Finish();
+      time.PrintElapsed();
 
       delete hashtable;
       }
    else
       {
       Hash *hashtable = BuildHashTable( words );
-      hashtable->Optimize( );
+      hashtable->Optimize();
       Search( hashtable );
       delete hashtable;
       }
