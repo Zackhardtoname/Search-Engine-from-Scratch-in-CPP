@@ -26,6 +26,8 @@ int main(int argc, char **argv) {
         return 1;
     }
     char *childExecPath = argv[1];
+
+    // Register signals and signal handlers
     signal(SIGINT, SIGINTHandler);
     signal(SIGTERM, SIGTERMHandler);
 
