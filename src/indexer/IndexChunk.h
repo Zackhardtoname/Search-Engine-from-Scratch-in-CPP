@@ -44,7 +44,7 @@ public:
     Vector<PostingList> postingLists;
     size_t estSize = 0;
 
-    void writeToDisk();
+    void writeToDisk(const char* filename);
 };
 
 #endif //SCOOBLE_SEARCH_INDEXCHUNK_H

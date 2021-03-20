@@ -16,11 +16,11 @@ add_executable(dummy-indexer
         )
 target_link_libraries(dummy-indexer rt)
 
-add_executable(chunker
-        chunker.cpp
+add_executable(create_test_chunk
+        create_test_chunk.cpp
         IndexChunk.cpp
         VLQ.cpp
         )
-target_link_libraries(chunker rt)
+target_link_libraries(create_test_chunk rt)
 
 # testing

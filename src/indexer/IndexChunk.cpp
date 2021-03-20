@@ -12,7 +12,7 @@
 #include "../stl/String.h"
 #include "../stl/String.cpp"
 
-void IndexChunk::writeToDisk() {
+void IndexChunk::writeToDisk(const char* filename) {
     // Structure:
     // [Header] [URL List] [Dictionary (word -> posting list offset)] [Posting Lists]
     //
@@ -25,7 +25,6 @@ void IndexChunk::writeToDisk() {
     // generate filename from current time
     time_t timestamp = std::time(nullptr);
     tm *timeRepr = std::gmtime(&timestamp);
-    char filename[1000] = "test.chunk";
     // strftime(filename, 1000, "%Y_%m_%d_%H_%M_%S.chunk", timeRepr);
 
     // Open chunk file
@@ -69,9 +68,6 @@ void IndexChunk::writeToDisk() {
 
         for(uint64_t post : pl.posts) {
             String encoded = VLQ::Encode(post);
-
-            std::cout << "\tEncoded: " << (int) *reinterpret_cast<uint8_t*>(encoded.cstr()) << "\n";
-            std::cout << "\t\tlen: " << encoded.length() << "\n";
 
             memcpy(cursor, encoded.cstr(), encoded.length());
             cursor += encoded.length();            

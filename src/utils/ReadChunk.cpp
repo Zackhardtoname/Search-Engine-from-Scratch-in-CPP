@@ -55,8 +55,9 @@ int main(int argc, char **argv) {
     }
 
     // Read header
+
     cout << "Chunk Header:" << std::endl;
-    cout << "\tDocument count:" << chunk->header.docCount << std::endl;
+    cout << "\tDocument count: " << chunk->header.docCount << std::endl;
     cout << "\tDictionary Offset: " << chunk->header.dictionaryOffset << std::endl;
     cout << "\tPosting List Offset: " << chunk->header.postingListsOffset << std::endl;
     cout << "\tEnd Offset: " << chunk->header.endOffset << std::endl;
