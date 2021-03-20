@@ -6,85 +6,91 @@
 #include <ctime>
 #include <iostream>
 
-#include "IndexChunk.h"
-#include "ContiguousChunk.h"
-#include "VLQ.h"
-#include "../stl/String.h"
 #include "../stl/String.cpp"
+#include "../stl/String.h"
+#include "ContiguousChunk.h"
+#include "IndexChunk.h"
+#include "VLQ.h"
 
-void IndexChunk::writeToDisk(const char* filename) {
-    // Structure:
-    // [Header] [URL List] [Dictionary (word -> posting list offset)] [Posting Lists]
-    //
-    // Header:
-    // [i32 num of documents] [i32 offset for posting list idx] [i32 offset for posting lists]
-    //
-    // Each Posting List:
-    // [i32 offset of first post]
-    
-    // generate filename from current time
-    time_t timestamp = std::time(nullptr);
-    tm *timeRepr = std::gmtime(&timestamp);
-    // strftime(filename, 1000, "%Y_%m_%d_%H_%M_%S.chunk", timeRepr);
+void IndexChunk::writeToDisk( const char *filename )
+   {
+   // Structure:
+   // [Header] [URL List] [Dictionary (word -> posting list offset)] [Posting
+   // Lists]
+   //
+   // Header:
+   // [i32 num of documents] [i32 offset for posting list idx] [i32 offset for
+   // posting lists]
+   //
+   // Each Posting List:
+   // [i32 offset of first post]
 
-    // Open chunk file
-    FILE *f = fopen(filename, "w"); // append
-    long curSize = 0;
+   // generate filename from current time
+   time_t timestamp = std::time( nullptr );
+   tm *timeRepr = std::gmtime( &timestamp );
+   // strftime(filename, 1000, "%Y_%m_%d_%H_%M_%S.chunk", timeRepr);
 
-    // Create contiguous chunk for writing
-    ContiguousChunk *chunk = new ContiguousChunk();
+   // Open chunk file
+   FILE *f = fopen( filename, "w" ); // append
+   long curSize = 0;
 
-    chunk->header.docCount = urls.size();
-    char *cursor = chunk->data;
+   // Create contiguous chunk for writing
+   ContiguousChunk *chunk = new ContiguousChunk();
 
-    // Copy the URLs into the URL list
-    for(int i = 0; i < urls.size(); ++i) {
-        strcpy(cursor, urls[i].cstr());
-        // Increase pos to next string pos, leaving space for terminator
-        cursor += urls[i].length() + 1;
-    }
+   chunk->header.docCount = urls.size();
+   char *cursor = chunk->data;
 
-    // TODO hash blob
-    chunk->header.dictionaryOffset = cursor - chunk->data;
-    strcpy(cursor, "________TODO________");
-    cursor += sizeof("________TODO________") - 1;
+   // Copy the URLs into the URL list
+   for ( int i = 0;  i < urls.size();  ++i )
+      {
+      strcpy( cursor, urls[ i ].cstr() );
+      // Increase pos to next string pos, leaving space for terminator
+      cursor += urls[ i ].length() + 1;
+      }
 
-    // Copy URLS into the posting list section of the data
-    chunk->header.postingListsOffset = cursor - chunk->data;
-    // For each posting list
+   // TODO hash blob
+   chunk->header.dictionaryOffset = cursor - chunk->data;
+   strcpy( cursor, "________TODO________" );
+   cursor += sizeof( "________TODO________" ) - 1;
 
-    int plcount = 0;
+   // Copy URLS into the posting list section of the data
+   chunk->header.postingListsOffset = cursor - chunk->data;
+   // For each posting list
 
-    for(PostingList pl : postingLists) {
-        PostingListHeader plHeader;
-        // TODO write synchronization tables
-        // TODO correct offset
-        plHeader.postsOffset = 0;
-        memcpy(cursor, &plHeader, sizeof(PostingListHeader));
-        cursor += sizeof(PostingListHeader);
+   int plcount = 0;
 
-        // For each post
-        std::cout << "Writing posting list " << plcount << "\n";
+   for ( PostingList pl : postingLists )
+      {
+      PostingListHeader plHeader;
+      // TODO write synchronization tables
+      // TODO correct offset
+      plHeader.postsOffset = 0;
+      memcpy( cursor, &plHeader, sizeof( PostingListHeader ) );
+      cursor += sizeof( PostingListHeader );
 
-        for(uint64_t post : pl.posts) {
-            String encoded = VLQ::Encode(post);
+      // For each post
+      std::cout << "Writing posting list " << plcount << "\n";
 
-            memcpy(cursor, encoded.cstr(), encoded.length());
-            cursor += encoded.length();            
-        }
+      for ( uint64_t post : pl.posts )
+         {
+         String encoded = VLQ::Encode( post );
 
-        // Add a sentinel at the end of each PL
-        strcpy(cursor, "\0"); // This line may not be necessary, as bytes should be 0x00 by default.
-        ++cursor;
-        ++plcount;
-    }
+         memcpy( cursor, encoded.cstr(), encoded.length() );
+         cursor += encoded.length();
+         }
 
-    chunk->header.endOffset = cursor - chunk->data;
+      // Add a sentinel at the end of each PL
+      strcpy( cursor, "\0" ); // This line may not be necessary, as bytes should
+                              // be 0x00 by default.
+      ++cursor;
+      ++plcount;
+      }
 
+   chunk->header.endOffset = cursor - chunk->data;
 
-    // Write contiguous chunk to file
-    char* chunkBuffer = reinterpret_cast<char*>(chunk);
-    size_t written = fwrite(chunkBuffer, sizeof(ContiguousChunk), 1, f);
-    std::cout << written << " chunks written." << std::endl;
-    fclose(f);
-}
+   // Write contiguous chunk to file
+   char *chunkBuffer = reinterpret_cast<char *>( chunk );
+   size_t written = fwrite( chunkBuffer, sizeof( ContiguousChunk ), 1, f );
+   std::cout << written << " chunks written." << std::endl;
+   fclose( f );
+   }

@@ -8,32 +8,34 @@
 #include <cstddef>
 #include <unordered_map>
 
+#include "../defs.h"
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "IndexerInjest.h"
-#include "../defs.h"
 
 constexpr static size_t INDEX_CHUNK_TARGET_SIZE = 1 * MB;
 
 using scb::String;
 using scb::Vector;
 
-struct PostingListHeader {
-    uint32_t postsOffset;
-};
+struct PostingListHeader
+   {
+      uint32_t postsOffset;
+   };
 
-struct ChunkHeader {
-    uint32_t docCount;
-    uint32_t dictionaryOffset; // from start of data[]
-    uint32_t postingListsOffset; // from start of data[]
-    uint32_t endOffset; // from start of data[]
-};
+struct ChunkHeader
+   {
+      uint32_t docCount;
+      uint32_t dictionaryOffset;   // from start of data[]
+      uint32_t postingListsOffset; // from start of data[]
+      uint32_t endOffset;          // from start of data[]
+   };
 
-struct ContiguousChunk {
-public:
-    ChunkHeader header;
-    char data[INDEX_CHUNK_TARGET_SIZE- sizeof(header)];
-};
+struct ContiguousChunk
+   {
+   public:
+      ChunkHeader header;
+      char data[ INDEX_CHUNK_TARGET_SIZE - sizeof( header ) ];
+   };
 
-
-#endif //SCOOBLE_SEARCH_CONTIGUOUSCHUNK_H
+#endif // SCOOBLE_SEARCH_CONTIGUOUSCHUNK_H
