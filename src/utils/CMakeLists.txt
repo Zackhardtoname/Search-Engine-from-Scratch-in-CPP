@@ -17,8 +17,9 @@ add_executable(ReadDumpFile
         ReadDumpFile.cpp
         )
 
-add_executable(ReadChunk
+add_executable(readChunk
         ReadChunk.cpp
+        ../indexer/VLQ.cpp
 )
 
 # testing

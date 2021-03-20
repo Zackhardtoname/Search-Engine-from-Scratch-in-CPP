@@ -10,6 +10,10 @@
 #include <fcntl.h>
 
 #include "../indexer/ContiguousChunk.h"
+#include "../indexer/VLQ.h"
+
+using std::cout;
+using std::cerr;
 
 size_t fileSize( int f )
 {
@@ -40,20 +44,55 @@ int main(int argc, char **argv) {
 
     int f = open(argv[1], O_RDONLY);
     if ( f == -1) {
-        std::cerr << "Error opening file " << argv[1] << std::endl;
+        cerr << "Error opening file " << argv[1] << std::endl;
         return 1;
     }
 
     chunk = (ContiguousChunk*) mmap(nullptr, fileSize(f), PROT_READ, MAP_PRIVATE, f, 0 );
     if (chunk == MAP_FAILED) {
-        std::cerr << "Error memory-mapping file " << argv[1] << std::endl;
+        cerr << "Error memory-mapping file " << argv[1] << std::endl;
         return 1;
     }
 
+    // Read header
+    cout << "Chunk Header:" << std::endl;
+    cout << "\tDocument count:" << chunk->header.docCount << std::endl;
+    cout << "\tDictionary Offset: " << chunk->header.dictionaryOffset << std::endl;
+    cout << "\tPosting List Offset: " << chunk->header.postingListsOffset << std::endl;
+    cout << "\tEnd Offset: " << chunk->header.endOffset << std::endl;
 
+    // Read URL List
+    cout << "URLs:" << std::endl;
+    const char* cursor = chunk->data;
 
-    std::cout << "Doc count: " << chunk->docCount << std::endl;
-    std::cout << "Url List Offset: " << chunk->urlListOffset << std::endl;
-    std::cout << "Dictionary Offset: " << chunk->dictionaryOffset << std::endl;
-    std::cout << "Posting List Offset: " << chunk->postingListsOffset << std::endl;
+    // TODO check if faster to just print character by character
+    while(cursor < chunk->data + chunk->header.dictionaryOffset) {
+        cout << "\t" << cursor << std::endl;
+        cursor += strlen(cursor) + 1;
+    }
+
+    // TODO print dictionary
+    cursor = chunk->data + chunk->header.postingListsOffset;
+    // Print decoded posts
+    VLQStreamDecoder decoder(cursor);
+    cout << "Posting Lists:" << std::endl;
+    int plCounter = 0;
+    uint64_t decoded;
+
+    // For each posting list
+    while( cursor < chunk->data + chunk->header.endOffset) {
+
+        const PostingListHeader *plHeader = reinterpret_cast<const PostingListHeader*>(cursor);
+
+        cursor += sizeof(PostingListHeader) + plHeader->postsOffset;
+        
+        decoder.setCursor(cursor);
+
+        cout << "\t" << plCounter++ << " (postsOffset = " << plHeader->postsOffset << "):" << std::endl;
+        while((decoded = decoder.next()) != 0) {
+            cout << "\t\t" << decoded << std::endl;
+        }
+
+        cursor = decoder.getCursor();
+    }
 }

@@ -17,7 +17,9 @@ add_executable(dummy-indexer
 target_link_libraries(dummy-indexer rt)
 
 add_executable(chunker
-        ContiguousChunk.cpp
+        chunker.cpp
+        IndexChunk.cpp
+        VLQ.cpp
         )
 target_link_libraries(chunker rt)
 

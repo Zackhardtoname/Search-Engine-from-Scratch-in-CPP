@@ -11,8 +11,7 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "IndexerInjest.h"
-
-constexpr static size_t INDEX_CHUNK_TARGET_SIZE = 100 * 1024 * 1024; // 100 Megabytes
+#include "ContiguousChunk.h"
 
 using scb::String;
 using scb::Vector;
@@ -26,25 +25,26 @@ struct StringHash {
 };
 
 class SyncEntry {
+public:
     unsigned seekOffsetDelta;
-    unsigned postLocationDelta;
+    unsigned postLocation;
 };
 
 class PostingList {
+public:
     Vector<SyncEntry> syncTable;
-    Vector<unsigned> posts;
+    Vector<uint64_t> posts;
 };
 
 class IndexChunk {
-    Vector<String> urls;
-    std::unordered_map<String, PostingList, StringHash> postingLists;
-
-    unsigned nextId = 0;
+    
 public:
+    Vector<String> urls;
+    std::unordered_map<String, uint32_t, StringHash> postingListOffsets;
+    Vector<PostingList> postingLists;
     size_t estSize = 0;
 
     void writeToDisk();
 };
-
 
 #endif //SCOOBLE_SEARCH_INDEXCHUNK_H

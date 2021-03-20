@@ -7,7 +7,7 @@
 
 
 #include <cstdint>
-#include "String.h"
+#include "../stl/String.h"
 
 using scb::String;
 
@@ -20,5 +20,15 @@ public:
     static uint64_t Decode(const String& s);
 };
 
+class VLQStreamDecoder {
+private:
+    const char *cursor;
+    constexpr static uint8_t mask = 0x7f; // 0111 1111
+public:
+    VLQStreamDecoder(const char *s);
+    uint64_t next();
+    const char* getCursor() const;
+    void setCursor(const char* cursor_in);
+};
 
 #endif //SCOOBLE_SEARCH_VLQ_H
