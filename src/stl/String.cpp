@@ -38,8 +38,21 @@ unsigned StringRef::Length() const
 
 std::ostream &scb::operator<<( std::ostream &os, const scb::String &s )
    {
-   os << "";
    for ( auto character : s )
       os << character;
    return os;
+   }
+
+std::istream &operator>>( std::istream &is, String &s )
+   {
+   s.clear();
+
+   while ( is )
+      {
+      int p = is.peek();
+      if ( isspace( p ) )
+         return is;
+      s.pushBack( static_cast<char>( p ) );
+      }
+   return is;
    }

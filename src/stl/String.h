@@ -336,7 +336,10 @@ struct StringRef
 
       [[nodiscard]] unsigned Length() const;
    };
+
 std::ostream &operator<<( std::ostream &os, const String &s );
+
+std::istream &operator>>( std::istream &is, String &s );
 
    }      // namespace scb
 #endif // SCOOBLE_STRING_H
