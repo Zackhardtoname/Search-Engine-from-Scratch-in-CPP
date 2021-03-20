@@ -4,9 +4,9 @@
 // Nicole Hamilton  nham@umich.edu
 
 #include <cassert>
-#include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -17,8 +17,7 @@ using namespace std;
 
 extern bool optVerbose;
 
-
-void Usage( )
+void Usage()
    {
    cout <<
 
@@ -31,10 +30,8 @@ void Usage( )
    exit( 0 );
    }
 
-
-using Hash = HashTable< const char *, size_t >;
-using Pair = Tuple< const char *, size_t >;
-
+using Hash = HashTable<const char *, size_t>;
+using Pair = Tuple<const char *, size_t>;
 
 void Search( const HashBlob *hashblob )
    {
@@ -43,16 +40,15 @@ void Search( const HashBlob *hashblob )
    string word;
    while ( cin >> word )
       {
-      const SerialTuple *s = hashblob->Find( word.c_str( ) );
+      const SerialTuple *s = hashblob->Find( word.c_str() );
       cout << ( s ? s->Value : 0 ) << "   " << word << endl;
       }
    }
 
-
 int main( int argc, char **argv )
    {
    if ( argc < 2 )
-      Usage( );
+      Usage();
 
    if ( *argv[ 0 ] == '-' )
       {
@@ -71,29 +67,29 @@ int main( int argc, char **argv )
 
       Timer time;
 
-      time.Start( );
+      time.Start();
 
       HashFile hashfile( argv[ 1 ] );
 
-      time.Finish( );
-      time.PrintElapsed( );
+      time.Finish();
+      time.PrintElapsed();
 
-      const HashBlob *hashblob = hashfile.Blob( );
+      const HashBlob *hashblob = hashfile.Blob();
       cout << "HashBlob size = " << hashblob->BlobSize << " bytes" << endl;
 
       cout << endl << "Enter search words:" << endl;
 
-      time.Start( );
+      time.Start();
 
       Search( hashblob );
 
-      time.Finish( );
-      time.PrintElapsed( );
+      time.Finish();
+      time.PrintElapsed();
       }
    else
       {
       HashFile hashfile( argv[ 1 ] );
-      const HashBlob *hashblob = hashfile.Blob( );
+      const HashBlob *hashblob = hashfile.Blob();
       Search( hashblob );
       }
    }

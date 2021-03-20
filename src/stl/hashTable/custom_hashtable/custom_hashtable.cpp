@@ -2,15 +2,15 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
-bool CompareEqual( const char *L, const char *R ){
-    while (*L==*R)
-        if (*(L++) = '\0')
-            return true;
-    return false;
-};
+bool CompareEqual( const char *L, const char *R )
+   {
+   while ( *L == *R )
+      if ( *( L++ ) = '\0' )
+         return true;
+   return false;
+   };
 
-
-template< typename Key, typename Value > class Tuple
+template <typename Key, typename Value> class Tuple
    {
    public:
       Key key;
@@ -21,16 +21,15 @@ template< typename Key, typename Value > class Tuple
          }
    };
 
-
-template< typename Key, typename Value > class Bucket
+template <typename Key, typename Value> class Bucket
    {
    public:
       Bucket *next;
       uint32_t hashValue;
-      Tuple< Key, Value > tuple;
+      Tuple<Key, Value> tuple;
 
-      Bucket( const Key &k, uint32_t h, const Value v ) :
-            tuple( k, v ), next( nullptr ), hashValue( h )
+      Bucket( const Key &k, uint32_t h, const Value v )
+          : tuple( k, v ), next( nullptr ), hashValue( h )
          {
          }
    };
@@ -724,64 +723,76 @@ template <typename T> class HashTable
             }
          }
 
-      //fun tiny obfuscation
-      bool insert(const T&val){
-         auto tryInsert = data[hashFunction(val)].insert(val);
-         return length+=tryInsert, tryInsert;
-      }
+      // fun tiny obfuscation
+      bool insert( const T &val )
+         {
+         auto tryInsert = data[ hashFunction( val ) ].insert( val );
+         return length += tryInsert, tryInsert;
+         }
 
-      bool remove(const T& val){
-         auto tryRemove = data[hashFunction(val)].remove(val);
-         return length-=tryRemove, tryRemove;
-      }
+      bool remove( const T &val )
+         {
+         auto tryRemove = data[ hashFunction( val ) ].remove( val );
+         return length -= tryRemove, tryRemove;
+         }
 
-      bool exists(const T& val) const{
-         return data[hashFunction(val)].exists(val);
-      }
+      bool exists( const T &val ) const
+         {
+         return data[ hashFunction( val ) ].exists( val );
+         }
 
-      Tuple<Key, Value> Find(const Key k, const Value initialValue = nullptr){
-         auto finder = data[hashFunction(key)].find(val);
-         
-      }
+      Tuple<Key, Value> Find( const Key k, const Value initialValue = nullptr )
+         {
+         auto finder = data[ hashFunction( key ) ].find( val );
+         }
 
-      int size() const{
+      int size() const
+         {
          return length;
-      }
+         }
 
-      int capacity() const{
+      int capacity() const
+         {
          return hasherSize;
-      }
+         }
 
-      //load factor func from 281
-      int lF() const{
-         return hasherSize/length;
-      }
+      // load factor func from 281
+      int lF() const
+         {
+         return hasherSize / length;
+         }
 
       /*
       to implement
-            instersections, unions, differences, set operations (will be helpful to compare maps wihtout going throug everythign)
+            instersections, unions, differences, set operations (will be helpful
+      to compare maps wihtout going throug everythign)
       */
 
-   private : 
-         //really only works for string right now lmao, thinking of making it VarArg like printf
-         //currently just using horners
-         int hashFunction(const T&val) const{
-            int value = 0;
-            while(*val)
-               value = (value * 32 + *val > 96 ? *val -96 : *(val) - 64)%hasherSize, ++val;
-            return value;
+   private:
+      // really only works for string right now lmao, thinking of making it
+      // VarArg like printf currently just using horners
+      int hashFunction( const T &val ) const
+         {
+         int value = 0;
+         while ( *val )
+            value =
+               ( value * 32 + *val > 96 ? *val - 96 : *(val)-64 ) % hasherSize,
+            ++val;
+         return value;
          }
 
-         void copier(const HashTable &ht){
-            if (ht.data){
-               length=ht.size(), hasherSize=ht.capacity();
-               data = new LinkedList[hasherSize];
-               for (int i = 0; i<hasherSize; ++i)
-                  data[i] = ht.data[i];
+      void copier( const HashTable &ht )
+         {
+         if ( ht.data )
+            {
+            length = ht.size(), hasherSize = ht.capacity();
+            data = new LinkedList[ hasherSize ];
+            for ( int i = 0;  i < hasherSize;  ++i )
+               data[ i ] = ht.data[ i ];
             }
          }
 
-         LinkedList *data;
-         int hasherSize;
-         int length;
+      LinkedList *data;
+      int hasherSize;
+      int length;
    };

@@ -7,6 +7,7 @@ find_package(OpenSSL REQUIRED)
 add_subdirectory(crawler)
 add_subdirectory(indexer)
 add_subdirectory(utils)
+add_subdirectory(crawler-controller)
 
 add_executable(crawlerCmdline
         parser/ParsedHtml.cpp
