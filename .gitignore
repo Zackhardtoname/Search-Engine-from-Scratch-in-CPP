@@ -4,6 +4,9 @@
 # CLion
 .idea/
 
+# macOS
+.DS_Store
+
 # Executables
 *.o
 src/crawler/crawler*
