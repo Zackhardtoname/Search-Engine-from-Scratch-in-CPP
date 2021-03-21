@@ -3,7 +3,7 @@
 ### How to make updates to the code repository:
 1. Create a new branch with `git checkout -b <new-branch-name>`
 2. Add and commit your changes.
-3. Right before pushing you changes, run `get merge master` on you dev branch to make sure it is updated. Resolve and commit any merge comflicts that arise.
+3. Right before pushing you changes, run `git merge master` on you dev branch to make sure it is updated. Resolve and commit any merge comflicts that arise.
 4. Push your branch with `git push --set-upstream origin <new-branch-name>`
 5. Go to gitub and click the 'New pull request' button next to your branch name on the repository.
 6. Assign whoever you want to review it, and wait for one/two code reviews before merging into the master branch(this may involve several rounds of code review and additional changes).
