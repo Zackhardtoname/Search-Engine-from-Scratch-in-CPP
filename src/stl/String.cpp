@@ -43,13 +43,13 @@ std::ostream &scb::operator<<( std::ostream &os, const scb::String &s )
    return os;
    }
 
-std::istream &operator>>( std::istream &is, String &s )
+std::istream &scb::operator>>( std::istream &is, String &s )
    {
    s.clear();
 
    while ( is )
       {
-      int p = is.peek();
+      int p = is.get();
       if ( isspace( p ) )
          return is;
       s.pushBack( static_cast<char>( p ) );
