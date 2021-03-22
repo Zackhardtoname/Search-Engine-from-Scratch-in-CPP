@@ -26,7 +26,7 @@ private:
     constexpr static uint8_t mask = 0x7f; // 0111 1111
 public:
     VLQStreamDecoder(const char *s);
-    uint64_t next();
+    uint64_t Next();
     const char* getCursor() const;
     void setCursor(const char* cursor_in);
 };

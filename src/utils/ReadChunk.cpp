@@ -63,26 +63,26 @@ int main( int argc, char **argv )
    // Read header
 
    cout << "Chunk Header:" << std::endl;
-   cout << "\tDocument count: " << chunk->header.docCount << std::endl;
-   cout << "\tDictionary Offset: " << chunk->header.dictionaryOffset
+   cout << "\tDocument count: " << chunk->header.DocCount << std::endl;
+   cout << "\tDictionary Offset: " << chunk->header.DictionaryOffset
         << std::endl;
-   cout << "\tPosting List Offset: " << chunk->header.postingListsOffset
+   cout << "\tPosting List Offset: " << chunk->header.PostingListsOffset
         << std::endl;
-   cout << "\tEnd Offset: " << chunk->header.endOffset << std::endl;
+   cout << "\tEnd Offset: " << chunk->header.EndOffset << std::endl;
 
    // Read URL List
    cout << "URLs:" << std::endl;
    const char *cursor = chunk->data;
 
    // TODO check if faster to just print character by character
-   while ( cursor < chunk->data + chunk->header.dictionaryOffset )
+   while ( cursor < chunk->data + chunk->header.DictionaryOffset )
       {
       cout << "\t" << cursor << std::endl;
       cursor += strlen( cursor ) + 1;
       }
 
    // TODO print dictionary
-   cursor = chunk->data + chunk->header.postingListsOffset;
+   cursor = chunk->data + chunk->header.PostingListsOffset;
    // Print decoded posts
    VLQStreamDecoder decoder( cursor );
    cout << "Posting Lists:" << std::endl;
@@ -90,7 +90,7 @@ int main( int argc, char **argv )
    uint64_t decoded;
 
    // For each posting list
-   while ( cursor < chunk->data + chunk->header.endOffset )
+   while ( cursor < chunk->data + chunk->header.EndOffset )
       {
 
       const PostingListHeader *plHeader =
@@ -102,7 +102,7 @@ int main( int argc, char **argv )
 
       cout << "\t" << plCounter++ << " (postsOffset = " << plHeader->postsOffset
            << "):" << std::endl;
-      while ( ( decoded = decoder.next() ) != 0 )
+      while ( ( decoded = decoder.Next() ) != 0 )
          {
          cout << "\t\t" << decoded << std::endl;
          }

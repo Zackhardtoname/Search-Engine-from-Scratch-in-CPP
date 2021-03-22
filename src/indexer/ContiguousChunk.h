@@ -25,10 +25,10 @@ struct PostingListHeader
 
 struct ChunkHeader
    {
-      uint32_t docCount;
-      uint32_t dictionaryOffset;   // from start of data[]
-      uint32_t postingListsOffset; // from start of data[]
-      uint32_t endOffset;          // from start of data[]
+      uint32_t DocCount;
+      uint32_t DictionaryOffset;   // from start of data[]
+      uint32_t PostingListsOffset; // from start of data[]
+      uint32_t EndOffset;          // from start of data[]
    };
 
 struct ContiguousChunk

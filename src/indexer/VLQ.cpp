@@ -41,11 +41,11 @@ VLQStreamDecoder::VLQStreamDecoder( const char *s )
    cursor = s;
    }
 
-uint64_t VLQStreamDecoder::next()
+uint64_t VLQStreamDecoder::Next()
    {
    unsigned shift = 0;
    uint64_t result = 0;
-   while ( ( (uint8_t)*cursor >> 7 ) != 0 )
+   while ( ( static_cast<uint8_t>(*cursor) >> 7 ) != 0 )
       {
       result |= ( static_cast<uint64_t>( *cursor & mask ) << shift );
       shift += 7;

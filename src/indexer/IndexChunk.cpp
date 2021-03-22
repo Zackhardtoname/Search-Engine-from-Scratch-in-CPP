@@ -37,7 +37,7 @@ void IndexChunk::writeToDisk( const char *filename )
    // Create contiguous chunk for writing
    ContiguousChunk *chunk = new ContiguousChunk();
 
-   chunk->header.docCount = urls.size();
+   chunk->header.DocCount = urls.size();
    char *cursor = chunk->data;
 
    // Copy the URLs into the URL list
@@ -49,22 +49,21 @@ void IndexChunk::writeToDisk( const char *filename )
       }
 
    // TODO hash blob
-   chunk->header.dictionaryOffset = cursor - chunk->data;
+   chunk->header.DictionaryOffset = cursor - chunk->data;
    strcpy( cursor, "________TODO________" );
    cursor += sizeof( "________TODO________" ) - 1;
 
    // Copy URLS into the posting list section of the data
-   chunk->header.postingListsOffset = cursor - chunk->data;
+   chunk->header.PostingListsOffset = cursor - chunk->data;
    // For each posting list
 
    int plcount = 0;
 
-   for ( PostingList pl : postingLists )
+   for ( const PostingList &pl : postingLists )
       {
-      PostingListHeader plHeader;
+      PostingListHeader plHeader { 0 };
       // TODO write synchronization tables
       // TODO correct offset
-      plHeader.postsOffset = 0;
       memcpy( cursor, &plHeader, sizeof( PostingListHeader ) );
       cursor += sizeof( PostingListHeader );
 
@@ -86,7 +85,7 @@ void IndexChunk::writeToDisk( const char *filename )
       ++plcount;
       }
 
-   chunk->header.endOffset = cursor - chunk->data;
+   chunk->header.EndOffset = cursor - chunk->data;
 
    // Write contiguous chunk to file
    char *chunkBuffer = reinterpret_cast<char *>( chunk );
