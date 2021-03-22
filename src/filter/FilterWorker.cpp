@@ -365,4 +365,5 @@ void *FilterWorker::threadFilteredUrls( void *inst )
 
 bool FilterWorker::markIfNotSeen( const String &url )
    {
+      return bloomfilter.Insert(url);
    }
