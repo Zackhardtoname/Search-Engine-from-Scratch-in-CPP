@@ -10,38 +10,47 @@
 
 #include "../stl/String.h"
 #include "../stl/Vector.h"
+#include "ContiguousChunk.h"
 #include "IndexerInjest.h"
-
-constexpr static size_t INDEX_CHUNK_TARGET_SIZE = 100 * 1024 * 1024; // 100 Megabytes
 
 using scb::String;
 using scb::Vector;
 
-// TODO: this is temporary. After we have our own hashmap implementation, ditch this
+// TODO: this is temporary. After we have our own hashmap implementation, ditch
+// this
 //  and use that instead.
-struct StringHash {
-    std::size_t operator()(const String &s) const {
-        return s.hash();
-    }
-};
+struct StringHash
+   {
+      std::size_t operator()( const String &s ) const
+         {
+         return s.hash();
+         }
+   };
 
-struct Document {
-    String Url;
-    unsigned Boundary;
-};
+class SyncEntry
+   {
+   public:
+      unsigned seekOffsetDelta;
+      unsigned postLocation;
+   };
 
-class IndexChunk {
-    Vector<Document> documents;
-    std::unordered_map<String, Vector<unsigned>, StringHash> postingLists;
+class PostingList
+   {
+   public:
+      Vector<SyncEntry> syncTable;
+      Vector<uint64_t> posts;
+   };
 
-    unsigned nextId = 0;
-public:
-    size_t estSize = 0;
+class IndexChunk
+   {
 
-    void Ingest(IndexerIngest &injest);
+   public:
+      Vector<String> urls;
+      std::unordered_map<String, uint32_t, StringHash> postingListOffsets;
+      Vector<PostingList> postingLists;
+      size_t estSize = 0;
 
-    void Persist();
-};
+      void writeToDisk( const char *filename );
+   };
 
-
-#endif //SCOOBLE_SEARCH_INDEXCHUNK_H
+#endif // SCOOBLE_SEARCH_INDEXCHUNK_H

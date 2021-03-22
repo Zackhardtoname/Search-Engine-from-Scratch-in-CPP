@@ -8,6 +8,11 @@ add_executable(ReadDumpFile
         ReadDumpFile.cpp
         )
 
+add_executable(readChunk
+        ReadChunk.cpp
+        ../indexer/VLQ.cpp
+)
+
 add_executable(HandleMQ
         HandleMQs.cpp
         )
