@@ -12,4 +12,8 @@ add_executable(HandleMQ
         HandleMQs.cpp
         )
 
+add_executable(MakeBloomFile
+        MakeBloomFile.cpp
+        )
+
 # testing
