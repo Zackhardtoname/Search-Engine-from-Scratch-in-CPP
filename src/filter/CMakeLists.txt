@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 project(filter)
 
 set(CMAKE_CXX_STANDARD 20)
+find_package(Threads REQUIRED)
 
 add_executable(dummy-filter
         DummyFilterWorker.cpp
@@ -12,7 +13,9 @@ target_link_libraries(dummy-filter rt)
 add_executable(filter-worker
         FilterWorker.cpp
         ../stl/String.cpp
+        ../stl/utils.cpp
+        ../crawler/ParsedUrl.cpp
         )
-target_link_libraries(filter-worker rt)
+target_link_libraries(filter-worker rt Threads::Threads ssl crypto)
 
 # testing

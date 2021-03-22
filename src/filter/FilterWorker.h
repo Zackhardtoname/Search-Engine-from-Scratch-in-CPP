@@ -67,6 +67,7 @@ class FilterWorker
       Vector<ParsedUrl> remoteWorkerAddrs;
       pthread_mutex_t lockRemoteWorkersSendBuffer;
       Vector<String> remoteWorkersSendBuffer;
+      pthread_t pthRemoteUrls;
 
       void queueRemoteUrl( int remote, const String &s );
 
@@ -82,6 +83,7 @@ class FilterWorker
       pthread_mutex_t lockFilteredUrls;
       sem_t semFilteredUrls;
       mqd_t qFrontier;
+      pthread_t pthFilteredUrls;
 
       [[noreturn]] static void *threadFilteredUrls( void * );
 
@@ -98,6 +100,9 @@ class FilterWorker
 
    public:
       void run();
+
+      FilterWorker( const char *remoteConfigFile, int rank,
+                    const char *bloomFile );
    };
 
 #endif // SCOOBLE_SEARCH_FILTERWORKER_H

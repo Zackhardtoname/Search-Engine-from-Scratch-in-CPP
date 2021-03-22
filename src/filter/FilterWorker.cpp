@@ -11,12 +11,12 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include <cassert>
+#include <fstream>
 #include <iostream>
 #include <mqueue.h>
 #include <poll.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <slapi-plugin.h>
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
@@ -26,18 +26,18 @@ using scb::Vector;
 
 void FilterWorker::run()
    {
-   // open the queues
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_WRONLY | O_NONBLOCK );
-   assert( frontier != -1 && "mq_open() failed" );
-
-   mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_RDONLY | O_NONBLOCK );
-   assert( newLinks != -1 && "mq_open() failed" );
-
+   // spawn the threads
    pthread_create( &pthNewLinksMqueue, nullptr, threadNewLinksMqueue, this );
    pthread_create( &pthRemoteWorkers, nullptr, threadRemoteWorkers, this );
 
    for ( pthread_t &pth : pthUnfilteredUrls )
       pthread_create( &pth, nullptr, threadUnfilteredUrls, this );
+
+   pthread_create( &pthRemoteUrls, nullptr, threadRemoteUrls, this );
+   pthread_create( &pthFilteredUrls, nullptr, threadFilteredUrls, this );
+
+   // wait on any one of the thraed
+   pthread_join( pthNewLinksMqueue, nullptr );
    }
 
 void *FilterWorker::threadNewLinksMqueue( void *inst )
@@ -48,12 +48,17 @@ void *FilterWorker::threadNewLinksMqueue( void *inst )
    while ( true )
       {
       ssize_t sz = mq_receive( self.qNewLinks, buf, MAX_URL_LEN, nullptr );
-      assert( sz != -1 && "mq_receive() failed" );
+      if ( sz == -1 )
+         {
+         std::cerr << "mq_receive() failed: " << strerror( errno ) << std::endl;
+         exit( 1 );
+         }
 
       buf[ sz ] = '\0';
+      std::cout << "got from mq: " << buf << std::endl;
 
       pthread_mutex_lock( &self.lockUnfilteredUrls );
-      self.unfilteredUrls.pushBack( buf );
+      self.unfilteredUrls.pushBack( String( buf ) );
       pthread_mutex_unlock( &self.lockUnfilteredUrls );
 
       // notify the downstream
@@ -109,6 +114,7 @@ void *FilterWorker::threadRemoteWorkers( void *inst )
                       args );
       pthread_detach( handlerThread );
       }
+   assert( false && "accept() failed" );
    }
 
 void *FilterWorker::threadRemoteWorkerConnection( void *p )
@@ -172,17 +178,25 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
       int rightfulHandler = url.Host.hash() % self.worldSize;
       if ( rightfulHandler != self.rank )
          {
+         std::cout << "not our host: " << url.Host << std::endl;
          self.queueRemoteUrl( rightfulHandler, url.CompleteUrl );
          continue;
          }
 
       // filter by robots.txt
       if ( !self.allowedByRobotstxt( url ) )
+         {
+         std::cout << "not allowed by robots.txt: " << url.CompleteUrl
+                   << std::endl;
          continue;
+         }
 
       // filter by bloom filter
       if ( self.markIfNotSeen( url.CompleteUrl ) )
+         {
+         std::cout << "seen: " << url.CompleteUrl << std::endl;
          continue;
+         }
 
       // all good! we can put that into filteredUrls
       pthread_mutex_lock( &self.lockFilteredUrls );
@@ -221,6 +235,8 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
    int status = connect( sock, info->ai_addr, info->ai_addrlen );
    if ( status == 0 )
       throw std::runtime_error( "cannot connect()" );
+
+   return sock;
    }
 
 [[noreturn]] void *FilterWorker::threadRemoteUrls( void *inst )
@@ -320,7 +336,7 @@ void *FilterWorker::threadFilteredUrls( void *inst )
       pthread_mutex_lock( &self.lockFilteredUrls );
 
       // count how many times have we hit this host in this tick
-      Counter<String> hostCounter;
+      Counter hostCounter;
 
       for ( int i = 0, loop = self.filteredUrls.size();  i < loop;  i++ )
          {
@@ -365,5 +381,62 @@ void *FilterWorker::threadFilteredUrls( void *inst )
 
 bool FilterWorker::markIfNotSeen( const String &url )
    {
-      return bloomfilter.Insert(url);
+   return bloomfilter.Insert( url );
+   }
+
+int FilterWorker::getHostRateLimit( const String &host )
+   {
+   return 1; // TODO: read alexa
+   }
+
+bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
+   {
+   return true; // TODO: implement this
+   }
+
+FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
+                            const char *bloomFile )
+    : bloomfilter( bloomFile )
+   {
+   // open the queues
+   qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDONLY );
+   assert( qNewLinks != -1 && "mq_open() failed" );
+
+   qFrontier = mq_open( FRONTIER_MQ, O_WRONLY );
+   assert( qFrontier != -1 && "mq_open() failed" );
+
+   // initialize sync structures
+   assert( sem_init( &semUnfilteredUrls, 0, 0 ) != -1 && "sem_init() failed" );
+   assert( pthread_mutex_init( &lockRemoteWorkersSendBuffer, nullptr ) == 0 &&
+           "mutex_init() failed" );
+   assert( pthread_mutex_init( &lockFilteredUrls, nullptr ) == 0 &&
+           "mutex_init() failed" );
+   assert( pthread_mutex_init( &lockUnfilteredUrls, nullptr ) == 0 &&
+           "mutex_init() failed" );
+   assert( sem_init( &semFilteredUrls, 0, 0 ) != -1 && "sem_init() failed" );
+
+   // setup remote
+   this->rank = rk;
+   std::ifstream remoteConf( remoteConfigFile );
+   remoteConf >> worldSize;
+   assert( worldSize > 0 && "world size must be positive" );
+   assert( worldSize < 1000 && "world size sanity check" );
+   assert( 0 <= rk && rk < worldSize && "invalid rank" );
+   std::cout << "I'm rank " << rk << " in a world size " << worldSize
+             << std::endl;
+   for ( int i = 0;  i < worldSize;  i++ )
+      {
+      scb::String addr;
+      remoteConf >> addr;
+      ParsedUrl parsed( addr );
+      remoteWorkerAddrs.pushBack( parsed );
+      std::cout << "remote " << i << "/" << ( worldSize - 1 ) << parsed.Host
+                << ':' << parsed.Port << std::endl;
+      }
+   }
+
+int main()
+   {
+   FilterWorker worker( "/tmp/remote.txt", 0, "/tmp/test" );
+   worker.run();
    }

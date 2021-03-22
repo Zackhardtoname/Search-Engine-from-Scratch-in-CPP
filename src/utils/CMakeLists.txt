@@ -11,6 +11,7 @@ add_executable(ReadDumpFile
 add_executable(HandleMQ
         HandleMQs.cpp
         )
+target_link_libraries(HandleMQ rt)
 
 add_executable(MakeBloomFile
         MakeBloomFile.cpp

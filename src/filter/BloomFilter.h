@@ -37,7 +37,7 @@ class Bloomfilter {
 public:
    Bloomfilter(const char *bloomFile) {
 
-      int fd = open(bloomFile, 0);
+      int fd = open(bloomFile, O_RDWR);
       assert(fd != -1 && "failed to open() bloom file");
 
       struct stat fileStat{};
@@ -51,6 +51,10 @@ public:
                  fd,                     // underlying file to use
                  0              // the whole file from the beginning
             );
+      if (blob == MAP_FAILED) {
+         std::cerr << strerror(errno) << std::endl;
+         exit(1);
+      }
 
       numHashes = *static_cast<uint32_t *>(blob);
       bits = static_cast<uint8_t *>(blob) + sizeof(uint32_t);
@@ -59,7 +63,7 @@ public:
 
    bool Insert(const scb::String &s) {
       auto val = hash(s);
-      bool existed = false;
+      bool existed = true;
       for (int i = 0; i < numHashes; ++i) {
          uint64_t slot = kHash(i, val);
          uint64_t bucket = slot / 8, bit = slot % 8;
