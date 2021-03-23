@@ -22,8 +22,6 @@ int main( int argc, char **argv )
    mqd_t frontier = mq_open( FRONTIER_MQ, O_RDWR );
    //   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
    assert( frontier != -1 && "mq_open() failed" );
-   scb::String url = "https://www.iana.org/";
-   mq_send( frontier, url.data(), url.size(), 0 );
 
    mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
    assert( newLinks != -1 && "mq_open() failed" );
