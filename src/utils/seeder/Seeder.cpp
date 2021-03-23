@@ -1,16 +1,12 @@
-//#include <assert.h>
-#include <cassert>
-//#include <cstdint>
-//#include <cstdlib>
-//#include <cstring>
-#include <iostream>
-#include <mqueue.h>
-#include <sys/wait.h>
-#include <unistd.h>
 #include "../../defs.h"
 #include "../../stl/Filesystem.h"
 #include "../../stl/RAII.h"
 #include "../../stl/utils.h"
+#include <cassert>
+#include <fstream>
+#include <iostream>
+#include <mqueue.h>
+#include <sys/wait.h>
 
 void seed( int argc )
    {
@@ -19,7 +15,7 @@ void seed( int argc )
    assert( frontier != -1 && "mq_open() failed" );
 
    char FileNameBuff[ FILENAME_MAX ];
-   //getcwd( FileNameBuff, FILENAME_MAX );
+   getcwd( FileNameBuff, FILENAME_MAX );
    scb::String cwd( FileNameBuff );
    scb::String seedPath = cwd + "/data/us_top_100.txt";
    const char *seedPathCStr = seedPath.cstr();
@@ -44,13 +40,10 @@ void seed( int argc )
       *URLBuffPtr = '\0';
 
       scb::String message = scb::String( URLBuff );
-      // Leaving this if statement out since this is handled in
-      // CrawlerParserWorker.cpp (for now)
-      // if (message.substr(0, 4) != "http") {
-      //   message = "http://www." + message + "\0";
-      //}
 
-      assert( 0 <= mq_send( frontier, message.cstr(), MAX_URL_LEN, 0 ) );
+      // Only send up to the length of the message to avoid sending too much
+      // data to the mqueue
+      assert( 0 <= mq_send( frontier, message.cstr(), message.length(), 0 ) );
       std::cout << "Queued message: " << message.cstr() << std::endl;
 
       seedFilePtr++;
