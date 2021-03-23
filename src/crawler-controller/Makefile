@@ -50,7 +50,7 @@ endif
 
 # make clean - remove .o files, executables, tarball
 clean:
-	rm -f $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE)_debug
+	rm -f *.o $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE)_debug
 	rm -Rf *.dSYM
 
 

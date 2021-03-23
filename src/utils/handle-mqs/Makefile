@@ -25,7 +25,7 @@ CXXFLAGS = -std=c++1z -pedantic -Ofast #-Werror -Wconversion -Wall -Wextra
 # Libararies needed to link, including ssl and mqueue
 LINK_FLAGS = -lssl -lrt -lcrypto
 
-# make create - set as default command run
+# make all - set as default command run
 all: $(SOURCE_FILES) $(EXECUTABLE)
 
 # make debug - will compile sources with $(CXXFLAGS) and the -g3 flag
