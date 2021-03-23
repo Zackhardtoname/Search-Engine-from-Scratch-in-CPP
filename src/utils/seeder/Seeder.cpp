@@ -12,7 +12,13 @@ void seed( int argc )
    {
 
    mqd_t frontier = mq_open( FRONTIER_MQ, O_WRONLY );
-   assert( frontier != -1 && "mq_open() failed" );
+   if ( frontier == -1 )
+      {
+      std::cout << "mq_open() failed. Make sure you created the frontier queue in the src/utils/handle-mqs folder with:" << std::endl;
+      std::cout << "  make" << std::endl;
+      std::cout << "  ./handle-mq create frontier" << std::endl;
+      return;
+      }
 
    char FileNameBuff[ FILENAME_MAX ];
    getcwd( FileNameBuff, FILENAME_MAX );
