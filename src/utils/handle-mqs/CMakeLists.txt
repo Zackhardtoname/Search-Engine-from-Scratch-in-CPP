@@ -8,8 +8,18 @@ add_executable(ReadDumpFile
         ReadDumpFile.cpp
         )
 
+add_executable(readChunk
+        ReadChunk.cpp
+        ../indexer/VLQ.cpp
+)
+
 add_executable(HandleMQ
         HandleMQs.cpp
+        )
+target_link_libraries(HandleMQ rt)
+
+add_executable(MakeBloomFile
+        MakeBloomFile.cpp
         )
 
 # testing

@@ -6,6 +6,7 @@ find_package(OpenSSL REQUIRED)
 
 add_subdirectory(crawler)
 add_subdirectory(indexer)
+add_subdirectory(filter)
 add_subdirectory(utils)
 add_subdirectory(crawler-controller)
 
@@ -22,6 +23,10 @@ add_executable(crawlerCmdline
         )
 target_link_libraries(crawlerCmdline ssl rt crypto)
 
+add_executable(test
+        test_file.cpp
+)
+
 add_executable(crawler-parser-worker
         parser/ParsedHtml.cpp
         parser/HtmlLexer.cpp
@@ -36,21 +41,14 @@ add_executable(crawler-parser-worker
         )
 target_link_libraries(crawler-parser-worker ssl rt crypto)
 
-add_executable(dummy-filter
-        filter/DummyFilterWorker.cpp
-        stl/String.cpp
-        )
-target_link_libraries(dummy-filter rt)
-
-
 # testing
 
 find_package(GTest)
 
 add_executable(testRobotstxt
-        crawler/testRobotstxt.cpp
+        filter/testRobotstxt.cpp
         stl/String.cpp
-        crawler/Robotstxt.cpp)
+        filter/Robotstxt.cpp)
 target_link_libraries(testRobotstxt stl ssl GTest::gtest)
 gtest_discover_tests(testRobotstxt)
 

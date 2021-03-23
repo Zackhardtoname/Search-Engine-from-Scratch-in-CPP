@@ -1,3 +1,4 @@
+#include <csignal>
 #include <mqueue.h>
 
 #include "../stl/RAII.h"
@@ -13,10 +14,16 @@
 
 int main( int argc, char **argv )
    {
+   // according to SSL document, we should ignore this
+   signal( SIGPIPE, SIG_IGN );
+
    // If we want to go with multiple queues with different priorities,
    //    add flag O_NONBLOCK and poll from them.
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
+   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDWR );
+   //   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
    assert( frontier != -1 && "mq_open() failed" );
+   scb::String url = "https://www.iana.org/";
+   mq_send( frontier, url.data(), url.size(), 0 );
 
    mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
    assert( newLinks != -1 && "mq_open() failed" );
@@ -39,13 +46,19 @@ int main( int argc, char **argv )
          // filter out non-english page by HTTP
          if ( !httpResp.Language.empty() &&
               !httpResp.Language.hasPrefix( "en" ) )
+            {
+            std::cout << "not english by http" << std::endl;
             continue;
+            }
 
          ParsedHtml parsedHtml( httpResp.Body );
          // filter out non-english page by HTML
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )
+            {
+            std::cout << "not english by http" << std::endl;
             continue;
+            }
 
          // apply porter stemming here, since we are going to apply
          // the transformation eventually anyway, we might as well reuse
@@ -57,7 +70,10 @@ int main( int argc, char **argv )
 
          // check dictionary for language
          if ( !englishDictChecker.Check( parsedHtml ) )
+            {
+            std::cout << "not english by dict" << std::endl;
             continue;
+            }
 
          // TODO: post parsedHtml to the indexer queue
 
@@ -66,6 +82,7 @@ int main( int argc, char **argv )
          for ( Link &link : parsedHtml.Links )
             {
             String normalizedUrl = pageUrl.Normalize( link.Href );
+            std::cout << "posting: " << normalizedUrl << std::endl;
             mq_send( newLinks, normalizedUrl.data(), normalizedUrl.size(), 0 );
             }
          }

@@ -81,7 +81,7 @@ String HttpGet( const ParsedUrl &url )
          }
 
       int got;
-      while ( ( got = recv( sockFd, buffer, sizeof( buffer ), 0 ) ) )
+      while ( ( got = recv( sockFd, buffer, sizeof( buffer ), 0 ) ) > 0 )
          response += String( buffer, got );
       }
    else if ( url.Service == "https" )
@@ -90,8 +90,10 @@ String HttpGet( const ParsedUrl &url )
       SSL_CTX *ctx = SSL_CTX_new( TLS_client_method() );
       SSL *ssl = SSL_new( ctx );
 
-      SSL_set_fd( ssl, sockFd );
-      SSL_connect( ssl );
+      if ( SSL_set_fd( ssl, sockFd ) == 0 )
+         throw NetworkException();
+      if ( SSL_connect( ssl ) != 1 )
+         throw NetworkException();
 
       Defer deferDestructSSL(
          [ & ]()
@@ -114,7 +116,7 @@ String HttpGet( const ParsedUrl &url )
          }
 
       int got;
-      while ( ( got = SSL_read( ssl, buffer, sizeof( buffer ) ) ) )
+      while ( ( got = SSL_read( ssl, buffer, sizeof( buffer ) ) ) > 0 )
          response += String( buffer, got );
       }
    else
