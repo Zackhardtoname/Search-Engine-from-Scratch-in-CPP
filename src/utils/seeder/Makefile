@@ -20,7 +20,10 @@ CXX         = g++
 OBJECTS =  $(SOURCE_FILES:.cpp=.o)
 
 # Default Flags
-CXXFLAGS = -std=c++1z -pedantic -Ofast #-Werror -Wconversion -Wall -Wextra
+CXXFLAGS = -std=c++1z -pedantic #-Werror -Wconversion -Wall -Wextra
+
+# Optimization Flag
+OPT = -Ofast
 
 # Libararies needed to link, including ssl and mqueue
 LINK_FLAGS = -lssl -lrt -lcrypto
@@ -39,14 +42,14 @@ $(EXECUTABLE): $(OBJECTS)
 ifeq ($(EXECUTABLE), executable)
 	@echo Edit EXECUTABLE variable in Makefile.
 	@echo Using default a.out.
-	$(CXX) $(CXXFLAGS) $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(OPT) $(OBJECTS)
 else
-	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $@ $(LINK_FLAGS)
+	$(CXX) $(CXXFLAGS) $(OPT) $(OBJECTS) -o $@ $(LINK_FLAGS)
 endif
 
 # rule for creating objects
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $*.cpp -o $*.o
+	$(CXX) $(CXXFLAGS) $(OPT) -c $*.cpp -o $*.o
 
 # make clean - remove .o files, executables, tarball
 clean:
