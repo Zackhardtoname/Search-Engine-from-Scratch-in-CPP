@@ -46,9 +46,9 @@ target_link_libraries(crawler-parser-worker ssl rt crypto)
 find_package(GTest)
 
 add_executable(testRobotstxt
-        crawler/testRobotstxt.cpp
+        filter/testRobotstxt.cpp
         stl/String.cpp
-        crawler/Robotstxt.cpp)
+        filter/Robotstxt.cpp)
 target_link_libraries(testRobotstxt stl ssl GTest::gtest)
 gtest_discover_tests(testRobotstxt)
 

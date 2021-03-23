@@ -12,9 +12,12 @@ target_link_libraries(dummy-filter rt)
 
 add_executable(filter-worker
         FilterWorker.cpp
+        Robotstxt.cpp
+        ../crawler/Crawler.cpp
+        ../crawler/ParsedHttpResponse.cpp
+        ../crawler/ParsedUrl.cpp
         ../stl/String.cpp
         ../stl/utils.cpp
-        ../crawler/ParsedUrl.cpp
         )
 target_link_libraries(filter-worker rt Threads::Threads ssl crypto)
 

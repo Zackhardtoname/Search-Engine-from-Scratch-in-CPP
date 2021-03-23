@@ -188,7 +188,7 @@ class String
          return *this;
          }
 
-      String operator+( const String &other )
+      String operator+( const String &other ) const
          {
          String copy( *this );
          for ( char c : other )

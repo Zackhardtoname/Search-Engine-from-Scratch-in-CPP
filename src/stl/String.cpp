@@ -49,10 +49,11 @@ std::istream &scb::operator>>( std::istream &is, String &s )
 
    while ( is )
       {
-      int p = is.get();
+      char p;
+      is >> p;
       if ( isspace( p ) )
          return is;
-      s.pushBack( static_cast<char>( p ) );
+      s.pushBack( p );
       }
    return is;
    }

@@ -6,10 +6,12 @@
 #define SCOOBLE_SEARCH_FILTERWORKER_H
 
 #include "../crawler/ParsedUrl.h"
+#include "../indexer/IndexChunk.h"
 #include "../stl/Pair.h"
 #include "../stl/Queue.h"
 #include "../stl/String.h"
 #include "BloomFilter.h"
+#include "Robotstxt.h"
 
 #include <mqueue.h>
 #include <pthread.h>
@@ -39,8 +41,7 @@ class FilterWorker
 
       /// Thread that handles: remote workers -> unfilteredUrls
       // Host and port for other workers to post URLs.
-      const char *hostname;
-      int port;
+      String hostname, port;
       pthread_t pthRemoteWorkers;
 
       struct RemoteWorkerConnectionArgs
@@ -94,6 +95,10 @@ class FilterWorker
       // Get the maximum rate for a host per tick
       int getHostRateLimit( const String &host );
 
+      pthread_mutex_t lockRobotstxtMap;
+      static Robotstxt *const ROBOTS_TXT_PENDING, *const DummyRobotstxt;
+      std::unordered_map<scb::String, Robotstxt *, StringHash>
+         robotstxtMap; // TODO: use our own hashmap
       bool allowedByRobotstxt( const ParsedUrl &url );
 
       Bloomfilter bloomfilter;

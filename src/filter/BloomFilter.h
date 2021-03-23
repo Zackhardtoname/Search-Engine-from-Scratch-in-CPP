@@ -55,7 +55,7 @@ public:
          std::cerr << strerror(errno) << std::endl;
          exit(1);
       }
-
+      // Number of hashes is contained within the first value in mmapped files as seen below.
       numHashes = *static_cast<uint32_t *>(blob);
       bits = static_cast<uint8_t *>(blob) + sizeof(uint32_t);
       size = (fileStat.st_size - sizeof(uint32_t)) * 8;

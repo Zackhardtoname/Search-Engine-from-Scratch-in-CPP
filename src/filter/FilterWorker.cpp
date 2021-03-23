@@ -20,6 +20,7 @@
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
+#include <csignal>
 
 using scb::String;
 using scb::Vector;
@@ -71,12 +72,10 @@ void *FilterWorker::threadRemoteWorkers( void *inst )
    auto &self = *static_cast<FilterWorker *>( inst );
 
    // create, bind, and listen socket
-   char portStr[ 20 ];
-   sprintf( portStr, "%d", self.port );
    addrinfo *addrResult;
    try
       {
-      addrResult = QueryHost( self.hostname, portStr );
+      addrResult = QueryHost( self.hostname.cstr(), self.port.cstr() );
       }
    catch ( std::exception & )
       {
@@ -389,15 +388,72 @@ int FilterWorker::getHostRateLimit( const String &host )
    return 1; // TODO: read alexa
    }
 
+Robotstxt *const FilterWorker::ROBOTS_TXT_PENDING =
+   reinterpret_cast<Robotstxt *const>( 1 );
+Robotstxt *const FilterWorker::DummyRobotstxt =
+   new Robotstxt( "User-agent: *\n" );
+
 bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
    {
-   return true; // TODO: implement this
+   pthread_mutex_lock( &lockRobotstxtMap );
+
+   // if no robots.txt yet, fetch and set
+   if ( !robotstxtMap.contains( url.Host ) )
+      {
+      std::cout << "no robots.txt for " << url.Host << std::endl;
+      robotstxtMap[ url.Host ] = ROBOTS_TXT_PENDING;
+      pthread_mutex_unlock(
+         &lockRobotstxtMap ); // unlock to allow other threads to proceed
+
+      // if either downloading failed, or parsing failed, use dummy robots.txt
+      try
+         {
+         auto result = FetchUrl( url.Normalize( "robots.txt" ) );
+         pthread_mutex_lock( &lockRobotstxtMap );
+         try
+            {
+            robotstxtMap[ url.Host ] = new Robotstxt( result.Body );
+            std::cout << "robots.txt for " << url.Host << " downloaded and parsed" << std::endl;
+            }
+         catch ( std::exception & )
+            {
+            robotstxtMap[ url.Host ] = DummyRobotstxt;
+            std::cout << "robots.txt for " << url.Host << " downloaded but failed to parse" << std::endl;
+            }
+         }
+      catch ( std::exception & )
+         {
+         pthread_mutex_lock( &lockRobotstxtMap );
+         robotstxtMap[ url.Host ] = DummyRobotstxt;
+         std::cout << "robots.txt for " << url.Host << " failed to download" << std::endl;
+         }
+      }
+
+   // now that we can be sure that we have a robots.txt
+   auto *robotstxt = robotstxtMap[ url.Host ];
+
+   // while pending, sleep until it is ready
+   while ( robotstxt == ROBOTS_TXT_PENDING )
+      {
+      pthread_mutex_unlock(
+         &lockRobotstxtMap ); // unlock to allow other threads to proceed
+      std::cout << "waiting for robots.txt of " << url.Host << std::endl;
+      usleep(500 * 1000);
+      pthread_mutex_lock( &lockRobotstxtMap );
+      }
+
+   bool allowed = robotstxt->Allow( url.CompleteUrl );
+   pthread_mutex_unlock( &lockRobotstxtMap );
+   return allowed;
    }
 
 FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
                             const char *bloomFile )
     : bloomfilter( bloomFile )
    {
+   // according to SSL document, we should ignore this
+   signal( SIGPIPE, SIG_IGN );
+
    // open the queues
    qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDONLY );
    assert( qNewLinks != -1 && "mq_open() failed" );
@@ -414,6 +470,8 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
    assert( pthread_mutex_init( &lockUnfilteredUrls, nullptr ) == 0 &&
            "mutex_init() failed" );
    assert( sem_init( &semFilteredUrls, 0, 0 ) != -1 && "sem_init() failed" );
+   assert( pthread_mutex_init( &lockRobotstxtMap, nullptr ) == 0 &&
+           "mutex_init() failed" );
 
    // setup remote
    this->rank = rk;
@@ -430,13 +488,18 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
       remoteConf >> addr;
       ParsedUrl parsed( addr );
       remoteWorkerAddrs.pushBack( parsed );
-      std::cout << "remote " << i << "/" << ( worldSize - 1 ) << parsed.Host
+      std::cout << "remote " << i << "/" << ( worldSize - 1 ) << " is " << parsed.Host
                 << ':' << parsed.Port << std::endl;
+      if ( i == rk )
+         {
+         hostname = parsed.Host;
+         port = parsed.Port;
+         }
       }
    }
 
 int main()
    {
-   FilterWorker worker( "/tmp/remote.txt", 0, "/tmp/test" );
+   FilterWorker worker( "/tmp/remote.txt", 0, "/tmp/bloom" );
    worker.run();
    }
