@@ -7,10 +7,10 @@
 #include <mqueue.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include "../defs.h"
-#include "../stl/Filesystem.h"
-#include "../stl/RAII.h"
-#include "../stl/utils.h"
+#include "../../defs.h"
+#include "../../stl/Filesystem.h"
+#include "../../stl/RAII.h"
+#include "../../stl/utils.h"
 
 void seed( int argc )
    {

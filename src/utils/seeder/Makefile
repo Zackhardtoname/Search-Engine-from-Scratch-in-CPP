@@ -5,10 +5,10 @@
 # TODO (begin) #
 #######################
 # Change 'executable' to match the command for the given component
-EXECUTABLE  = handle-mq
+EXECUTABLE  = seeder
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = HandleMQs.cpp
+SOURCE_FILES = Seeder.cpp ../../stl/String.cpp
 #######################
 # TODO (end) #
 #######################
@@ -25,7 +25,7 @@ CXXFLAGS = -std=c++1z -pedantic -Ofast #-Werror -Wconversion -Wall -Wextra
 # Libararies needed to link, including ssl and mqueue
 LINK_FLAGS = -lssl -lrt -lcrypto
 
-# make create - set as default command run
+# make all - set as default command run
 all: $(SOURCE_FILES) $(EXECUTABLE)
 
 # make debug - will compile sources with $(CXXFLAGS) and the -g3 flag
