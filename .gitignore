@@ -10,7 +10,8 @@ src/crawler/crawler*
 src/parser/parser*
 src/crawler-parser-worker/crawler-parser-worker*
 src/crawler-controller/crawler-controller*
-src/utils/handle-mq*
+src/utils/handle-mqs/handle-mq*
+src/utils/seeder/seeder*
 
 # Chunk and dump files from indexer
 *.dump
@@ -20,3 +21,4 @@ src/utils/handle-mq*
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
+>>>>>>> master

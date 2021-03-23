@@ -440,6 +440,7 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
       usleep(500 * 1000);
       pthread_mutex_lock( &lockRobotstxtMap );
+      robotstxt = robotstxtMap[ url.Host ];
       }
 
    bool allowed = robotstxt->Allow( url.CompleteUrl );
