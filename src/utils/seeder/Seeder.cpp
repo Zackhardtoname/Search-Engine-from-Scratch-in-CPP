@@ -20,8 +20,8 @@ void seed( int argc )
       return;
       }
 
-   char FileNameBuff[ FILENAME_MAX ];
-   getcwd( FileNameBuff, FILENAME_MAX );
+   char FileNameBuff[ PATH_MAX ];
+   getcwd( FileNameBuff, PATH_MAX );
    scb::String cwd( FileNameBuff );
    scb::String seedPath = cwd + "/data/us_top_100.txt";
    const char *seedPathCStr = seedPath.cstr();
