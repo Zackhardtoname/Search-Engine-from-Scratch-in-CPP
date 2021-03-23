@@ -49,7 +49,7 @@ ParsedUrl::ParsedUrl( const String &url )
       Path = "/";
    }
 
-String ParsedUrl::Normalize( const String &path )
+String ParsedUrl::Normalize( const String &path ) const
    {
    if ( path.hasPrefix( "mailto:" ) || path.hasPrefix( "tel:" ) )
       return ""; // not crawlable
