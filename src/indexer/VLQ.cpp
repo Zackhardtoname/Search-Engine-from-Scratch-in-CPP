@@ -31,7 +31,9 @@ uint64_t VLQ::Decode( StringRef s, size_t *consumed )
       {
       result |= ( static_cast<uint64_t>( c & mask ) << shift );
       shift += 7;
-      *consumed++;
+      ++*consumed;
+      if ( c >> 7 == 0 )
+         break;
       }
    return result;
    }

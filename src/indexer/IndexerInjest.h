@@ -23,7 +23,7 @@ template <> struct WireType<IndexerIngest>
    {
       static String ToWire( const IndexerIngest &val )
          {
-         return Serialize( val.Words ) + Serialize( val.Words ) +
+         return Serialize( val.Words ) + Serialize( val.TitleWords ) +
                 Serialize( val.Url );
          }
 

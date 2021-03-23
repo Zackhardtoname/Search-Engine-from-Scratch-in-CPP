@@ -327,6 +327,11 @@ struct StringRef
    {
       String::Iterator Begin, End;
 
+      StringRef() = default;
+      StringRef( const String &s ) : Begin( s.begin() ), End( s.end() )
+         {
+         }
+
       [[nodiscard]] scb::String Str() const
          {
          return String( Begin, End );
@@ -358,7 +363,10 @@ struct StringRef
          if ( end >= End )
             end = End;
 
-         return StringRef{ .Begin = begin, .End = end };
+         StringRef rst;
+         rst.Begin = begin;
+         rst.End = end;
+         return rst;
          }
 
       [[nodiscard]] String::Iterator begin() const
