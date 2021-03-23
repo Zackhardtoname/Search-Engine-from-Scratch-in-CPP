@@ -1,33 +1,25 @@
-#include "../defs.h"
-#include "../stl/Filesystem.h"
-#include "../stl/RAII.h"
-#include "../stl/utils.h"
-#include <assert.h>
+//#include <assert.h>
 #include <cassert>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
+//#include <cstdint>
+//#include <cstdlib>
+//#include <cstring>
 #include <iostream>
 #include <mqueue.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "../defs.h"
+#include "../stl/Filesystem.h"
+#include "../stl/RAII.h"
+#include "../stl/utils.h"
 
 void seed( int argc )
    {
-   // TODO question - can the attr be shared so to avoid recreating a ton of
-   // them...? PubClient producer;
-   struct mq_attr attr;
-   attr.mq_flags = 0; // blocking
-   attr.mq_maxmsg = 256;
-   // Maximal url size most browsers support
-   attr.mq_msgsize = MAX_URL_LEN;
-   attr.mq_curmsgs = 0;
-   /* create the message queue */
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_CREAT | O_RDWR, 0644, &attr );
-   assert( (mqd_t)-1 != frontier );
+
+   mqd_t frontier = mq_open( FRONTIER_MQ, O_WRONLY );
+   assert( frontier != -1 && "mq_open() failed" );
 
    char FileNameBuff[ FILENAME_MAX ];
-   getcwd( FileNameBuff, FILENAME_MAX );
+   //getcwd( FileNameBuff, FILENAME_MAX );
    scb::String cwd( FileNameBuff );
    scb::String seedPath = cwd + "/data/us_top_100.txt";
    const char *seedPathCStr = seedPath.cstr();
@@ -59,14 +51,13 @@ void seed( int argc )
       //}
 
       assert( 0 <= mq_send( frontier, message.cstr(), MAX_URL_LEN, 0 ) );
-      std::cout << "Queued message: " << message << std::endl;
+      std::cout << "Queued message: " << message.cstr() << std::endl;
 
       seedFilePtr++;
       }
 
    // cleanup
    assert( (mqd_t)-1 != mq_close( frontier ) );
-   assert( (mqd_t)-1 != mq_unlink( FRONTIER_MQ ) );
    }
 
 int main( int argc, char *argv[] )
