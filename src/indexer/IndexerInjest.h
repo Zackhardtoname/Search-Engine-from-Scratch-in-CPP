@@ -7,18 +7,45 @@
 
 #include "../stl/String.h"
 #include "../stl/Vector.h"
+#include "../stl/wire.h"
 
 using scb::String;
 using scb::Vector;
 
-struct IndexerIngest {
-    Vector<String> Words;
-    Vector<String> TitleWords;
-    String Url;
+struct IndexerIngest
+   {
+      Vector<String> Words;
+      Vector<String> TitleWords;
+      String Url;
+   };
 
-    String Serialize();
+template <> struct WireType<IndexerIngest>
+   {
+      static String ToWire( const IndexerIngest &val )
+         {
+         return Serialize( val.Words ) + Serialize( val.Words ) +
+                Serialize( val.Url );
+         }
 
-    explicit IndexerIngest(const String &s);
-};
+      static IndexerIngest FromWire( StringRef buf, size_t *consumed )
+         {
+         size_t sizeWords;
+         auto words = Deserialize<Vector<String>>( buf, &sizeWords );
+         buf = buf.Substr( sizeWords );
 
-#endif //SCOOBLE_SEARCH_INDEXERINJEST_H
+         size_t sizeTitleWords;
+         auto titleWords = Deserialize<Vector<String>>( buf, &sizeTitleWords );
+         buf = buf.Substr( sizeTitleWords );
+
+         size_t sizeUrl;
+         auto url = Deserialize<String>( buf, &sizeUrl );
+
+         *consumed = sizeWords + sizeTitleWords + sizeUrl;
+
+         return IndexerIngest{ .Words = words,
+                               .TitleWords = titleWords,
+                               .Url = url };
+         }
+   };
+
+#endif // SCOOBLE_SEARCH_INDEXERINJEST_H

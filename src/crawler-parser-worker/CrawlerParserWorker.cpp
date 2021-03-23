@@ -19,14 +19,14 @@ int main( int argc, char **argv )
 
    // If we want to go with multiple queues with different priorities,
    //    add flag O_NONBLOCK and poll from them.
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDWR );
-   //   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
+   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
    assert( frontier != -1 && "mq_open() failed" );
-   scb::String url = "https://www.iana.org/";
-   mq_send( frontier, url.data(), url.size(), 0 );
 
    mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
    assert( newLinks != -1 && "mq_open() failed" );
+
+   mqd_t parsedDocs = mq_open( PARSED_DOCS_QUEUE, O_WRONLY );
+   assert( parsedDocs != -1 && "mq_open() failed" );
 
    EnglishDictChecker englishDictChecker( "english.dict" );
 
@@ -41,7 +41,9 @@ int main( int argc, char **argv )
 
       try
          {
-         auto httpResp = FetchUrl( buf );
+         String url( buf );
+
+         auto httpResp = FetchUrl( url );
 
          // filter out non-english page by HTTP
          if ( !httpResp.Language.empty() &&
@@ -75,7 +77,14 @@ int main( int argc, char **argv )
             continue;
             }
 
-         // TODO: post parsedHtml to the indexer queue
+         // post parsedHtml to the indexer queue
+         IndexerIngest ingest{ .Words = parsedHtml.Words,
+                               .TitleWords = parsedHtml.TitleWords,
+                               .Url = url };
+         String blob = Serialize( ingest );
+         // if too large a document, ignore
+         if ( blob.size() <= PARSED_DOCS_QUEUE_MAX_MSGSIZE )
+            mq_send( parsedDocs, blob.data(), blob.size(), 0 );
 
          // post URLs to the bloom filter queue
          ParsedUrl pageUrl( buf );
