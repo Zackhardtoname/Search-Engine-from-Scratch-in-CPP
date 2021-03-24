@@ -11,7 +11,8 @@
 void seed( int argc )
    {
 
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_WRONLY );
+   mq_attr attr{};
+   mqd_t frontier = mq_open( FRONTIER_MQ, O_WRONLY, 0644, &attr );
    if ( frontier == -1 )
       {
       std::cout << "mq_open() failed. Make sure you created the frontier queue in the src/utils/handle-mqs folder with:" << std::endl;
@@ -34,6 +35,18 @@ void seed( int argc )
 
    while ( seedFilePtr != seedEnd )
       {
+      // Check if the frontier is full before adding another URL
+      struct mq_attr *cur_attr = &attr;
+      mq_getattr( frontier, cur_attr );
+      assert( (mqd_t)-1 != frontier );
+      if ( cur_attr->mq_curmsgs == attr.mq_maxmsg )
+         {
+         std::cout << "Message queue has reached the max capacity of "
+                   << attr.mq_maxmsg << std::endl;
+         break;
+         }
+
+
       char URLBuff[ MAX_URL_LEN ];
       char *URLBuffPtr = URLBuff;
 
