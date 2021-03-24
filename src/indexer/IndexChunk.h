@@ -11,14 +11,13 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "ContiguousChunk.h"
-#include "IndexerInjest.h"
+#include "IndexerIngest.h"
 
 using scb::String;
 using scb::Vector;
 
 // TODO: this is temporary. After we have our own hashmap implementation, ditch
-// this
-//  and use that instead.
+//    this and use that instead.
 struct StringHash
    {
       std::size_t operator()( const String &s ) const
@@ -27,30 +26,30 @@ struct StringHash
          }
    };
 
-class SyncEntry
+struct Document
    {
-   public:
-      unsigned seekOffsetDelta;
-      unsigned postLocation;
-   };
-
-class PostingList
-   {
-   public:
-      Vector<SyncEntry> syncTable;
-      Vector<uint64_t> posts;
+      String Url;
+      uint64_t LastPost;
    };
 
 class IndexChunk
    {
+      uint64_t nextPost = 0;
 
    public:
-      Vector<String> urls;
-      std::unordered_map<String, uint32_t, StringHash> postingListOffsets;
-      Vector<PostingList> postingLists;
-      size_t estSize = 0;
+      size_t EstSize = 0;
+
+      Vector<Document> Documents;
+      std::unordered_map<String, Vector<uint64_t>, StringHash> PostingLists;
+
+      void Ingest( const IndexerIngest &ingest );
 
       void writeToDisk( const char *filename );
    };
+
+// This function delta-encodes the given posting list, and makes the accompanied
+// sync table. In other words, it outputs: [PostingListHeader] [Sync Table]
+// [Posts 1, 2, 3...]
+String SerializePostingList( const Vector<uint64_t> &lst );
 
 #endif // SCOOBLE_SEARCH_INDEXCHUNK_H

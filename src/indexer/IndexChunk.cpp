@@ -4,10 +4,13 @@
 
 #include <cassert>
 #include <ctime>
+#include <fcntl.h>
 #include <iostream>
+#include <sys/mman.h>
+#include <unistd.h>
 
-#include "../stl/String.cpp"
 #include "../stl/String.h"
+#include "../stl/UniquePointer.h"
 #include "ContiguousChunk.h"
 #include "IndexChunk.h"
 #include "VLQ.h"
@@ -15,81 +18,171 @@
 void IndexChunk::writeToDisk( const char *filename )
    {
    // Structure:
-   // [Header] [URL List] [Dictionary (word -> posting list offset)] [Posting
-   // Lists]
+   // [Header]
+   // [Document Table (URL/document idx -> document header)]
+   // [URL List]
+   // [Dictionary (word -> posting list offset)]
+   // [Posting Lists]
    //
    // Header:
-   // [i32 num of documents] [i32 offset for posting list idx] [i32 offset for
-   // posting lists]
+   // [i32 num of documents]
+   // [i32 offset for posting list idx (the Dictionary)]
+   // [i32 offset for posting lists]
+   //
+   // document table entry:
+   // [i32 offset of first char of URL]
+   // [i32 last post in the document]
    //
    // Each Posting List:
-   // [i32 offset of first post]
+   // [i32 offset of post1]
+   // [Sync table]
+   // [post1 post2 ... postn]
 
-   // generate filename from current time
-   time_t timestamp = std::time( nullptr );
-   tm *timeRepr = std::gmtime( &timestamp );
-   // strftime(filename, 1000, "%Y_%m_%d_%H_%M_%S.chunk", timeRepr);
+   // Header
+   ChunkHeader header{ .DocumentCount = Documents.size() };
 
-   // Open chunk file
-   FILE *f = fopen( filename, "w" ); // append
-   long curSize = 0;
+   // Document table
+   auto docTable = scb::make_unique<DocumentTableEntry[]>( Documents.size() );
 
-   // Create contiguous chunk for writing
-   ContiguousChunk *chunk = new ContiguousChunk();
-
-   chunk->header.DocCount = urls.size();
-   char *cursor = chunk->data;
-
-   // Copy the URLs into the URL list
-   for ( int i = 0;  i < urls.size();  ++i )
+   // make URL list, and fill in document table
+   String urlList;
+   for ( int i = 0;  i < Documents.size();  i++ )
       {
-      strcpy( cursor, urls[ i ].cstr() );
-      // Increase pos to next string pos, leaving space for terminator
-      cursor += urls[ i ].length() + 1;
+      docTable[ i ].UrlOffset = urlList.size();
+
+      urlList += Documents[ i ].Url;
+      urlList.pushBack( '\0' );
       }
 
-   // TODO hash blob
-   chunk->header.DictionaryOffset = cursor - chunk->data;
-   strcpy( cursor, "________TODO________" );
-   cursor += sizeof( "________TODO________" ) - 1;
+   // dictionary of words -> posting list offset
+   scb::HashTable<scb::String, uint32_t> postingListOffsetMap;
 
-   // Copy URLS into the posting list section of the data
-   chunk->header.PostingListsOffset = cursor - chunk->data;
-   // For each posting list
-
-   int plcount = 0;
-
-   for ( const PostingList &pl : postingLists )
+   // make posting lists, and fill in the offset mapping
+   String serializedPostingLists;
+   for ( const String &word : PostingLists )
       {
-      PostingListHeader plHeader { 0 };
-      // TODO write synchronization tables
-      // TODO correct offset
-      memcpy( cursor, &plHeader, sizeof( PostingListHeader ) );
-      cursor += sizeof( PostingListHeader );
+      postingListOffsetMap[ word ] = serializedPostingLists.size();
+      serializedPostingLists += SerializePostingList( PostingLists[ word ] );
+      }
 
-      // For each post
-      std::cout << "Writing posting list " << plcount << "\n";
+   // make a hashblob out of the hashmap
+   String postingListOffsetHashblob = postingListOffsetMap.MakeBlob();
 
-      for ( uint64_t post : pl.posts )
+   // We got everything, calculate the final size and offset
+   header.DocumentTableOffset = sizeof( ChunkHeader );
+   header.UrlListOffset = header.DocumentTableOffset +
+                          Documents.size() * sizeof( DocumentTableEntry );
+   header.WordToPostingListDictionaryOffset =
+      header.UrlListOffset + urlList.size();
+   header.PostingListsOffset = header.WordToPostingListDictionaryOffset +
+                               postingListOffsetHashblob.size();
+
+   size_t chunkSize = header.PostingListsOffset + serializedPostingLists.size();
+
+   // open the file for writing, and resize it
+   int fd = open( filename, O_CREAT | O_RDWR );
+   ftruncate( fd, chunkSize );
+
+   // mmap it in
+   auto *chunk = static_cast<uint8_t *>(
+      mmap( nullptr,                // system choose address for us
+            chunkSize,              // length of mapping
+            PROT_READ | PROT_WRITE, // we want both read and write
+            MAP_SHARED,             // we want the change to persist
+            fd,                     // underlying file to use
+            0                       // the whole file from the beginning
+            ) );
+
+   // write header
+   memcpy( chunk, &header, sizeof( ChunkHeader ) );
+   // write document table
+   memcpy( chunk + header.DocumentTableOffset, docTable.get(),
+           Documents.size() * sizeof( DocumentTableEntry ) );
+   // write URL list
+   memcpy( chunk + header.UrlListOffset, urlList.data(), urlList.size() );
+   // write word -> posting list offset dictionary
+   memcpy( chunk + header.WordToPostingListDictionaryOffset,
+           postingListOffsetHashblob.data(), postingListOffsetHashblob.size() );
+   // write posting lists
+   memcpy( chunk + header.PostingListsOffset, serializedPostingLists.data(),
+           serializedPostingLists.size() );
+
+   // cleanup
+   munmap( chunk, chunkSize );
+   close( fd );
+   }
+
+void IndexChunk::Ingest( const IndexerIngest &ingest )
+   {
+   // If this document only has an URL, discard it
+   if ( ingest.Words.empty() && ingest.TitleWords.empty() )
+      return;
+
+   // record document words
+   for ( const String &word : ingest.Words )
+      PostingLists[ word ].pushBack( ++nextPost );
+
+   // record title words
+   for ( const String &word : ingest.TitleWords )
+      PostingLists[ String( "@" ) + word ].pushBack( ++nextPost );
+
+   // record document metadata
+   Documents.pushBack( { ingest.Url, nextPost } );
+
+   // update estimated size
+   EstSize += ingest.Url.length();
+   EstSize += ingest.TitleWords.size() * 2;
+   EstSize += ingest.Words.size() * 2;
+   }
+
+String SerializePostingList( const Vector<uint64_t> &lst )
+   {
+   // number of sync table entries = ceil ( number of posts / NUM_POSTS_COVERED)
+   int nEntries = lst.size() / SyncTableEntry::NUM_POSTS_COVERED;
+   if ( lst.size() % SyncTableEntry::NUM_POSTS_COVERED != 0 )
+      nEntries++;
+
+   // allocate the whole sync table, since we already know how large it is
+   auto syncTable = scb::make_unique<SyncTableEntry[]>( nEntries );
+   // of course, we start searching from the beginning for [lst[0],
+   // lst[NUM_POSTS_COVERED])
+   syncTable[ 0 ] = { .Offset = 0,
+                      .Post = static_cast<uint32_t>( lst.front() ) };
+
+   String encodedPosts;
+
+   uint64_t prevPost = 0;
+   int prevSyncSlot = 0;
+   for ( int i = 0;  i < lst.size();  i++ )
+      {
+      uint64_t post = lst[ i ];
+
+      int curSyncSlot = i / SyncTableEntry::NUM_POSTS_COVERED;
+      if ( curSyncSlot != prevSyncSlot )
          {
-         String encoded = VLQ::Encode( post );
-
-         memcpy( cursor, encoded.cstr(), encoded.length() );
-         cursor += encoded.length();
+         // write a new entry into the sync table
+         syncTable[ curSyncSlot ] = { .Offset = static_cast<uint32_t>(
+                                         encodedPosts.size() ),
+                                      .Post = static_cast<uint32_t>( post ) };
+         prevSyncSlot = curSyncSlot;
          }
 
-      // Add a sentinel at the end of each PL
-      strcpy( cursor, "\0" ); // This line may not be necessary, as bytes should
-                              // be 0x00 by default.
-      ++cursor;
-      ++plcount;
+      encodedPosts += VLQ::Encode( post - prevPost );
+      prevPost = post;
       }
 
-   chunk->header.EndOffset = cursor - chunk->data;
+   // make header
+   PostingListHeader header{
+      .PostsOffset = static_cast<uint32_t>(
+         sizeof( PostingListHeader ) + nEntries * sizeof( SyncTableEntry ) ),
+      .NumSyncTableEntries = static_cast<uint32_t>( nEntries ),
+      .NumPosts = lst.size()
+   };
 
-   // Write contiguous chunk to file
-   char *chunkBuffer = reinterpret_cast<char *>( chunk );
-   size_t written = fwrite( chunkBuffer, sizeof( ContiguousChunk ), 1, f );
-   std::cout << written << " chunks written." << std::endl;
-   fclose( f );
+   // combine the three
+   return String( reinterpret_cast<char *>( &header ),
+                  sizeof( PostingListHeader ) ) +
+          String( reinterpret_cast<char *>( syncTable.get() ),
+                  nEntries * sizeof( SyncTableEntry ) ) +
+          encodedPosts;
    }
