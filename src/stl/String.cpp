@@ -7,11 +7,6 @@
 using scb::String;
 using scb::StringRef;
 
-String StringRef::Str() const
-   {
-   return String( Begin, End );
-   }
-
 bool StringRef::EqualsCaseInsensitive( const scb::String &other ) const
    {
    if ( other.length() != Length() )
@@ -24,16 +19,6 @@ bool StringRef::EqualsCaseInsensitive( const scb::String &other ) const
       i++;
       }
    return true;
-   }
-
-bool StringRef::Empty() const
-   {
-   return Length() == 0;
-   }
-
-unsigned StringRef::Length() const
-   {
-   return (unsigned)( End - Begin );
    }
 
 std::ostream &scb::operator<<( std::ostream &os, const scb::String &s )

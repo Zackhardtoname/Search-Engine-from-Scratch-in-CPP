@@ -8,6 +8,7 @@ add_executable(indexer
         IndexChunk.cpp
         IndexChunk.h
         PorterStemming.cpp
+        ../stl/wire.cpp
         )
 target_link_libraries(indexer rt)
 
