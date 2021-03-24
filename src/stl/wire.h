@@ -5,54 +5,74 @@
 #ifndef STL_WIRE_H
 #define STL_WIRE_H
 
+#include "../indexer/VLQ.h"
 #include "String.h"
 #include <cstdint>
 
 using scb::String;
+using scb::StringRef;
 
-// Format:
-// %b: a signed byte
-// %s: short, 16bit signed integer
-// %i: int, 32bit signed integer
-// %l: long, 64bit signed integer
-// %a: array of char, maximal length 256
-// %A: array of char, maximal length 65536
-class Serializer
+template <typename T> struct WireType
    {
-      String format, buffer;
-      String::Iterator itFormat;
+      static String ToWire( const T &val );
 
-   public:
-      explicit Serializer( String fmt );
-
-      void PutInt( int64_t x );
-
-      void PutString( const String &x );
-
-      String &Get();
+      static T FromWire( StringRef s, size_t *consumed );
    };
 
-class Deserializer
+template <> struct WireType<String>
    {
-      String format;
-      const String &buffer;
-      String::Iterator itFormat;
-      String::ConstIterator itBuffer;
+      static String ToWire( const String &val )
+         {
+         // = [len of str][actual char array]
+         return VLQ::Encode( val.size() ) + val;
+         }
 
-   public:
-      Deserializer( String fmt, const String &buf );
-
-      int64_t GetInt();
-
-      String GetString();
-
-      void Rearm( String fmt );
-
-      void Rearm();
-
-      int BytesConsumed();
-
-      bool Parsable();
+      static String FromWire( StringRef buf, size_t *consumed )
+         {
+         size_t headerLen;
+         uint64_t strLen = VLQ::Decode( buf, &headerLen );
+         *consumed = headerLen + strLen;
+         return buf.Substr( headerLen, strLen ).Str();
+         }
    };
+
+template <typename T> struct WireType<scb::Vector<T>>
+   {
+      static String ToWire( const scb::Vector<T> &vals )
+         {
+         // = [num elements][elem1][elem2]...
+         String rst = VLQ::Encode( vals.size() );
+         for ( const T &val : vals )
+            rst += WireType<T>::ToWire( val );
+         return rst;
+         }
+
+      static scb::Vector<T> FromWire( StringRef buf, size_t *consumed )
+         {
+         uint64_t numElements = VLQ::Decode( buf, consumed );
+         buf = buf.Substr( *consumed );
+
+         scb::Vector<T> rst;
+         for ( int i = 0;  i < numElements;  i++ )
+            {
+            size_t sizeEle;
+            rst.pushBack( WireType<T>::FromWire( buf, &sizeEle ) );
+            buf = buf.Substr( sizeEle );
+            *consumed += sizeEle;
+            }
+
+         return rst;
+         }
+   };
+
+template <typename T> String Serialize( const T &val )
+   {
+   return WireType<T>::ToWire( val );
+   }
+
+template <typename T> T Deserialize( StringRef buf, size_t *consumed )
+   {
+   return WireType<T>::FromWire( buf, consumed );
+   }
 
 #endif // STL_WIRE_H

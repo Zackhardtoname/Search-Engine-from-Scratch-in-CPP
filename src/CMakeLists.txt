@@ -9,6 +9,7 @@ add_subdirectory(indexer)
 add_subdirectory(filter)
 add_subdirectory(utils)
 add_subdirectory(crawler-controller)
+add_subdirectory(crawler-parser-worker)
 
 add_executable(crawlerCmdline
         parser/ParsedHtml.cpp
@@ -27,19 +28,6 @@ add_executable(test
         test_file.cpp
 )
 
-add_executable(crawler-parser-worker
-        parser/ParsedHtml.cpp
-        parser/HtmlLexer.cpp
-        crawler/ParsedHttpResponse.cpp
-        crawler/ParsedUrl.cpp
-        crawler/Crawler.cpp
-        stl/String.cpp
-        stl/utils.cpp
-        #        crawler-parser-worker/WorkerCmdline.cpp
-        crawler-parser-worker/CrawlerParserWorker.cpp
-        indexer/PorterStemming.cpp
-        )
-target_link_libraries(crawler-parser-worker ssl rt crypto)
 
 # testing
 
