@@ -11,10 +11,12 @@
 void seed( int argc )
    {
 
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_WRONLY );
+   mqd_t frontier = mq_open( FRONTIER_MQ, O_WRONLY | O_NONBLOCK );
    if ( frontier == -1 )
       {
-      std::cout << "mq_open() failed. Make sure you created the frontier queue in the src/utils/handle-mqs folder with:" << std::endl;
+      std::cout << "mq_open() failed. Make sure you created the frontier queue "
+                   "in the src/utils/handle-mqs folder with:"
+                << std::endl;
       std::cout << "  make" << std::endl;
       std::cout << "  ./handle-mq create frontier" << std::endl;
       return;
@@ -34,6 +36,7 @@ void seed( int argc )
 
    while ( seedFilePtr != seedEnd )
       {
+
       char URLBuff[ MAX_URL_LEN ];
       char *URLBuffPtr = URLBuff;
 
@@ -49,8 +52,22 @@ void seed( int argc )
 
       // Only send up to the length of the message to avoid sending too much
       // data to the mqueue
-      assert( 0 <= mq_send( frontier, message.cstr(), message.length(), 0 ) );
-      std::cout << "Queued message: " << message.cstr() << std::endl;
+      if ( mq_send( frontier, message.cstr(), message.length(), 0 ) == -1 )
+         {
+         // Check if the frontier is full before adding another URL
+         if ( errno == EAGAIN )
+            {
+            mq_attr attr{};
+            mq_getattr( frontier, &attr );
+            std::cout << "Message queue has reached the max capacity of "
+                      << attr.mq_maxmsg << std::endl;
+            break;
+            }
+         else
+            assert( false && "mq_send() error" );
+         }
+      else
+         std::cout << "Queued message: " << message.cstr() << std::endl;
 
       seedFilePtr++;
       }
