@@ -1,0 +1,8 @@
+#!/bin/bash
+DIR=$(pwd)
+BUILD_DIR="/tmp/scb_build"
+mkdir ${BUILD_DIR}
+cd ${BUILD_DIR} || exit
+cmake "${DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${DIR}"
+cmake --build . -- -j "$(nproc)"
+rm -rf ${BUILD_DIR}
