@@ -18,6 +18,8 @@
 
 #include "HashTable.h"
 
+#define NullTerminatorSize 8
+constexpr size_t SerialTupleBaseSize = 2*sizeof(size_t) + sizeof(uint32_t);
 
 using Hash = HashTable< const char *, size_t >;
 using Pair = Tuple< const char *, size_t >;
@@ -25,7 +27,6 @@ using HashBucket = Bucket< const char *, size_t >;
 
 
 static const size_t Unknown = 0;
-
 
 size_t RoundUp( size_t length, size_t boundary )
    {
@@ -54,7 +55,7 @@ struct SerialTuple
       // (Actual length is not given but not needed.)
 
       size_t Length, Value;
-      size_t HashValue;
+      uint32_t HashValue;
 
       // The Key will be a C-string of whatever length.
       char Key[ Unknown ];
@@ -64,16 +65,18 @@ struct SerialTuple
 
       static size_t BytesRequired( const HashBucket *b )
          {
+         size_t running_length = 0;
+
          // add up bytes required for each bucket in the chain
          while ( b )
-            {
-            Value = b->tuple.value;
-            HashValue = b->hashValue;
-            Key = b->tuple.key;
-            Length += RoundUp( sizeof( Value ) + sizeof( HashValue ) + sizeof( Key ), 8);
+            {            
+            running_length += SerialTupleBaseSize + sizeof(b->tuple.key);
             b = b->next;
             }
-         return Length;
+         
+         if(running_length > 0) running_length += NullTerminatorSize;
+
+         return running_length;
          }
 
       // Write the HashBucket out as a SerialTuple in the buffer,
@@ -145,11 +148,11 @@ class HashBlob
       // Define a MagicNumber and Version so you can validate
       // a HashBlob really is one of your HashBlobs.
 
-      size_t MagicNumber,
-         Version,
-         BlobSize,
-         NumberOfBuckets,
-         Buckets[ Unknown ];
+      size_t MagicNumber;
+      size_t Version;
+      size_t BlobSize;
+      size_t NumberOfBuckets;
+      size_t Buckets[ Unknown ];
 
       // The SerialTuples will follow immediately after.
 
@@ -171,16 +174,19 @@ class HashBlob
          // Calculate how much space it will take to
          // represent a HashTable as a HashBlob.
 
-         // Need space for the header + buckets +
-         // all the serialized tuples.
+         size_t header_size =  4*sizeof(size_t);
+         size_t buckets_section_size = sizeof(size_t)*(hashTable->numberOfBuckets);
+         size_t tuples_section_size = 0;
 
-         // TODO: header info would just be a couple sizeof( size_t )
-         // then also doing sizeof( hashTable->numberOfBuckets )
+         // Sum up the space required for all serialtuples (including null terminators)
+         for(int i = 0; i < hashTable->numberOfBuckets; ++i)
+            {
 
-         // TODO: call SerialTuple::BytesRequired on each hashTable->buckets[index]
-         // should return bytes required for total bucket chain for that index
+            // Assume that BytesRequired accounts for separate chaining and null terminator size
+            tuples_section_size += SerialTuple::BytesRequired(hashTable->buckets[i]);
+            }
 
-         return 0;
+         return header_size + buckets_section_size + tuples_section_size;
          }
 
       // Write a HashBlob into a buffer, returning a
@@ -243,7 +249,7 @@ class HashFile
          {
          // Open the file for reading, map it, check the header,
          // and note the blob address.
-         int fd = open((char*)filename, O_RDONLY);
+         int fd = open(filename, O_RDONLY);
          if (fd == -1)
             {
             std::cout << "Error: file not open\n";
@@ -251,20 +257,19 @@ class HashFile
             }
          size_t sz = FileSize(fd);
 
-         char* mapped = (char*)mmap(nullptr, sz, PROT_READ, MAP_PRIVATE, fd, 0);
+         void* mapped = mmap(nullptr, sz, PROT_READ, MAP_PRIVATE, fd, 0);
          if (mapped == MAP_FAILED)
             {
             std::cout << "Error: mapping failed\n";
             exit(1);
             }
 
-         // TODO: check header, not sure what we are supposed to do here?
-         // what info in header would be useful for reading the hashblob?
-         // are we supposed to skip the header bytes to get straight to the hash blob Buckets?
-
-         // TODO: is this the correct way to save the blob address?
-         blob = (HashBlob*)mapped; // TODO: should this instead start at the bytes after the header?
+         // TODO "Check the header"
+         // I think this means check the version and magic number
          
+         // Interpret loaded data as HashBlob
+         blob = reinterpret_cast<HashBlob*>(mapped);
+
          }
 
       HashFile( const char *filename, const Hash *hashtable )
@@ -272,28 +277,27 @@ class HashFile
          // Open the file for write, map it, write
          // the hashtable out as a HashBlob, and note
          // the blob address.
-         int fd = open((char*)filename, O_WRONLY);
+         int fd = open(filename, O_WRONLY);
          if (fd == -1)
             {
             std::cout << "Error: file not open\n";
             exit(1);
             }
-         size_t sz = FileSize(fd);
 
-         char* mapped = (char*)mmap(nullptr, sz, PROT_WRITE, MAP_PRIVATE, fd, 0);
+         size_t sz = HashBlob::BytesRequired(hashtable);
+
+         void* mapped = mmap(nullptr, sz, PROT_WRITE, MAP_PRIVATE, fd, 0);
          if (mapped == MAP_FAILED)
             {
             std::cout << "Error: mapping failed\n";
             exit(1);
             }
-         char* begin = mapped;
 
-         // create HashBlob from given HashTable
-         size_t numBytes = BytesRequired(hashtable);
-         blob = Create(hashtable);
+         // TODO do we need both create and write? Or can we just Create() directly into mapped*
+         blob = HashBlob::Create(hashtable);
          
          // write HashBlob to memory
-         blob = Write(blob, numBytes, hashtable);
+         blob = HashBlob::Write(reinterpret_cast<HashBlob*>(mapped), sz, hashtable);
 
          // HashBlob address saved
          }
