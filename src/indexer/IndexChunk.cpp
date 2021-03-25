@@ -120,14 +120,30 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
 
    // record document words
    for ( const String &word : ingest.Words )
-      PostingLists[ word ].pushBack( ++nextPost );
+      {
+      auto &lst = PostingLists[ word ];
+      uint64_t post = ++nextPost;
+      if ( lst.empty() )
+         EstSize += VLQ::Length( post );
+      else
+         EstSize += VLQ::Length( post - lst.back() );
+      lst.pushBack( post );
+      }
 
    // record title words
    for ( const String &word : ingest.TitleWords )
-      PostingLists[ String( "@" ) + word ].pushBack( ++nextPost );
+      {
+      auto &lst = PostingLists[ String( "@" ) + word ];
+      uint64_t post = ++nextPost;
+      if ( lst.empty() )
+         EstSize += VLQ::Length( post );
+      else
+         EstSize += VLQ::Length( post - lst.back() );
+      lst.pushBack( post );
+      }
 
    // record document metadata
-   Documents.pushBack( { ingest.Url, nextPost } );
+   Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );
 
    // update estimated size
    EstSize += ingest.Url.length();
