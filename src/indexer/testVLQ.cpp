@@ -55,7 +55,8 @@ TEST( VQLEncoderTest, CheckEncodingDecodingSmall )
    for ( int i = 0;  i < 0x7FFFFF;  i++ )
       {
       String s = VLQ::Encode( i );
-      EXPECT_EQ( VLQ::Decode( s ), i );
+      size_t consumed;
+      EXPECT_EQ( VLQ::Decode( s, &consumed ), i );
       }
    }
 
@@ -69,7 +70,8 @@ TEST( VQLEncoderTest, CheckEncodingDecodingRandom )
       {
       uint64_t num = dist( gen );
       String s = VLQ::Encode( num );
-      EXPECT_EQ( num, VLQ::Decode( s ) );
+      size_t consumed;
+      EXPECT_EQ( num, VLQ::Decode( s, &consumed ) );
       }
    }
 
