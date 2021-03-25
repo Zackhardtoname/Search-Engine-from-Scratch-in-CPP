@@ -22,3 +22,12 @@ add_executable(filter-worker
 target_link_libraries(filter-worker rt Threads::Threads ssl crypto)
 
 # testing
+
+find_package(GTest)
+
+add_executable(testRobotstxt
+        testRobotstxt.cpp
+        ../stl/String.cpp
+        Robotstxt.cpp)
+target_link_libraries(testRobotstxt ssl GTest::gtest)
+gtest_discover_tests(testRobotstxt)
