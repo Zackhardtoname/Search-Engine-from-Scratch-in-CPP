@@ -19,7 +19,7 @@
 #include "HashTable.h"
 
 #define NullTerminatorSize 8
-constexpr size_t SerialTupleBaseSize = 2*sizeof(size_t) + sizeof(uint32_t);
+constexpr size_t SerialTupleBaseSize = 3*sizeof(size_t);
 
 using Hash = HashTable< const char *, size_t >;
 using Pair = Tuple< const char *, size_t >;
@@ -55,7 +55,7 @@ struct SerialTuple
       // (Actual length is not given but not needed.)
 
       size_t Length, Value;
-      uint32_t HashValue;
+      size_t HashValue;
 
       // The Key will be a C-string of whatever length.
       char Key[ Unknown ];
@@ -126,6 +126,12 @@ struct SerialTuple
          // TODO: write a sentinel SerialTuple at the end? could be more info on Piazza
          // essentailly a SerialTuple with Length = 0 should be written to the end
          // Should be an additional 24 bytes total? For the 3 size_t members? But all will be 0 value.
+         for ( size_t i = 0; i < NullTerminatorSize; ++i )
+            {
+            *buffer++ = '0';
+            }
+
+
          return buffer + 1; // this will be the start of buffer for the next call to Write
          }
   };
@@ -181,9 +187,12 @@ class HashBlob
          // Sum up the space required for all serialtuples (including null terminators)
          for(int i = 0; i < hashTable->numberOfBuckets; ++i)
             {
-
-            // Assume that BytesRequired accounts for separate chaining and null terminator size
-            tuples_section_size += SerialTuple::BytesRequired(hashTable->buckets[i]);
+            // If the bucket isn't empty
+            if ( hashTable->buckets[i] )
+               {
+               // Assume that BytesRequired accounts for separate chaining and null terminator size
+               tuples_section_size += SerialTuple::BytesRequired(hashTable->buckets[i]);
+               }
             }
 
          return header_size + buckets_section_size + tuples_section_size;
@@ -198,6 +207,26 @@ class HashBlob
          // TODO: assume Create must have been called before write?
          // TODO: not sure if need to allocate anything using bytes, should be malloc()ed by Create?
          // TODO: write each HashBucket in hashTable as a SerialTuple to hb
+         hb->MagicNumber = 0;
+         hb->Version = 1;
+         hb->BlobSize = bytes;
+         hb->NumberOfBuckets = hashTable->numberOfBuckets;
+         
+         for ( size_t i = 0; i < hb->numberOfBuckets; ++i )
+            {
+            *( Buckets + i ) = 0;
+            }
+
+         size_t *tupleMemory = Buckets + hashTable->numberOfBuckets;
+
+         for ( size_t i = 0; i < hashTable->numberOfBuckets; ++i )
+            {
+            if ( hashTable->bucket[ i ] ) 
+               {
+                SerializeTuple::Write( *( tupleMemory + i ), bytes, hashTable->bucket [ i ] );
+               }
+            }
+
 
          return nullptr;
          }
@@ -212,8 +241,9 @@ class HashBlob
       static HashBlob *Create( const Hash *hashTable )
          {
          // TODO: use malloc() here based on BytesRequired
+         // TODO: maybe avoid duplicate call to BytesRequired?
 
-         return nullptr;
+         return reinterpret_cast<HashBlob*>(malloc(BytesRequired(hashTable)));
          }
 
       // Discard
@@ -284,6 +314,11 @@ class HashFile
             exit(1);
             }
 
+         // Optimize the hastable memory before storing it as a blob
+         // TODO: For the AG we don't need to call this, but we could consider calling it here
+         // for our own code in case we forget to call optimize before creating the HashBlob
+         //hashtable->Optimize();
+
          size_t sz = HashBlob::BytesRequired(hashtable);
 
          void* mapped = mmap(nullptr, sz, PROT_WRITE, MAP_PRIVATE, fd, 0);
@@ -293,7 +328,7 @@ class HashFile
             exit(1);
             }
 
-         // TODO do we need both create and write? Or can we just Create() directly into mapped*
+         // TODO: do we need both create and write? Or can we just Create() directly into mapped*
          blob = HashBlob::Create(hashtable);
          
          // write HashBlob to memory
