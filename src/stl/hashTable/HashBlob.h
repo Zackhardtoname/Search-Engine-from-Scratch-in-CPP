@@ -54,7 +54,7 @@ struct SerialTuple
       // (Actual length is not given but not needed.)
 
       size_t Length, Value;
-      uint32_t HashValue;
+      size_t HashValue;
 
       // The Key will be a C-string of whatever length.
       char Key[ Unknown ];
@@ -64,9 +64,10 @@ struct SerialTuple
 
       static size_t BytesRequired( const HashBucket *b )
          {
-         // Your code here.
-
-         return 0;
+         Value = b->tuple.value;
+         HashValue = b->hashValue;
+         Key = b->tuple.key;
+         return Length = RoundUp( sizeof( Value ) + sizeof( HashValue ) + sizeof( Key ), 8);
          }
 
       // Write the HashBucket out as a SerialTuple in the buffer,
@@ -75,9 +76,31 @@ struct SerialTuple
       static char *Write( char *buffer, char *bufferEnd,
             const HashBucket *b )
          {
-         // Your code here.
-
-         return nullptr;
+         size_t numBytes = BytesRequired( b );
+         // error check numBytes TODO:?
+         if ( numBytes > (size_t)(bufferEnd - buffer) )
+            {
+            // TODO: is this necessary?
+            // what would we return here?
+            }
+         // write member vars byte by byte to buffer (TODO: is it definitely already allocated?)
+         for ( size_t i = 0; i < sizeof( Length ); ++i )
+            {
+            *buffer++ = ((char*)&Length)[i];
+            }
+         for ( size_t i = 0; i < sizeof( HashValue ); ++i )
+            {
+            *buffer++ = ((char*)&HashValue)[i];
+            }
+         for ( size_t i = 0; i < sizeof( Value ); ++i )
+            {
+            *buffer++ = ((char*)&Value)[i];
+            }
+         for (size_t i = 0; i < sizeof( Key ); ++i )
+            {
+            *buffer++ = Key[i];
+            }
+         return buffer + 1;
          }
   };
 
@@ -139,7 +162,8 @@ class HashBlob
       static HashBlob *Write( HashBlob *hb, size_t bytes,
             const Hash *hashTable )
          {
-         // Your code here.
+         // TODO: not sure if need to allocate anything using bytes, should be malloc()ed by Create?
+         // TODO: write each HashBucket in hashTable as a SerialTuple to hb
 
          return nullptr;
          }
@@ -153,7 +177,7 @@ class HashBlob
 
       static HashBlob *Create( const Hash *hashTable )
          {
-         // Your code here.
+         // TODO: use malloc() here based on BytesRequired
 
          return nullptr;
          }
@@ -162,7 +186,8 @@ class HashBlob
 
       static void Discard( HashBlob *blob )
          {
-         // Your code here.
+         // TODO: not exactly sure what to do here, just remove from memory?
+            // write updates to file? remove blob from file?
          }
    };
 
@@ -190,8 +215,25 @@ class HashFile
          {
          // Open the file for reading, map it, check the header,
          // and note the blob address.
+         int fd = open((char*)filename, O_RDONLY);
+         if (fd == -1)
+            {
+            std::cout << "Error: file not open\n";
+            exit(1);
+            }
+         size_t sz = FileSize(fd);
 
-         // Your code here.
+         char* mapped = (char*)mmap(nullptr, sz, PROT_READ, MAP_PRIVATE, fd, 0);
+         if (mapped == MAP_FAILED)
+            {
+            std::cout << "Error: mapping failed\n";
+            exit(1);
+            }
+
+         // TODO: check header, not sure what we are supposed to do here?
+
+         // TODO: is this the correct way to save the blob address?
+         blob = (HashBlob*)mapped; // TODO: should this instead start at the bytes after the header?
          }
 
       HashFile( const char *filename, const Hash *hashtable )
@@ -199,12 +241,34 @@ class HashFile
          // Open the file for write, map it, write
          // the hashtable out as a HashBlob, and note
          // the blob address.
+         int fd = open((char*)filename, O_WRONLY);
+         if (fd == -1)
+            {
+            std::cout << "Error: file not open\n";
+            exit(1);
+            }
+         size_t sz = FileSize(fd);
 
-         // Your code here.
+         char* mapped = (char*)mmap(nullptr, sz, PROT_WRITE, MAP_PRIVATE, fd, 0);
+         if (mapped == MAP_FAILED)
+            {
+            std::cout << "Error: mapping failed\n";
+            exit(1);
+            }
+         char* begin = mapped;
+
+         // create HashBlob from given HashTable
+         size_t numBytes = BytesRequired(hashtable);
+         blob = Create(hashtable);
+         
+         // write HashBlob to memory
+         blob = Write(blob, numBytes, hashtable);
+
+         // HashBlob address saved
          }
 
       ~HashFile( )
          {
-         // Your code here.
+         // deallocate from addr blob to addr blob + numBytes -> TODO: save numBytes as member?
          }
    };
