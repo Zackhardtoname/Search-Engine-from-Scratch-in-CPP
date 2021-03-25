@@ -9,8 +9,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#include "../indexer/ContiguousChunk.h"
-#include "../indexer/VLQ.h"
+#include "../../indexer/ContiguousChunk.h"
+#include "../../indexer/VLQ.h"
 
 using std::cerr;
 using std::cout;
