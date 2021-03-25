@@ -64,10 +64,16 @@ struct SerialTuple
 
       static size_t BytesRequired( const HashBucket *b )
          {
-         Value = b->tuple.value;
-         HashValue = b->hashValue;
-         Key = b->tuple.key;
-         return Length = RoundUp( sizeof( Value ) + sizeof( HashValue ) + sizeof( Key ), 8);
+         // add up bytes required for each bucket in the chain
+         while ( b )
+            {
+            Value = b->tuple.value;
+            HashValue = b->hashValue;
+            Key = b->tuple.key;
+            Length += RoundUp( sizeof( Value ) + sizeof( HashValue ) + sizeof( Key ), 8);
+            b = b->next;
+            }
+         return Length;
          }
 
       // Write the HashBucket out as a SerialTuple in the buffer,
@@ -76,6 +82,15 @@ struct SerialTuple
       static char *Write( char *buffer, char *bufferEnd,
             const HashBucket *b )
          {
+
+         // TODO: Should we write all the buckets in the chain?
+         // ex. while loop, going through all buckets to b->next
+         // All of the logic below would be same except changing
+         // the if statement error check for bufferEnd exceeding numBytes
+         // Also, might want to change BytesRequired to return the
+         // numBytes required for ALL buckets in the chain (simple while loop again)
+         // This is currently the implemented version, but is it correct?
+
          size_t numBytes = BytesRequired( b );
          // error check numBytes TODO:?
          if ( numBytes > (size_t)(bufferEnd - buffer) )
@@ -83,24 +98,32 @@ struct SerialTuple
             // TODO: is this necessary?
             // what would we return here?
             }
-         // write member vars byte by byte to buffer (TODO: is it definitely already allocated?)
-         for ( size_t i = 0; i < sizeof( Length ); ++i )
+         // write each bucket in chain to buffer
+         while ( b )
             {
-            *buffer++ = ((char*)&Length)[i];
+            // write member vars byte by byte to buffer (TODO: is it definitely already allocated?)
+            for ( size_t i = 0; i < sizeof( Length ); ++i )
+               {
+               *buffer++ = ((char*)&Length)[i];
+               }
+            for ( size_t i = 0; i < sizeof( HashValue ); ++i )
+               {
+               *buffer++ = ((char*)&HashValue)[i];
+               }
+            for ( size_t i = 0; i < sizeof( Value ); ++i )
+               {
+               *buffer++ = ((char*)&Value)[i];
+               }
+            for (size_t i = 0; i < sizeof( Key ); ++i )
+               {
+               *buffer++ = Key[i];
+               }
+            b = b->next;
             }
-         for ( size_t i = 0; i < sizeof( HashValue ); ++i )
-            {
-            *buffer++ = ((char*)&HashValue)[i];
-            }
-         for ( size_t i = 0; i < sizeof( Value ); ++i )
-            {
-            *buffer++ = ((char*)&Value)[i];
-            }
-         for (size_t i = 0; i < sizeof( Key ); ++i )
-            {
-            *buffer++ = Key[i];
-            }
-         return buffer + 1;
+         // TODO: write a sentinel SerialTuple at the end? could be more info on Piazza
+         // essentailly a SerialTuple with Length = 0 should be written to the end
+         // Should be an additional 24 bytes total? For the 3 size_t members? But all will be 0 value.
+         return buffer + 1; // this will be the start of buffer for the next call to Write
          }
   };
 
@@ -151,7 +174,11 @@ class HashBlob
          // Need space for the header + buckets +
          // all the serialized tuples.
 
-         // Your code here.
+         // TODO: header info would just be a couple sizeof( size_t )
+         // then also doing sizeof( hashTable->numberOfBuckets )
+
+         // TODO: call SerialTuple::BytesRequired on each hashTable->buckets[index]
+         // should return bytes required for total bucket chain for that index
 
          return 0;
          }
@@ -162,6 +189,7 @@ class HashBlob
       static HashBlob *Write( HashBlob *hb, size_t bytes,
             const Hash *hashTable )
          {
+         // TODO: assume Create must have been called before write?
          // TODO: not sure if need to allocate anything using bytes, should be malloc()ed by Create?
          // TODO: write each HashBucket in hashTable as a SerialTuple to hb
 
@@ -231,9 +259,12 @@ class HashFile
             }
 
          // TODO: check header, not sure what we are supposed to do here?
+         // what info in header would be useful for reading the hashblob?
+         // are we supposed to skip the header bytes to get straight to the hash blob Buckets?
 
          // TODO: is this the correct way to save the blob address?
          blob = (HashBlob*)mapped; // TODO: should this instead start at the bytes after the header?
+         
          }
 
       HashFile( const char *filename, const Hash *hashtable )
@@ -270,5 +301,6 @@ class HashFile
       ~HashFile( )
          {
          // deallocate from addr blob to addr blob + numBytes -> TODO: save numBytes as member?
+         // TODO: probably want to close the file here instead, save the fd
          }
    };
