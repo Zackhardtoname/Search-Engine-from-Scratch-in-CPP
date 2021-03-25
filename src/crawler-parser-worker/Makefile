@@ -2,7 +2,6 @@
 ## Auther: Emerson Pfeiffer (epfeiffe)
 
 #######################
-# TODO (begin) #
 #######################
 # Change 'executable' to match the command for the given component
 EXECUTABLE  = crawler-parser-worker
@@ -11,7 +10,6 @@ EXECUTABLE  = crawler-parser-worker
 SOURCE_FILES = CrawlerParserWorker.cpp ../crawler/Crawler.cpp ../crawler/ParsedUrl.cpp ../stl/utils.cpp ../stl/String.cpp ../crawler/ParsedHttpResponse.cpp ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp ../indexer/PorterStemming.cpp
 
 #######################
-# TODO (end) #
 #######################
 
 # designate which compiler to use
