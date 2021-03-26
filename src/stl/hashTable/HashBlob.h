@@ -187,7 +187,10 @@ class HashBlob
          // If there's something at this bucket iterate through Serial Tuple objects until
          // one with a matching key is found. If you reach the null terminator, return nullptr
          const size_t *chainAddress = &MagicNumber + chainStart;
-
+         
+         // TODO: this while loop might not work since the address will never be an actual nullptr
+         // we only know we reach the end by dereferencing at the address (once we know we're at the bytes for Length)
+         // and see if the pointer (reinterpret_cast as a size_t*) is pointing to a 0 value
          while (reinterpret_cast<SerialTuple*>(chainAddress))
          {
             /* code */
@@ -277,16 +280,17 @@ class HashBlob
          {
          // TODO: use malloc() here based on BytesRequired
          // TODO: maybe avoid duplicate call to BytesRequired?
-
-         return reinterpret_cast<HashBlob*>(malloc(BytesRequired(hashTable)));
+         size_t numBytes = BytesRequired(hashTable);
+         return Write(reinterpret_cast<HashBlob*>(malloc(numBytes)), numBytes, hashTable); 
          }
 
       // Discard
 
       static void Discard( HashBlob *blob )
          {
-         // TODO: not exactly sure what to do here, just remove from memory?
-            // write updates to file? remove blob from file?
+         // TODO: this is effectively a destructor!
+         // need to call free on the blob!
+         free(reinterpret_cast<void*>(blob));
          }
    };
 
@@ -295,6 +299,7 @@ class HashFile
    private:
 
       HashBlob *blob;
+      int fd = 0;
 
       size_t FileSize( int f )
          {
@@ -314,7 +319,7 @@ class HashFile
          {
          // Open the file for reading, map it, check the header,
          // and note the blob address.
-         int fd = open(filename, O_RDONLY);
+         fd = open(filename, O_RDONLY);
          if (fd == -1)
             {
             std::cout << "Error: file not open\n";
@@ -329,7 +334,7 @@ class HashFile
             exit(1);
             }
 
-         // TODO "Check the header"
+         // TODO "Check the header" -> this is not meaningful for the AG
          // I think this means check the version and magic number
          
          // Interpret loaded data as HashBlob
@@ -342,7 +347,7 @@ class HashFile
          // Open the file for write, map it, write
          // the hashtable out as a HashBlob, and note
          // the blob address.
-         int fd = open(filename, O_WRONLY);
+         fd = open(filename, O_WRONLY);
          if (fd == -1)
             {
             std::cout << "Error: file not open\n";
@@ -364,8 +369,9 @@ class HashFile
             }
 
          // TODO: do we need both create and write? Or can we just Create() directly into mapped*
-         blob = HashBlob::Create(hashtable);
-         
+         // blob = HashBlob::Create(hashtable);
+         // DONT NEED THIS, EXTERNAL USAGE
+
          // write HashBlob to memory
          blob = HashBlob::Write(reinterpret_cast<HashBlob*>(mapped), sz, hashtable);
 
@@ -374,7 +380,6 @@ class HashFile
 
       ~HashFile( )
          {
-         // deallocate from addr blob to addr blob + numBytes -> TODO: save numBytes as member?
-         // TODO: probably want to close the file here instead, save the fd
+         close(fd);
          }
    };
