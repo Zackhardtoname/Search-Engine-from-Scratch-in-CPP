@@ -15,7 +15,7 @@ class ParsedUrl
       String CompleteUrl;
       String Service, Host, Port, HostPort, Path;
 
-      explicit ParsedUrl( const String &url );
+      explicit ParsedUrl( const String &input );
 
       // Normalize the given path with this URL
       String Normalize( const String &path ) const;
