@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+sudo ./handle-mq delete frontier newLinks docs
+sudo ./handle-mq create frontier newLinks docs
