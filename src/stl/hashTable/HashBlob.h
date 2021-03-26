@@ -107,21 +107,19 @@ struct SerialTuple
             // what would we return here?
            // }
          // write each bucket in chain to buffer
+
          while ( b )
             {
+
+            size_t *size_t_buf = reinterpret_cast<size_t*>(buffer);
+
             // write member vars byte by byte to buffer (TODO: is it definitely already allocated?)
-            for ( size_t i = 0; i < sizeof( Length ); ++i )
-               {
-               *buffer++ = ((char*)&BytesForBucket( b ))[i];
-               }
-            for ( size_t i = 0; i < sizeof( HashValue ); ++i )
-               {
-               *buffer++ = ((char*)&b->hashValue)[i];
-               }
-            for ( size_t i = 0; i < sizeof( Value ); ++i )
-               {
-               *buffer++ = ((char*)&b->tuple.value)[i];
-               }
+            *size_t_buf++ = BytesForBucket(b);
+            *size_t_buf++ = b->hashValue;
+            *size_t_buf++ = b->tuple.value;
+
+            buffer = reinterpret_cast<char*>(size_t_buf);
+
             for (size_t i = 0; i < sizeof( Key ); ++i )
                {
                *buffer++ = b->tuple.key[i];
@@ -217,24 +215,25 @@ class HashBlob
          hb->BlobSize = bytes;
          hb->NumberOfBuckets = hashTable->numberOfBuckets;
          
-         for ( size_t i = 0; i < hb->numberOfBuckets; ++i )
+         for ( size_t i = 0; i < hb->NumberOfBuckets; ++i )
             {
-            *( Buckets + i ) = 0;
+            *( hb->Buckets + i ) = 0;
             }
 
-         char *tupleMemory = reinterpret_cast<char *>(Buckets) + hashTable->numberOfBuckets;
+         char *tupleMemory = reinterpret_cast<char *>(hb->Buckets) + hashTable->numberOfBuckets;
 
          for ( size_t i = 0; i < hashTable->numberOfBuckets; ++i )
             {
-            if ( hashTable->bucket[ i ] ) 
+            if ( hashTable->buckets[ i ] ) 
                {
-               // TODO: ok to write ptr addr to size_t? Buckets holds size_t
-               *( Buckets + i ) = tupleMemory;
-               tupleMemory = SerialTuple::Write( tupleMemory, tupleMemory + bytes, hashTable->bucket [ i ] );
+               // TODO: If hb->Buckets gets really big, it may make more sense to make the offset from 
+               // tupleMemory-1 instead of from the beginning of the hashblob
+               *( hb->Buckets + i ) = static_cast<size_t>(tupleMemory - reinterpret_cast<char*>(hb));
+               tupleMemory = SerialTuple::Write( tupleMemory, tupleMemory + bytes, hashTable->buckets [ i ] );
                }
             }
 
-         return nullptr;
+         return hb;
          }
 
       // Create allocates memory for a HashBlob of required size
