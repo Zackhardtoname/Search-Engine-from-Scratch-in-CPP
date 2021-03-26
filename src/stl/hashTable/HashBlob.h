@@ -59,6 +59,11 @@ struct SerialTuple
 
       // The Key will be a C-string of whatever length.
       char Key[ Unknown ];
+      
+      static size_t BytesForBucket( const HashBucket *b )
+         {
+         return SerialTupleBaseSize + sizeof( b->tuple.key );
+         }
 
       // Calculate the bytes required to encode a HashBucket as a
       // SerialTuple.
@@ -69,8 +74,8 @@ struct SerialTuple
 
          // add up bytes required for each bucket in the chain
          while ( b )
-            {            
-            running_length += SerialTupleBaseSize + sizeof(b->tuple.key);
+            {
+            running_length += BytesForBucket( b );
             b = b->next;
             }
          
@@ -94,32 +99,32 @@ struct SerialTuple
          // numBytes required for ALL buckets in the chain (simple while loop again)
          // This is currently the implemented version, but is it correct?
 
-         size_t numBytes = BytesRequired( b );
+         //size_t numBytes = BytesRequired( b );
          // error check numBytes TODO:?
-         if ( numBytes > (size_t)(bufferEnd - buffer) )
-            {
+         //if ( numBytes > (size_t)(bufferEnd - buffer) )
+           // {
             // TODO: is this necessary?
             // what would we return here?
-            }
+           // }
          // write each bucket in chain to buffer
          while ( b )
             {
             // write member vars byte by byte to buffer (TODO: is it definitely already allocated?)
             for ( size_t i = 0; i < sizeof( Length ); ++i )
                {
-               *buffer++ = ((char*)&Length)[i];
+               *buffer++ = ((char*)&BytesForBucket( b ))[i];
                }
             for ( size_t i = 0; i < sizeof( HashValue ); ++i )
                {
-               *buffer++ = ((char*)&HashValue)[i];
+               *buffer++ = ((char*)&b->hashValue)[i];
                }
             for ( size_t i = 0; i < sizeof( Value ); ++i )
                {
-               *buffer++ = ((char*)&Value)[i];
+               *buffer++ = ((char*)&b->tuple.value)[i];
                }
             for (size_t i = 0; i < sizeof( Key ); ++i )
                {
-               *buffer++ = Key[i];
+               *buffer++ = b->tuple.key[i];
                }
             b = b->next;
             }
@@ -217,16 +222,17 @@ class HashBlob
             *( Buckets + i ) = 0;
             }
 
-         size_t *tupleMemory = Buckets + hashTable->numberOfBuckets;
+         char *tupleMemory = reinterpret_cast<char *>(Buckets) + hashTable->numberOfBuckets;
 
          for ( size_t i = 0; i < hashTable->numberOfBuckets; ++i )
             {
             if ( hashTable->bucket[ i ] ) 
                {
-                SerializeTuple::Write( *( tupleMemory + i ), bytes, hashTable->bucket [ i ] );
+               // TODO: ok to write ptr addr to size_t? Buckets holds size_t
+               *( Buckets + i ) = tupleMemory;
+               tupleMemory = SerialTuple::Write( tupleMemory, tupleMemory + bytes, hashTable->bucket [ i ] );
                }
             }
-
 
          return nullptr;
          }
