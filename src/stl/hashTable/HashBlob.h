@@ -172,18 +172,32 @@ class HashBlob
          // ( key, value ) entry.  If the key is not found,
          // return nullptr.
 
-         // TODO: general idea for Find:
          // 1. calculate hashValue -> TODO: need to add fnvHash code into this file
-         size_t hashVal = fnvHash( key, strlen( key ) );
+         size_t hashVal = Hash::fnvHash( key, strlen( key ) );
          // 2. calculate index
          size_t index = hashVal % NumberOfBuckets;
          // 3. check Buckets to see if the key even exists
          size_t chainStart = Buckets[ index ];
+
+         // If there's nothing at this bucket, return nullptr
+         if ( chainStart == 0) {
+            return nullptr;
+         }
+
+         // If there's something at this bucket iterate through Serial Tuple objects until
+         // one with a matching key is found. If you reach the null terminator, return nullptr
+         const size_t *chainAddress = &MagicNumber + chainStart;
+
+         while (reinterpret_cast<SerialTuple*>(chainAddress))
+         {
+            /* code */
+         }
+         
+
          // NOTE: chainStart is just the start of the chain, this key might be further into the bytes
          // 4. Now we know where to start in memory
          // need to use chainAddress as our offset from the beginning of the HashBlob
          // TODO: how to calculate actual address?
-         size_t *chainAddress = /* HashBlobStart <this>? */ + chainStart; // INCOMPLETE
          // 5. use the chainAddress to start searching the following bytes
          // search continues until we find the key OR reach the null terminator (Lenght == 0)
             // Recall the structure of the serial tuple as Length, HashValue, Value, Key

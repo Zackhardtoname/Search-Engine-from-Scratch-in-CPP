@@ -101,7 +101,7 @@ template <typename Key, typename Value> class Bucket
 template <typename Key, typename Value> class HashTable
    {
    private:
-      size_t fnvHash( const char *data, size_t length ) const
+      static size_t fnvHash( const char *data, size_t length )
          {
          static const size_t OffsetBasis = 146959810393466560;
          static const size_t prime = 1099511628211ul;
