@@ -131,6 +131,7 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
             // found a null-terminated string at buf[start...i], where buf[i] is
             // NULL
             pthread_mutex_lock( &args->self->lockUnfilteredUrls );
+            std::cout << "got from remote: " << buf + start << std::endl;
             args->self->unfilteredUrls.pushBack( buf + start );
             pthread_mutex_unlock( &args->self->lockUnfilteredUrls );
 
@@ -141,8 +142,8 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
             start = i + 1;
             }
 
-      // everything before buf[start] has been posted, that leaves us (got + sz
-      // - start) bytes
+      // everything before buf[start] has been posted, that leaves us
+      // (got + sz - start) bytes
       int bytesLeft = got + sz - start;
       // if we did consume some bytes
       if ( start != 0 )
@@ -232,8 +233,8 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
 
    // connect socket
    int status = connect( sock, info->ai_addr, info->ai_addrlen );
-   if ( status == 0 )
-      throw std::runtime_error( "cannot connect()" );
+   if ( status == -1 )
+      throw std::runtime_error( strerror( errno ) );
 
    return sock;
    }
@@ -258,13 +259,16 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
             }
          catch ( std::exception &e )
             {
-            std::cerr << "cannot connect to peer " << i << " at "
+            std::cout << "cannot connect to peer " << i << " at "
                       << self.remoteWorkerAddrs[ i ].HostPort << ": "
                       << e.what() << std::endl;
             events[ i ].fd = 0;
             sleep( 1 );
             }
          }
+
+      std::cout << "connected to peer " << i << " at "
+                << self.remoteWorkerAddrs[ i ].HostPort << std::endl;
       }
 
    // set poll to listen for writable events
@@ -301,13 +305,16 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
                      }
                   catch ( std::exception &e )
                      {
-                     std::cerr << "cannot connect to peer " << i << " at "
+                     std::cout << "cannot connect to peer " << i << " at "
                                << self.remoteWorkerAddrs[ i ].HostPort << ": "
                                << e.what() << std::endl;
                      events[ i ].fd = 0;
                      sleep( 1 );
                      }
                   }
+
+               std::cerr << "reconnected to peer " << i << " at "
+                         << self.remoteWorkerAddrs[ i ].HostPort << std::endl;
                }
             else if ( POLLOUT & events[ i ].revents )
                {
@@ -316,9 +323,18 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
                auto &buf = self.remoteWorkersSendBuffer[ i ];
                // write as much from buf as possible
                int total = 0;
-               while ( int sent = send( events[ i ].fd, buf.data() + total,
-                                        buf.size() - total, O_NONBLOCK ) )
+               while ( true )
+                  {
+                  int sent = send( events[ i ].fd, buf.data() + total,
+                                   buf.size() - total, O_NONBLOCK );
+                  // sent all
+                  if ( sent == 0 )
+                     break;
+                  // even if it's not EAGAIN, we'll handle that on the next loop
+                  if ( sent == -1 )
+                     break;
                   total += sent;
+                  }
                buf = buf.substr( total );
                pthread_mutex_unlock( &self.lockRemoteWorkersSendBuffer );
                }
@@ -413,19 +429,22 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
          try
             {
             robotstxtMap[ url.Host ] = new Robotstxt( result.Body );
-            std::cout << "robots.txt for " << url.Host << " downloaded and parsed" << std::endl;
+            std::cout << "robots.txt for " << url.Host
+                      << " downloaded and parsed" << std::endl;
             }
          catch ( std::exception & )
             {
             robotstxtMap[ url.Host ] = DummyRobotstxt;
-            std::cout << "robots.txt for " << url.Host << " downloaded but failed to parse" << std::endl;
+            std::cout << "robots.txt for " << url.Host
+                      << " downloaded but failed to parse" << std::endl;
             }
          }
       catch ( std::exception & )
          {
          pthread_mutex_lock( &lockRobotstxtMap );
          robotstxtMap[ url.Host ] = DummyRobotstxt;
-         std::cout << "robots.txt for " << url.Host << " failed to download" << std::endl;
+         std::cout << "robots.txt for " << url.Host << " failed to download"
+                   << std::endl;
          }
       }
 
@@ -438,7 +457,7 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
       pthread_mutex_unlock(
          &lockRobotstxtMap ); // unlock to allow other threads to proceed
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
-      usleep(500 * 1000);
+      usleep( 500 * 1000 );
       pthread_mutex_lock( &lockRobotstxtMap );
       robotstxt = robotstxtMap[ url.Host ];
       }
@@ -457,10 +476,20 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
 
    // open the queues
    qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDONLY );
-   assert( qNewLinks != -1 && "mq_open() failed" );
+   if ( qNewLinks == -1 )
+      {
+      std::cerr << "mq_open(NEW_LINKS_QUEUE) failed: " << strerror( errno )
+                << std::endl;
+      exit( 1 );
+      }
 
    qFrontier = mq_open( FRONTIER_MQ, O_WRONLY );
-   assert( qFrontier != -1 && "mq_open() failed" );
+   if ( qFrontier == -1 )
+      {
+      std::cerr << "mq_open(FRONTIER_MQ) failed: " << strerror( errno )
+                << std::endl;
+      exit( 1 );
+      }
 
    // initialize sync structures
    assert( sem_init( &semUnfilteredUrls, 0, 0 ) != -1 && "sem_init() failed" );
@@ -477,20 +506,23 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
    // setup remote
    this->rank = rk;
    std::ifstream remoteConf( remoteConfigFile );
+   if ( !remoteConf )
+      assert( !"cannot open() remote config file" );
    remoteConf >> worldSize;
    assert( worldSize > 0 && "world size must be positive" );
    assert( worldSize < 1000 && "world size sanity check" );
    assert( 0 <= rk && rk < worldSize && "invalid rank" );
    std::cout << "I'm rank " << rk << " in a world size " << worldSize
              << std::endl;
+   remoteWorkersSendBuffer.resize( worldSize );
    for ( int i = 0;  i < worldSize;  i++ )
       {
       scb::String addr;
       remoteConf >> addr;
       ParsedUrl parsed( addr );
       remoteWorkerAddrs.pushBack( parsed );
-      std::cout << "remote " << i << "/" << ( worldSize - 1 ) << " is " << parsed.Host
-                << ':' << parsed.Port << std::endl;
+      std::cout << "remote " << i << "/" << ( worldSize - 1 ) << " is "
+                << parsed.Host << ':' << parsed.Port << std::endl;
       if ( i == rk )
          {
          hostname = parsed.Host;
@@ -499,8 +531,17 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
       }
    }
 
-int main()
+int main( int argc, char **argv )
    {
-   FilterWorker worker( "/tmp/remote.txt", 0, "/tmp/bloom" );
+
+   if ( argc != 4 )
+      {
+      fprintf( stderr, "Usage: %s [remote-config] [bloom-file] [rank]\n",
+               argv[ 0 ] );
+      return 1;
+      }
+
+   FilterWorker worker( argv[ 1 ], strtol( argv[ 3 ], nullptr, 10 ),
+                        argv[ 2 ] );
    worker.run();
    }
