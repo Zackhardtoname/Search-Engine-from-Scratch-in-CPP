@@ -60,8 +60,10 @@ String HttpGet( const ParsedUrl &url )
       String( "GET " ) + url.Path +
       " HTTP/1.1\r\n"
       "Host: " +
-      url.Host + " \r\n" +
-      "User-Agent: LinuxGetUrl/2.0 zackLt@umich.edu (Linux)\r\n"
+      url.Host + "\r\n" +
+      "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 "
+      "Safari/537.36 zackLt@umich.edu\r\n"
       "Accept-Language: en-US,en;q=0.5\r\n"
       "Accept: text/html\r\n"
       "Accept-Encoding: identity\r\n"
@@ -79,6 +81,7 @@ String HttpGet( const ParsedUrl &url )
             throw NetworkException();
          sent += n;
          }
+      shutdown( sockFd, SHUT_WR );
 
       int got;
       while ( ( got = recv( sockFd, buffer, sizeof( buffer ), 0 ) ) > 0 )
