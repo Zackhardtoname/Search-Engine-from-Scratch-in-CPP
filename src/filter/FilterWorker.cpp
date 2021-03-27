@@ -11,6 +11,7 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include <cassert>
+#include <csignal>
 #include <fstream>
 #include <iostream>
 #include <mqueue.h>
@@ -20,7 +21,6 @@
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
-#include <csignal>
 
 using scb::String;
 using scb::Vector;
@@ -428,7 +428,7 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
          pthread_mutex_lock( &lockRobotstxtMap );
          try
             {
-            robotstxtMap[ url.Host ] = new Robotstxt( result.Body );
+            robotstxtMap[ url.Host ] = new Robotstxt( result );
             std::cout << "robots.txt for " << url.Host
                       << " downloaded and parsed" << std::endl;
             }

@@ -45,15 +45,7 @@ int main( int argc, char **argv )
 
          auto httpResp = FetchUrl( url );
 
-         // filter out non-english page by HTTP
-         if ( !httpResp.Language.empty() &&
-              !httpResp.Language.hasPrefix( "en" ) )
-            {
-            std::cout << "not english by http" << std::endl;
-            continue;
-            }
-
-         ParsedHtml parsedHtml( httpResp.Body );
+         ParsedHtml parsedHtml( httpResp );
          // filter out non-english page by HTML
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )
