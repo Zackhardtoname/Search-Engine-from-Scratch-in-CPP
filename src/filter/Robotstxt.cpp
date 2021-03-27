@@ -11,7 +11,7 @@ Robotstxt::Robotstxt( const String &content )
    if ( starSectionPos == String::npos )
       starSectionPos = content.findCaseInsensitive( "User-agent:*" );
    if ( starSectionPos == String::npos )
-      throw InvalidRobotstxtError();
+      throw std::runtime_error( "no \"User-Agent: *\" section in robots.txt" );
 
    int nextSection =
       content.findCaseInsensitive( "User-agent:", starSectionPos + 1 );

@@ -93,7 +93,7 @@ String FetchUrl( const String &url )
       }
 
    if ( !mime.empty() && !mime.hasPrefixCaseInsensitive( "text" ) )
-      throw std::runtime_error( "not a text file" );
+      throw std::runtime_error( "not a text/* file" );
 
    int stat;
    while ( waitpid( pid, &stat, 0 ) == -1 )

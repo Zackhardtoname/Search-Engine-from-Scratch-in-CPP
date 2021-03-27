@@ -56,7 +56,7 @@ void *FilterWorker::threadNewLinksMqueue( void *inst )
          }
 
       buf[ sz ] = '\0';
-      std::cout << "got from mq: " << buf << std::endl;
+      std::cout << "from local mq: " << buf << std::endl;
 
       pthread_mutex_lock( &self.lockUnfilteredUrls );
       self.unfilteredUrls.pushBack( String( buf ) );
@@ -131,7 +131,7 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
             // found a null-terminated string at buf[start...i], where buf[i] is
             // NULL
             pthread_mutex_lock( &args->self->lockUnfilteredUrls );
-            std::cout << "got from remote: " << buf + start << std::endl;
+            std::cout << "from remote: " << buf + start << std::endl;
             args->self->unfilteredUrls.pushBack( buf + start );
             pthread_mutex_unlock( &args->self->lockUnfilteredUrls );
 
@@ -360,12 +360,16 @@ void *FilterWorker::threadFilteredUrls( void *inst )
 
          // this should not happen, but check just in case
          if ( url.CompleteUrl.size() > MAX_URL_LEN )
+            {
+            std::cout << "URL too long: " << url.CompleteUrl << std::endl;
             continue;
+            }
 
          // if rate limit for this host reached, requeue
          if ( hostCounter.Get( url.Host ) >= self.getHostRateLimit( url.Host ) )
             {
-            self.filteredUrls.pushBack( std::move( url ) );
+            self.filteredUrls.pushBack( url );
+            std::cout << "rate limit hit for: " << url.CompleteUrl << std::endl;
             continue;
             }
 
@@ -376,6 +380,7 @@ void *FilterWorker::threadFilteredUrls( void *inst )
             if ( errno == EAGAIN )
                {
                self.filteredUrls.pushBack( std::move( url ) ); // requeue
+               std::cout << "frontier blocked" << std::endl;
                break; // wait until the next tick
                }
             else
@@ -385,7 +390,7 @@ void *FilterWorker::threadFilteredUrls( void *inst )
          // update rate count
          hostCounter.Increment( url.Host );
 
-         std::cout << "posted: " << url.CompleteUrl << std::endl;
+         std::cout << "posted to frontier: " << url.CompleteUrl << std::endl;
          }
 
       pthread_mutex_unlock( &self.lockFilteredUrls );
@@ -425,25 +430,17 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
       try
          {
          auto result = FetchUrl( url.Normalize( "robots.txt" ) );
+         auto *robotstxt = new Robotstxt( result );
          pthread_mutex_lock( &lockRobotstxtMap );
-         try
-            {
-            robotstxtMap[ url.Host ] = new Robotstxt( result );
-            std::cout << "robots.txt for " << url.Host
-                      << " downloaded and parsed" << std::endl;
-            }
-         catch ( std::exception & )
-            {
-            robotstxtMap[ url.Host ] = DummyRobotstxt;
-            std::cout << "robots.txt for " << url.Host
-                      << " downloaded but failed to parse" << std::endl;
-            }
+         robotstxtMap[ url.Host ] = robotstxt;
+         std::cout << "robots.txt for " << url.Host << " downloaded and parsed"
+                   << std::endl;
          }
-      catch ( std::exception & )
+      catch ( std::exception &ex )
          {
          pthread_mutex_lock( &lockRobotstxtMap );
          robotstxtMap[ url.Host ] = DummyRobotstxt;
-         std::cout << "robots.txt for " << url.Host << " failed to download"
+         std::cout << "robots.txt for " << url.Host << " failed: " << ex.what()
                    << std::endl;
          }
       }
@@ -454,8 +451,8 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
    // while pending, sleep until it is ready
    while ( robotstxt == ROBOTS_TXT_PENDING )
       {
-      pthread_mutex_unlock(
-         &lockRobotstxtMap ); // unlock to allow other threads to proceed
+      // unlock to allow other threads to proceed while we wait
+      pthread_mutex_unlock( &lockRobotstxtMap );
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
       usleep( 500 * 1000 );
       pthread_mutex_lock( &lockRobotstxtMap );

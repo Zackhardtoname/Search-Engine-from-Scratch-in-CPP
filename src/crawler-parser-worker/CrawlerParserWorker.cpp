@@ -50,7 +50,7 @@ int main( int argc, char **argv )
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )
             {
-            std::cout << "not english by http" << std::endl;
+            std::cout << "not english by html" << std::endl;
             continue;
             }
 
@@ -83,8 +83,8 @@ int main( int argc, char **argv )
          for ( Link &link : parsedHtml.Links )
             {
             String normalizedUrl = pageUrl.Normalize( link.Href );
-            std::cout << "posting: " << normalizedUrl << std::endl;
             mq_send( newLinks, normalizedUrl.data(), normalizedUrl.size(), 0 );
+            std::cout << "posted to filter: " << normalizedUrl << std::endl;
             }
          }
       catch ( std::exception &s )
