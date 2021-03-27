@@ -379,7 +379,7 @@ void *FilterWorker::threadFilteredUrls( void *inst )
             {
             if ( errno == EAGAIN )
                {
-               self.filteredUrls.pushBack( std::move( url ) ); // requeue
+               self.filteredUrls.pushBack( url ); // requeue
                std::cout << "frontier blocked" << std::endl;
                break; // wait until the next tick
                }

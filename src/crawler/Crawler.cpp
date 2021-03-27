@@ -51,12 +51,12 @@ String FetchUrl( const String &url )
          "--max-filesize", "5m",    // abort on files larger than this
          "--location",              // follow redirections
          "--max-redirs", "10",      // at most 10 times
-         "--connect-timeout", "10", // 10 sec connect timeout
-         "--max-time", "30",        // 30 sec total timeout
+         "--connect-timeout", "5", // 10 sec connect timeout
+         "--max-time", "15",        // 30 sec total timeout
          "--user-agent",
          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
          "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu",
-         "--retry", "3", // retry 3 times if transient failure
+         "--retry", "1", // retry once if transient failure
          "--write-out",
          "%{stderr}%{content_type}\n%{http_code}", // put these to stderr
          url.cstr(), nullptr );
