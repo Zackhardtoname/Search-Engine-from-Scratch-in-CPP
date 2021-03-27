@@ -19,6 +19,8 @@ class ParsedUrl
 
       // Normalize the given path with this URL
       String Normalize( const String &path ) const;
+
+      String SwitchHTTPProtocal(const String &path ) const;
    };
 
 #endif // CRAWLER_PARSEDURL_H

@@ -22,6 +22,7 @@
 using scb::String;
 
 constexpr int MAX_REDIRECTION = 5;
+constexpr int MAX_RESPONSE_SIZE = 102400;
 
 struct NetworkException : std::runtime_error {
     NetworkException() : std::runtime_error("network error") {};
@@ -37,6 +38,7 @@ struct HttpRequestError : std::runtime_error {
 
 struct TooManyRedirectionError : HttpRequestError {
     TooManyRedirectionError() : HttpRequestError("too many redirection") {}
+    explicit TooManyRedirectionError(const char *s) : HttpRequestError(s) {}
 };
 
 /// Send an HTTP GET request and returns the response.
