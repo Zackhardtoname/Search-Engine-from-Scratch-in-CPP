@@ -5,12 +5,12 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(GTest)
 
-add_executable(testParsedUrl
-        testParsedUrl.cpp
-        ParsedUrl.cpp
-        )
-target_link_libraries(testParsedUrl GTest::gtest)
-gtest_discover_tests(testParsedUrl)
+#add_executable(testParsedUrl
+#        testParsedUrl.cpp
+#        ParsedUrl.cpp
+#        )
+#target_link_libraries(testParsedUrl GTest::gtest)
+#gtest_discover_tests(testParsedUrl)
 
 add_executable(crawlerCmdline
         ../parser/ParsedHtml.cpp

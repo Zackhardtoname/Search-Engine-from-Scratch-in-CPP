@@ -24,12 +24,12 @@ add_executable(create_test_chunk
 target_link_libraries(create_test_chunk rt)
 
 # testing
-find_package(GTest)
-
-add_executable(testVLQEncoding VLQ.cpp testVLQ.cpp)
-target_link_libraries(testVLQEncoding ssl GTest::gtest)
-gtest_discover_tests(testVLQEncoding)
-
-add_executable(testPorterStemming testPorterStemming.cpp PorterStemming.cpp)
-target_link_libraries(testPorterStemming GTest::gtest)
-gtest_discover_tests(testPorterStemming)
+#find_package(GTest)
+#
+#add_executable(testVLQEncoding VLQ.cpp testVLQ.cpp)
+#target_link_libraries(testVLQEncoding ssl GTest::gtest)
+#gtest_discover_tests(testVLQEncoding)
+#
+#add_executable(testPorterStemming testPorterStemming.cpp PorterStemming.cpp)
+#target_link_libraries(testPorterStemming GTest::gtest)
+#gtest_discover_tests(testPorterStemming)
