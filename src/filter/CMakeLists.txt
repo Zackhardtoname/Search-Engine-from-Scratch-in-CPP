@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(filter)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
 
 add_executable(dummy-filter

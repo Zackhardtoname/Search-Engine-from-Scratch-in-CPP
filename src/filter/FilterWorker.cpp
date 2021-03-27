@@ -10,6 +10,7 @@
 #include "../stl/RAII.h"
 #include "../stl/String.h"
 #include "../stl/Vector.h"
+#include "../stl/utils.h"
 #include <cassert>
 #include <csignal>
 #include <fstream>
@@ -21,6 +22,7 @@
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
+#include <netdb.h>
 
 using scb::String;
 using scb::Vector;
@@ -419,7 +421,7 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
    pthread_mutex_lock( &lockRobotstxtMap );
 
    // if no robots.txt yet, fetch and set
-   if ( !robotstxtMap.contains( url.Host ) )
+   if ( !robotstxtMap.count( url.Host ) )
       {
       std::cout << "no robots.txt for " << url.Host << std::endl;
       robotstxtMap[ url.Host ] = ROBOTS_TXT_PENDING;

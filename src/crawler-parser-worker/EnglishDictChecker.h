@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <string>
+#include <cassert>
 #include <unordered_set>
 
 #include "../indexer/IndexChunk.h"
