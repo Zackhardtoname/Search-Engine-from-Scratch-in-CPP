@@ -4,7 +4,7 @@
 //     <a href="https://zackLight.com" target="_blank">Page Title</a>
 //     <div className="snippet">
 //         <div className="col s12"><p>
-//             <b>snippet: </b>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid consequatur cumque eaque
+//             Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid consequatur cumque eaque
 //             iste natus nulla officia officiis optio sequi similique temporibus, voluptas voluptate. Beatae culpa dicta
 //             eius quo rem similique!
 //         </p></div>
@@ -15,7 +15,7 @@
 //     <a href="https://zackLight.com" target="_blank">Page Title</a>
 //     <div className="snippet">
 //         <div className="col s12"><p>
-//             <b>snippet: </b>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid consequatur cumque eaque
+//             Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid consequatur cumque eaque
 //             iste natus nulla officia officiis optio sequi similique temporibus, voluptas voluptate. Beatae culpa dicta
 //             eius quo rem similique!
 //         </p></div>
