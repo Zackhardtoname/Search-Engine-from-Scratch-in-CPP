@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="make-bloom-file"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\crawler\;CMake Files\crawler-controller\;CMake Files\crawler-parser-worker\;CMake Files\filter\;CMake Files\utils\;CMake Files\utils\handle-mqs\;CMake Files\utils\make-bloom-file\;CMake Files\utils\read-chunk\;CMake Files\utils\read-dump-file\;CMake Files\utils\seeder\;CMake Files\indexer\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="make-bloom-file">
+				<Option output="/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/make-bloom-file" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../include/c++/10.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../include/c++/10.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../include/c++/10.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 make-bloom-file"/>
+					<CompileFile command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="make-bloom-file/fast">
+				<Option output="/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/make-bloom-file" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../include/c++/10.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../include/c++/10.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/../../../../include/c++/10.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 make-bloom-file/fast"/>
+					<CompileFile command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j32 -f &quot;/home/zack/github/scooble_search/src/cmake-build-debug/utils/make-bloom-file/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/zack/github/scooble_search/src/utils/make-bloom-file/MakeBloomFile.cpp">
+			<Option target="make-bloom-file"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/crawler/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\crawler\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/crawler-controller/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\crawler-controller\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/crawler-parser-worker/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\crawler-parser-worker\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/filter/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\filter\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/utils/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\utils\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/utils/handle-mqs/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\utils\handle-mqs\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/utils/make-bloom-file/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\utils\make-bloom-file\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/utils/read-chunk/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\utils\read-chunk\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/utils/read-dump-file/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\utils\read-dump-file\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/utils/seeder/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\utils\seeder\"/>
+		</Unit>
+		<Unit filename="/home/zack/github/scooble_search/src/indexer/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\indexer\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

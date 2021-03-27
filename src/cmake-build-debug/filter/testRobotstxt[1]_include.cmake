@@ -1,0 +1,5 @@
+if(EXISTS "/home/zack/github/scooble_search/src/cmake-build-debug/filter/testRobotstxt[1]_tests.cmake")
+  include("/home/zack/github/scooble_search/src/cmake-build-debug/filter/testRobotstxt[1]_tests.cmake")
+else()
+  add_test(testRobotstxt_NOT_BUILT testRobotstxt_NOT_BUILT)
+endif()

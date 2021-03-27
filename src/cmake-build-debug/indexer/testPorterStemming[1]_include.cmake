@@ -1,0 +1,5 @@
+if(EXISTS "/home/zack/github/scooble_search/src/cmake-build-debug/indexer/testPorterStemming[1]_tests.cmake")
+  include("/home/zack/github/scooble_search/src/cmake-build-debug/indexer/testPorterStemming[1]_tests.cmake")
+else()
+  add_test(testPorterStemming_NOT_BUILT testPorterStemming_NOT_BUILT)
+endif()
