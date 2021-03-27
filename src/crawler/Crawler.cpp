@@ -86,7 +86,7 @@ String HttpGet( const ParsedUrl &url )
       while ( ( got = recv( sockFd, buffer, sizeof( buffer ), 0 ) ) > 0 )
          {
          response += String( buffer, got );
-         if ( numBufferUsed++ == maxNumBuffer )
+         if (numBufferUsed++ == maxNumBuffer)
             break;
          }
       }
@@ -124,10 +124,10 @@ String HttpGet( const ParsedUrl &url )
       int got;
       while ( ( got = SSL_read( ssl, buffer, sizeof( buffer ) ) ) > 0 )
          {
-         response += String( buffer, got );
+            response += String( buffer, got );
 
-         if ( numBufferUsed++ == maxNumBuffer )
-            break;
+            if (numBufferUsed++ == maxNumBuffer)
+               break;
          }
       }
    else
@@ -149,35 +149,27 @@ ParsedHttpResponse FetchUrl( String url )
       String resp = HttpGet( parsedUrl );
       ParsedHttpResponse parsedResp( resp );
 
-      if ( parsedResp.ContentType != "text/html" )
-         {
-         String errMsg = String( "content type " ) + parsedResp.ContentType +
-                         String( " not supported" );
-         throw HttpRequestError( errMsg.cstr() );
-         }
+      if ( parsedResp.ContentType != "text/html" ) {
+         String errMsg = String("content type ") + parsedResp.ContentType + String(" not supported");
+         throw HttpRequestError(errMsg.cstr());
+      }
       if ( parsedResp.StatusCode == "200" )
          return parsedResp;
 
-      if ( parsedResp.StatusCode == "505" )
-         {
+      if (parsedResp.StatusCode == "505") {
          nRedirect = MAX_REDIRECTION - 1;
-         url = parsedUrl.SwitchHTTPProtocal( url );
-         }
-      else if ( parsedResp.StatusCode == "100" ||
-                parsedResp.StatusCode == "301" ||
-                parsedResp.StatusCode == "302" ||
-                parsedResp.StatusCode == "303" ||
-                parsedResp.StatusCode == "307" ||
-                parsedResp.StatusCode == "308" )
+         url = parsedUrl.SwitchHTTPProtocal(url);
+      }
+      else if ( parsedResp.StatusCode == "100" || parsedResp.StatusCode == "301" ||
+           parsedResp.StatusCode == "302" || parsedResp.StatusCode == "303" ||
+           parsedResp.StatusCode == "307" || parsedResp.StatusCode == "308" )
          url = parsedUrl.Normalize( parsedResp.Location );
       else
          {
-         String errMsg = String( "status code " ) +
-                         parsedResp.StatusCode.cstr() +
-                         String( " not supported" );
-         throw HttpRequestError( errMsg.cstr() );
+            String errMsg = String("status code ") + parsedResp.StatusCode.cstr() + String(" not supported");
+            throw HttpRequestError(errMsg.cstr());
          }
       }
 
-   throw TooManyRedirectionError( url.cstr() );
+   throw TooManyRedirectionError(url.cstr());
    }

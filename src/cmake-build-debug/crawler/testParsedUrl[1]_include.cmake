@@ -1,5 +1,0 @@
-if(EXISTS "/home/zack/github/scooble_search/src/cmake-build-debug/crawler/testParsedUrl[1]_tests.cmake")
-  include("/home/zack/github/scooble_search/src/cmake-build-debug/crawler/testParsedUrl[1]_tests.cmake")
-else()
-  add_test(testParsedUrl_NOT_BUILT testParsedUrl_NOT_BUILT)
-endif()

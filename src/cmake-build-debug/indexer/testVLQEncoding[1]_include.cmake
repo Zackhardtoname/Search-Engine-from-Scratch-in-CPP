@@ -1,5 +1,0 @@
-if(EXISTS "/home/zack/github/scooble_search/src/cmake-build-debug/indexer/testVLQEncoding[1]_tests.cmake")
-  include("/home/zack/github/scooble_search/src/cmake-build-debug/indexer/testVLQEncoding[1]_tests.cmake")
-else()
-  add_test(testVLQEncoding_NOT_BUILT testVLQEncoding_NOT_BUILT)
-endif()
