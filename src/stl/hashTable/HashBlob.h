@@ -5,26 +5,25 @@
 
 // Nicole Hamilton  nham@umich.edu
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdlib.h>
 #include <cassert>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
+#include <fcntl.h>
 #include <malloc.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "HashTable.h"
 
 #define NullTerminatorSize 8
-constexpr size_t SerialTupleBaseSize = 3*sizeof(size_t);
+constexpr size_t SerialTupleBaseSize = 3 * sizeof( size_t );
 
-using Hash = HashTable< const char *, size_t >;
-using Pair = Tuple< const char *, size_t >;
-using HashBucket = Bucket< const char *, size_t >;
-
+using Hash = HashTable<const char *, size_t>;
+using Pair = Tuple<const char *, size_t>;
+using HashBucket = Bucket<const char *, size_t>;
 
 static const size_t Unknown = 0;
 
@@ -33,23 +32,20 @@ size_t RoundUp( size_t length, size_t boundary )
    // Round up to the next multiple of the boundary, which
    // must be a power of 2.
 
-   static const size_t oneless = boundary - 1,
-      mask = ~( oneless );
+   static const size_t oneless = boundary - 1, mask = ~( oneless );
    return ( length + oneless ) & mask;
    }
 
-
 struct SerialTuple
    {
-   // This is a serialization of a HashTable< char *, size_t >::Bucket.
-   // One is packed up against the next in a HashBlob.
+      // This is a serialization of a HashTable< char *, size_t >::Bucket.
+      // One is packed up against the next in a HashBlob.
 
-   // Since this struct includes size_t and uint32_t members, we'll
-   // require that it be sizeof( size_t ) aligned to avoid unaligned
-   // accesses.
+      // Since this struct includes size_t and uint32_t members, we'll
+      // require that it be sizeof( size_t ) aligned to avoid unaligned
+      // accesses.
 
    public:
-
       // SerialTupleLength = 0 is a sentinel indicating
       // this is the last SerialTuple chained in this list.
       // (Actual length is not given but not needed.)
@@ -59,7 +55,7 @@ struct SerialTuple
 
       // The Key will be a C-string of whatever length.
       char Key[ Unknown ];
-      
+
       static size_t BytesForBucket( const HashBucket *b )
          {
          size_t keySize = 0;
@@ -83,8 +79,9 @@ struct SerialTuple
             running_length += BytesForBucket( b );
             b = b->next;
             }
-         
-         if(running_length > 0) running_length += NullTerminatorSize;
+
+         if ( running_length > 0 )
+            running_length += NullTerminatorSize;
 
          return running_length;
          }
@@ -92,56 +89,53 @@ struct SerialTuple
       // Write the HashBucket out as a SerialTuple in the buffer,
       // returning a pointer to one past the last character written.
 
-      static char *Write( char *buffer, char *bufferEnd,
-            const HashBucket *b )
+      static char *Write( char *buffer, char *bufferEnd, const HashBucket *b )
          {
 
          while ( b )
             {
 
-            size_t *size_t_buf = reinterpret_cast<size_t*>(buffer);
+            size_t *size_t_buf = reinterpret_cast<size_t *>( buffer );
 
             // write member vars byte by byte to buffer
-            *size_t_buf++ = BytesForBucket(b);
+            *size_t_buf++ = BytesForBucket( b );
             *size_t_buf++ = b->tuple.value;
             *size_t_buf++ = b->hashValue;
 
-            buffer = reinterpret_cast<char*>(size_t_buf);
+            buffer = reinterpret_cast<char *>( size_t_buf );
 
             size_t i = 0;
             while ( b->tuple.key[ i ] )
                {
-               *buffer++ = b->tuple.key[i];
+               *buffer++ = b->tuple.key[ i ];
                ++i;
                }
 
             b = b->next;
             }
 
-         size_t *size_t_buf = reinterpret_cast<size_t*>(buffer);
+         size_t *size_t_buf = reinterpret_cast<size_t *>( buffer );
          *size_t_buf++ = 0;
-         buffer = reinterpret_cast<char*>(size_t_buf);
+         buffer = reinterpret_cast<char *>( size_t_buf );
 
-
-         return buffer; // this will be the start of buffer for the next call to Write
+         return buffer; // this will be the start of buffer for the next call to
+                        // Write
          }
-  };
-
+   };
 
 class HashBlob
    {
-   // This will be a hash specifically designed to hold an
-   // entire hash table as a single contiguous blob of bytes.
-   // Pointers are disallowed so that the blob can be
-   // relocated to anywhere in memory
+      // This will be a hash specifically designed to hold an
+      // entire hash table as a single contiguous blob of bytes.
+      // Pointers are disallowed so that the blob can be
+      // relocated to anywhere in memory
 
-   // The basic structure should consist of some header
-   // information including the number of buckets and other
-   // details followed by a concatenated list of all the
-   // individual lists of tuples within each bucket.
+      // The basic structure should consist of some header
+      // information including the number of buckets and other
+      // details followed by a concatenated list of all the
+      // individual lists of tuples within each bucket.
 
    public:
-
       // Define a MagicNumber and Version so you can validate
       // a HashBlob really is one of your HashBlobs.
 
@@ -153,14 +147,14 @@ class HashBlob
 
       // The SerialTuples will follow immediately after.
 
-
       const SerialTuple *Find( const char *key ) const
          {
          // Search for the key k and return a pointer to the
          // ( key, value ) entry.  If the key is not found,
          // return nullptr.
 
-         // 1. calculate hashValue -> TODO: need to add fnvHash code into this file
+         // 1. calculate hashValue -> TODO: need to add fnvHash code into this
+         // file
          size_t hashVal = Hash::fnvHash( key, strlen( key ) );
          // 2. calculate index
          size_t index = hashVal % NumberOfBuckets;
@@ -168,13 +162,15 @@ class HashBlob
          size_t chainStart = Buckets[ index ];
 
          // If there's nothing at this bucket, return nullptr
-         if ( chainStart == 0) {
+         if ( chainStart == 0 )
+            {
             return nullptr;
-         }
-            
-         // chainAddress is used to read right from the hashBlob, it points to the beginning
-         // of the blob
-         const char *chainAddress = reinterpret_cast<const char *>(&MagicNumber) + chainStart;
+            }
+
+         // chainAddress is used to read right from the hashBlob, it points to
+         // the beginning of the blob
+         const char *chainAddress =
+            reinterpret_cast<const char *>( &MagicNumber ) + chainStart;
          size_t tupleLength = chainStart;
 
          while ( true )
@@ -185,53 +181,56 @@ class HashBlob
             if ( tupleLength == 0 )
                return nullptr;
 
-            // Need to increment by factors of 8 here since size_t is 8 bytes and chainAddress
-            // is a char*
-            size_t tupleVal = *(chainAddress + 8);
-            size_t tupleHashVal = *(chainAddress + 16);
+            // Need to increment by factors of 8 here since size_t is 8 bytes
+            // and chainAddress is a char*
+            size_t tupleVal = *( chainAddress + 8 );
+            size_t tupleHashVal = *( chainAddress + 16 );
 
-            // Subtract by 23 since we want the 24 bytes from the Length, Value, and Hash Value
-            // removed from the overall length, yet we want one extra character for a null char
-            char tupleKey[tupleLength - 23];
+            // Subtract by 23 since we want the 24 bytes from the Length, Value,
+            // and Hash Value removed from the overall length, yet we want one
+            // extra character for a null char
+            char tupleKey[ tupleLength - 23 ];
 
             // Read in the key from the hashBlob
-            for ( size_t i = 24; i < tupleLength; ++i )
+            for ( size_t i = 24;  i < tupleLength;  ++i )
                {
-               tupleKey[ i - 24 ] = *(chainAddress + i);
+               tupleKey[ i - 24 ] = *( chainAddress + i );
                }
 
-            tupleKey[tupleLength - 24] = '\0';
-            auto k = reinterpret_cast<const SerialTuple *>(chainAddress);
+            tupleKey[ tupleLength - 24 ] = '\0';
+            auto k = reinterpret_cast<const SerialTuple *>( chainAddress );
 
             // If we found the key we were looking for
-            if ( !strcmp(tupleKey, key) )
-               return reinterpret_cast<const SerialTuple *>(chainAddress);
+            if ( !strcmp( tupleKey, key ) )
+               return reinterpret_cast<const SerialTuple *>( chainAddress );
 
             chainAddress += tupleLength;
-
             }
 
          return nullptr;
          }
-
 
       static size_t BytesRequired( const Hash *hashTable )
          {
          // Calculate how much space it will take to
          // represent a HashTable as a HashBlob.
 
-         size_t header_size =  4*sizeof(size_t);
-         size_t buckets_section_size = sizeof(size_t)*(hashTable->numberOfBuckets);
+         size_t header_size = 4 * sizeof( size_t );
+         size_t buckets_section_size =
+            sizeof( size_t ) * ( hashTable->numberOfBuckets );
          size_t tuples_section_size = 0;
 
-         // Sum up the space required for all serialtuples (including null terminators)
-         for(int i = 0; i < hashTable->numberOfBuckets; ++i)
+         // Sum up the space required for all serialtuples (including null
+         // terminators)
+         for ( int i = 0;  i < hashTable->numberOfBuckets;  ++i )
             {
             // If the bucket isn't empty
-            if ( hashTable->buckets[i] )
+            if ( hashTable->buckets[ i ] )
                {
-               // Assume that BytesRequired accounts for separate chaining and null terminator size
-               tuples_section_size += SerialTuple::BytesRequired(hashTable->buckets[i]);
+               // Assume that BytesRequired accounts for separate chaining and
+               // null terminator size
+               tuples_section_size +=
+                  SerialTuple::BytesRequired( hashTable->buckets[ i ] );
                }
             }
 
@@ -242,29 +241,35 @@ class HashBlob
       // pointer to the blob.
 
       static HashBlob *Write( HashBlob *hb, size_t bytes,
-            const Hash *hashTable )
+                              const Hash *hashTable )
          {
          // TODO: assume Create must have been called before write?
          hb->MagicNumber = 0;
          hb->Version = 1;
          hb->BlobSize = bytes;
          hb->NumberOfBuckets = hashTable->numberOfBuckets;
-         
-         for ( size_t i = 0; i < hb->NumberOfBuckets; ++i )
+
+         for ( size_t i = 0;  i < hb->NumberOfBuckets;  ++i )
             {
             *( hb->Buckets + i ) = 0;
             }
 
-         char *startOfEmptyTupleMemory = reinterpret_cast<char *>(hb->Buckets + hb->NumberOfBuckets);
+         char *startOfEmptyTupleMemory =
+            reinterpret_cast<char *>( hb->Buckets + hb->NumberOfBuckets );
 
-         for ( size_t i = 0; i < hashTable->numberOfBuckets; ++i )
+         for ( size_t i = 0;  i < hashTable->numberOfBuckets;  ++i )
             {
-            if ( hashTable->buckets[ i ] ) 
+            if ( hashTable->buckets[ i ] )
                {
-               // TODO: If hb->Buckets gets really big, it may make more sense to make the offset from 
-               // tupleMemory-1 instead of from the beginning of the hashblob
-               *( hb->Buckets + i ) = static_cast<size_t>(startOfEmptyTupleMemory - reinterpret_cast<char * >(&hb->MagicNumber));
-               startOfEmptyTupleMemory = SerialTuple::Write( startOfEmptyTupleMemory, startOfEmptyTupleMemory + bytes, hashTable->buckets [ i ] );
+               // TODO: If hb->Buckets gets really big, it may make more sense
+               // to make the offset from tupleMemory-1 instead of from the
+               // beginning of the hashblob
+               *( hb->Buckets + i ) = static_cast<size_t>(
+                  startOfEmptyTupleMemory -
+                  reinterpret_cast<char *>( &hb->MagicNumber ) );
+               startOfEmptyTupleMemory = SerialTuple::Write(
+                  startOfEmptyTupleMemory, startOfEmptyTupleMemory + bytes,
+                  hashTable->buckets[ i ] );
                }
             }
 
@@ -282,8 +287,9 @@ class HashBlob
          {
          // TODO: use malloc() here based on BytesRequired
          // TODO: maybe avoid duplicate call to BytesRequired?
-         size_t numBytes = BytesRequired(hashTable);
-         return Write(reinterpret_cast<HashBlob*>(malloc(numBytes)), numBytes, hashTable); 
+         size_t numBytes = BytesRequired( hashTable );
+         return Write( reinterpret_cast<HashBlob *>( malloc( numBytes ) ),
+                       numBytes, hashTable );
          }
 
       // Discard
@@ -292,14 +298,13 @@ class HashBlob
          {
          // TODO: this is effectively a destructor!
          // need to call free on the blob!
-         free(reinterpret_cast<void*>(blob));
+         free( reinterpret_cast<void *>( blob ) );
          }
    };
 
 class HashFile
    {
    private:
-
       HashBlob *blob;
       int fd = 0;
 
@@ -311,8 +316,7 @@ class HashFile
          }
 
    public:
-
-      const HashBlob *Blob( )
+      const HashBlob *Blob()
          {
          return blob;
          }
@@ -321,28 +325,27 @@ class HashFile
          {
          // Open the file for reading, map it, check the header,
          // and note the blob address.
-         fd = open(filename, O_RDONLY);
-         if (fd == -1)
+         fd = open( filename, O_RDONLY );
+         if ( fd == -1 )
             {
             std::cout << "Error: file not open\n";
-            exit(1);
+            exit( 1 );
             }
-         size_t sz = FileSize(fd);
+         size_t sz = FileSize( fd );
 
-         void* mapped = mmap(nullptr, sz, PROT_READ, MAP_SHARED, fd, 0);
-         if (mapped == MAP_FAILED)
+         void *mapped = mmap( nullptr, sz, PROT_READ, MAP_SHARED, fd, 0 );
+         if ( mapped == MAP_FAILED )
             {
             std::cout << "Error: mapping failed\n";
-            exit(1);
+            exit( 1 );
             }
 
          // TODO "Check the header" -> this is not meaningful for the AG
          // I think this means check the version and magic number
-         
-         // TODO: HashBlob isn't correctly written into and read from a file, needs to be fixed
-         // Interpret loaded data as HashBlob
-         blob = reinterpret_cast<HashBlob*>(mapped);
 
+         // TODO: HashBlob isn't correctly written into and read from a file,
+         // needs to be fixed Interpret loaded data as HashBlob
+         blob = reinterpret_cast<HashBlob *>( mapped );
          }
 
       HashFile( const char *filename, const Hash *hashtable )
@@ -350,35 +353,38 @@ class HashFile
          // Open the file for write, map it, write
          // the hashtable out as a HashBlob, and note
          // the blob address.
-         fd = open(filename, O_CREAT | O_RDWR, 0644);
-         if (fd == -1)
+         fd = open( filename, O_CREAT | O_RDWR, 0644 );
+         if ( fd == -1 )
             {
             std::cout << "Error: file not open\n";
-            exit(1);
+            exit( 1 );
             }
 
          // Optimize the hastable memory before storing it as a blob
-         // TODO: For the AG we don't need to call this, but we could consider calling it here
-         // for our own code in case we forget to call optimize before creating the HashBlob
-         size_t sz = HashBlob::BytesRequired(hashtable);
-         ftruncate(fd, sz);
+         // TODO: For the AG we don't need to call this, but we could consider
+         // calling it here for our own code in case we forget to call optimize
+         // before creating the HashBlob
+         size_t sz = HashBlob::BytesRequired( hashtable );
+         ftruncate( fd, sz );
 
-         void* mapped = mmap(nullptr, sz, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
-         if (mapped == MAP_FAILED)
+         void *mapped =
+            mmap( nullptr, sz, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0 );
+         if ( mapped == MAP_FAILED )
             {
-            std::cout << strerror(errno) << std::endl;
+            std::cout << strerror( errno ) << std::endl;
             std::cout << "Error: mapping failed\n";
-            exit(1);
+            exit( 1 );
             }
 
-         mapped = HashBlob::Write(reinterpret_cast<HashBlob*>(mapped), sz, hashtable);
-         blob = reinterpret_cast<HashBlob*>(mapped);
+         mapped = HashBlob::Write( reinterpret_cast<HashBlob *>( mapped ), sz,
+                                   hashtable );
+         blob = reinterpret_cast<HashBlob *>( mapped );
 
          // HashBlob address saved
          }
 
-      ~HashFile( )
+      ~HashFile()
          {
-         close(fd);
+         close( fd );
          }
    };
