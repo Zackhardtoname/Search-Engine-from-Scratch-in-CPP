@@ -62,7 +62,12 @@ struct SerialTuple
       
       static size_t BytesForBucket( const HashBucket *b )
          {
-         return SerialTupleBaseSize + sizeof( b->tuple.key );
+         size_t keySize = 0;
+         while ( b->tuple.key[ keySize ] )
+            {
+            ++keySize;
+            }
+         return SerialTupleBaseSize + keySize;
          }
 
       // Calculate the bytes required to encode a HashBucket as a
@@ -91,51 +96,34 @@ struct SerialTuple
             const HashBucket *b )
          {
 
-         // TODO: Should we write all the buckets in the chain?
-         // ex. while loop, going through all buckets to b->next
-         // All of the logic below would be same except changing
-         // the if statement error check for bufferEnd exceeding numBytes
-         // Also, might want to change BytesRequired to return the
-         // numBytes required for ALL buckets in the chain (simple while loop again)
-         // This is currently the implemented version, but is it correct?
-
-         //size_t numBytes = BytesRequired( b );
-         // error check numBytes TODO:?
-         //if ( numBytes > (size_t)(bufferEnd - buffer) )
-           // {
-            // TODO: is this necessary?
-            // what would we return here?
-           // }
-         // write each bucket in chain to buffer
-
          while ( b )
             {
 
             size_t *size_t_buf = reinterpret_cast<size_t*>(buffer);
 
-            // write member vars byte by byte to buffer (TODO: is it definitely already allocated?)
+            // write member vars byte by byte to buffer
             *size_t_buf++ = BytesForBucket(b);
-            *size_t_buf++ = b->hashValue;
             *size_t_buf++ = b->tuple.value;
+            *size_t_buf++ = b->hashValue;
 
             buffer = reinterpret_cast<char*>(size_t_buf);
 
-            for (size_t i = 0; i < sizeof( Key ); ++i )
+            size_t i = 0;
+            while ( b->tuple.key[ i ] )
                {
                *buffer++ = b->tuple.key[i];
+               ++i;
                }
+
             b = b->next;
             }
-         // TODO: write a sentinel SerialTuple at the end? could be more info on Piazza
-         // essentailly a SerialTuple with Length = 0 should be written to the end
-         // Should be an additional 24 bytes total? For the 3 size_t members? But all will be 0 value.
-         for ( size_t i = 0; i < NullTerminatorSize; ++i )
-            {
-            *buffer++ = '0';
-            }
+
+         size_t *size_t_buf = reinterpret_cast<size_t*>(buffer);
+         *size_t_buf++ = 0;
+         buffer = reinterpret_cast<char*>(size_t_buf);
 
 
-         return buffer + 1; // this will be the start of buffer for the next call to Write
+         return buffer; // this will be the start of buffer for the next call to Write
          }
   };
 
@@ -183,29 +171,45 @@ class HashBlob
          if ( chainStart == 0) {
             return nullptr;
          }
+            
+         // chainAddress is used to read right from the hashBlob, it points to the beginning
+         // of the blob
+         const char *chainAddress = reinterpret_cast<const char *>(&MagicNumber) + chainStart;
+         size_t tupleLength = chainStart;
 
-         // If there's something at this bucket iterate through Serial Tuple objects until
-         // one with a matching key is found. If you reach the null terminator, return nullptr
-         const size_t *chainAddress = &MagicNumber + chainStart;
-         
-         // TODO: this while loop might not work since the address will never be an actual nullptr
-         // we only know we reach the end by dereferencing at the address (once we know we're at the bytes for Length)
-         // and see if the pointer (reinterpret_cast as a size_t*) is pointing to a 0 value
-         while (reinterpret_cast<SerialTuple*>(chainAddress))
-         {
-            /* code */
-         }
-         
+         while ( true )
+            {
+            tupleLength = *chainAddress;
 
-         // NOTE: chainStart is just the start of the chain, this key might be further into the bytes
-         // 4. Now we know where to start in memory
-         // need to use chainAddress as our offset from the beginning of the HashBlob
-         // TODO: how to calculate actual address?
-         // 5. use the chainAddress to start searching the following bytes
-         // search continues until we find the key OR reach the null terminator (Lenght == 0)
-            // Recall the structure of the serial tuple as Length, HashValue, Value, Key
-            // If we find key, return pointer to beginning of segment (at start of Length) NOT start of Key
-            // If we reach null terminator, return nullptr
+            // If we reach the end of the chain
+            if ( tupleLength == 0 )
+               return nullptr;
+
+            // Need to increment by factors of 8 here since size_t is 8 bytes and chainAddress
+            // is a char*
+            size_t tupleVal = *(chainAddress + 8);
+            size_t tupleHashVal = *(chainAddress + 16);
+
+            // Subtract by 23 since we want the 24 bytes from the Length, Value, and Hash Value
+            // removed from the overall length, yet we want one extra character for a null char
+            char tupleKey[tupleLength - 23];
+
+            // Read in the key from the hashBlob
+            for ( size_t i = 24; i < tupleLength; ++i )
+               {
+               tupleKey[ i - 24 ] = *(chainAddress + i);
+               }
+
+            tupleKey[tupleLength - 24] = '\0';
+            auto k = reinterpret_cast<const SerialTuple *>(chainAddress);
+
+            // If we found the key we were looking for
+            if ( !strcmp(tupleKey, key) )
+               return reinterpret_cast<const SerialTuple *>(chainAddress);
+
+            chainAddress += tupleLength;
+
+            }
 
          return nullptr;
          }
@@ -241,8 +245,6 @@ class HashBlob
             const Hash *hashTable )
          {
          // TODO: assume Create must have been called before write?
-         // TODO: not sure if need to allocate anything using bytes, should be malloc()ed by Create?
-         // TODO: write each HashBucket in hashTable as a SerialTuple to hb
          hb->MagicNumber = 0;
          hb->Version = 1;
          hb->BlobSize = bytes;
@@ -253,7 +255,7 @@ class HashBlob
             *( hb->Buckets + i ) = 0;
             }
 
-         char *tupleMemory = reinterpret_cast<char *>(hb->Buckets) + hashTable->numberOfBuckets;
+         char *startOfEmptyTupleMemory = reinterpret_cast<char *>(hb->Buckets + hb->NumberOfBuckets);
 
          for ( size_t i = 0; i < hashTable->numberOfBuckets; ++i )
             {
@@ -261,8 +263,8 @@ class HashBlob
                {
                // TODO: If hb->Buckets gets really big, it may make more sense to make the offset from 
                // tupleMemory-1 instead of from the beginning of the hashblob
-               *( hb->Buckets + i ) = static_cast<size_t>(tupleMemory - reinterpret_cast<char*>(hb));
-               tupleMemory = SerialTuple::Write( tupleMemory, tupleMemory + bytes, hashTable->buckets [ i ] );
+               *( hb->Buckets + i ) = static_cast<size_t>(startOfEmptyTupleMemory - reinterpret_cast<char * >(&hb->MagicNumber));
+               startOfEmptyTupleMemory = SerialTuple::Write( startOfEmptyTupleMemory, startOfEmptyTupleMemory + bytes, hashTable->buckets [ i ] );
                }
             }
 
@@ -337,6 +339,7 @@ class HashFile
          // TODO "Check the header" -> this is not meaningful for the AG
          // I think this means check the version and magic number
          
+         // TODO: HashBlob isn't correctly written into and read from a file, needs to be fixed
          // Interpret loaded data as HashBlob
          blob = reinterpret_cast<HashBlob*>(mapped);
 
@@ -347,7 +350,7 @@ class HashFile
          // Open the file for write, map it, write
          // the hashtable out as a HashBlob, and note
          // the blob address.
-         fd = open(filename, O_WRONLY);
+         fd = open(filename, O_CREAT | O_RDWR, 0644);
          if (fd == -1)
             {
             std::cout << "Error: file not open\n";
@@ -357,23 +360,22 @@ class HashFile
          // Optimize the hastable memory before storing it as a blob
          // TODO: For the AG we don't need to call this, but we could consider calling it here
          // for our own code in case we forget to call optimize before creating the HashBlob
-         //hashtable->Optimize();
-
          size_t sz = HashBlob::BytesRequired(hashtable);
+         ftruncate(fd, sz);
 
-         void* mapped = mmap(nullptr, sz, PROT_WRITE, MAP_PRIVATE, fd, 0);
+         void* mapped = mmap(nullptr, sz, PROT_WRITE | PROT_READ, MAP_PRIVATE, fd, 0);
          if (mapped == MAP_FAILED)
             {
+            std::cout << strerror(errno) << std::endl;
             std::cout << "Error: mapping failed\n";
             exit(1);
             }
 
-         // TODO: do we need both create and write? Or can we just Create() directly into mapped*
-         // blob = HashBlob::Create(hashtable);
-         // DONT NEED THIS, EXTERNAL USAGE
 
+         // TODO: HashBlob isn't correctly written into and read from a file, needs to be fixed
          // write HashBlob to memory
-         blob = HashBlob::Write(reinterpret_cast<HashBlob*>(mapped), sz, hashtable);
+         mapped = HashBlob::Write(reinterpret_cast<HashBlob*>(mapped), sz, hashtable);
+         blob = reinterpret_cast<HashBlob*>(mapped);
 
          // HashBlob address saved
          }
