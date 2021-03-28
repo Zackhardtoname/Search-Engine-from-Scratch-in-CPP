@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include "HashTable.h"
 
@@ -58,12 +59,7 @@ struct SerialTuple
 
       static size_t BytesForBucket( const HashBucket *b )
          {
-         size_t keySize = 0;
-         while ( b->tuple.key[ keySize ] )
-            {
-            ++keySize;
-            }
-         return SerialTupleBaseSize + keySize;
+         return SerialTupleBaseSize + strlen(b->tuple.key);
          }
 
       // Calculate the bytes required to encode a HashBucket as a
@@ -224,14 +220,10 @@ class HashBlob
          // terminators)
          for ( int i = 0;  i < hashTable->numberOfBuckets;  ++i )
             {
-            // If the bucket isn't empty
-            if ( hashTable->buckets[ i ] )
-               {
-               // Assume that BytesRequired accounts for separate chaining and
-               // null terminator size
-               tuples_section_size +=
-                  SerialTuple::BytesRequired( hashTable->buckets[ i ] );
-               }
+            // Assume that BytesRequired accounts for separate chaining and
+            // null terminator size
+            tuples_section_size +=
+               SerialTuple::BytesRequired( hashTable->buckets[ i ] );
             }
 
          return header_size + buckets_section_size + tuples_section_size;
@@ -360,8 +352,7 @@ class HashFile
             exit( 1 );
             }
 
-         // Optimize the hastable memory before storing it as a blob
-         // TODO: For the AG we don't need to call this, but we could consider
+         // TODO: For the AG we don't need to call optimize, but we could consider
          // calling it here for our own code in case we forget to call optimize
          // before creating the HashBlob
          size_t sz = HashBlob::BytesRequired( hashtable );

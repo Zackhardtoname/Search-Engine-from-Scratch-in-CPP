@@ -7,6 +7,9 @@
 # macOS
 .DS_Store
 
+# Swap files
+*.swp
+
 # Executables
 *.o
 src/crawler/crawler*
