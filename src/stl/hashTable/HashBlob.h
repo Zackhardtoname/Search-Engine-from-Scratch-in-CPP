@@ -145,6 +145,7 @@ class HashBlob
 
       const SerialTuple *Find( const char *key ) const
          {
+         if (!strcmp(key, "would")) std::cout << "testing: blob find on " << key << std::endl;
          // Search for the key k and return a pointer to the
          // ( key, value ) entry.  If the key is not found,
          // return nullptr.
@@ -156,7 +157,7 @@ class HashBlob
          size_t index = hashVal % NumberOfBuckets;
          // 3. check Buckets to see if the key even exists
          size_t chainStart = Buckets[ index ];
-
+         if (!strcmp(key, "would")) std::cout << "testing: blob find on chainStart" << std::endl;
          // If there's nothing at this bucket, return nullptr
          if ( chainStart == 0 )
             {
@@ -169,8 +170,11 @@ class HashBlob
             reinterpret_cast<const char *>( &MagicNumber ) + chainStart;
          size_t tupleLength = chainStart;
 
+         if (!strcmp(key, "would")) std::cout << "testing: blob find on chainAddress" << std::endl;
          while ( true )
             {
+
+            if (!strcmp(key, "would")) std::cout << "testing: blob find beginning loop" << std::endl;
             tupleLength = *chainAddress;
 
             // If we reach the end of the chain
@@ -182,6 +186,7 @@ class HashBlob
             size_t tupleVal = *( chainAddress + 8 );
             size_t tupleHashVal = *( chainAddress + 16 );
 
+            if (!strcmp(key, "would")) std::cout << "testing: blob find part through loop tupleLength: " << tupleLength  << std::endl;
             // Subtract by 23 since we want the 24 bytes from the Length, Value,
             // and Hash Value removed from the overall length, yet we want one
             // extra character for a null char
@@ -193,6 +198,8 @@ class HashBlob
                tupleKey[ i - 24 ] = *( chainAddress + i );
                }
 
+            if (!strcmp(key, "would")) std::cout << "testing: blob find reading portion over" << std::endl;
+
             tupleKey[ tupleLength - 24 ] = '\0';
             auto k = reinterpret_cast<const SerialTuple *>( chainAddress );
 
@@ -201,6 +208,8 @@ class HashBlob
                return reinterpret_cast<const SerialTuple *>( chainAddress );
 
             chainAddress += tupleLength;
+
+            if (!strcmp(key, "would")) std::cout << "testing: blob find ending loop" << std::endl;
             }
 
          return nullptr;
@@ -366,7 +375,6 @@ class HashFile
             std::cout << "Error: mapping failed\n";
             exit( 1 );
             }
-
          mapped = HashBlob::Write( reinterpret_cast<HashBlob *>( mapped ), sz,
                                    hashtable );
          blob = reinterpret_cast<HashBlob *>( mapped );
