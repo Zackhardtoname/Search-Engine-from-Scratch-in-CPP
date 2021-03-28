@@ -157,12 +157,6 @@ ParsedHttpResponse FetchUrl( String url )
          }
       if ( parsedResp.StatusCode == "200" )
          return parsedResp;
-
-      if ( parsedResp.StatusCode == "505" )
-         {
-         nRedirect = MAX_REDIRECTION - 1;
-         url = parsedUrl.SwitchHTTPProtocal( url );
-         }
       else if ( parsedResp.StatusCode == "100" ||
                 parsedResp.StatusCode == "301" ||
                 parsedResp.StatusCode == "302" ||
