@@ -329,7 +329,7 @@ class HashFile
             }
          size_t sz = FileSize(fd);
 
-         void* mapped = mmap(nullptr, sz, PROT_READ, MAP_PRIVATE, fd, 0);
+         void* mapped = mmap(nullptr, sz, PROT_READ, MAP_SHARED, fd, 0);
          if (mapped == MAP_FAILED)
             {
             std::cout << "Error: mapping failed\n";
@@ -363,7 +363,7 @@ class HashFile
          size_t sz = HashBlob::BytesRequired(hashtable);
          ftruncate(fd, sz);
 
-         void* mapped = mmap(nullptr, sz, PROT_WRITE | PROT_READ, MAP_PRIVATE, fd, 0);
+         void* mapped = mmap(nullptr, sz, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
          if (mapped == MAP_FAILED)
             {
             std::cout << strerror(errno) << std::endl;
@@ -371,9 +371,6 @@ class HashFile
             exit(1);
             }
 
-
-         // TODO: HashBlob isn't correctly written into and read from a file, needs to be fixed
-         // write HashBlob to memory
          mapped = HashBlob::Write(reinterpret_cast<HashBlob*>(mapped), sz, hashtable);
          blob = reinterpret_cast<HashBlob*>(mapped);
 
