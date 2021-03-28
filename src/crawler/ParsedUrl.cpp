@@ -81,3 +81,23 @@ String ParsedUrl::Normalize( const String &path ) const
             .CompleteUrl;
       }
    }
+
+String ParsedUrl::SwitchHTTPProtocal( const String &path ) const
+   {
+   // An easy naive switch between HTTP and HTTPS
+   // It could be expanded to change HTTP versions
+
+   ParsedUrl url( path );
+   String newService;
+
+   if ( Service == "http" )
+      {
+      newService = "https";
+      }
+   else if ( url.Service == "https" )
+      {
+      newService = "http";
+      }
+
+   return ParsedUrl( newService + "://" + HostPort + path ).CompleteUrl;
+   }

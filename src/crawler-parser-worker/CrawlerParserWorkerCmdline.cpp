@@ -129,7 +129,7 @@ int main( int argc, char **argv )
       }
 
    // Add the passed in URL as the first link on the message queue
-   // TODO: Have this read off a seperate message queue that the parent process
+   // TODO: Have this read off a separate message queue that the parent process
    // initializes with a seed list of URLs
    assert( 0 <= mq_send( mq, argv[ 2 ], MAX_URL_LEN, 0 ) );
 

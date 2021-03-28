@@ -115,7 +115,8 @@ String ParsedHttpResponse::parseHeaderValue( const String &headerLine,
          valStart++ )
       ;
    int valEnd = valStart;
-   for ( ;  valEnd < headerLine.size() && headerLine[ valEnd ] != ' ';
+   for ( ;  valEnd < headerLine.size() && headerLine[ valEnd ] != ';' &&
+            headerLine[ valEnd ] != ' ';
          valEnd++ )
       ;
    return headerLine.substr( valStart, valEnd - valStart );
