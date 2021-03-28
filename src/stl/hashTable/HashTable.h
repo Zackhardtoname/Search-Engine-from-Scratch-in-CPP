@@ -41,11 +41,11 @@ template <typename Key, typename Value> class Tuple
       Tuple( const Key &k, const Value v ) : key( k ), value( v )
          {
          }
-      /*
-      void print() {
+
+      void print()
+         {
          cout << key << "\t" << value << "\t";
-      }
-      */
+         }
    };
 
 template <typename Key, typename Value> class Bucket
@@ -86,16 +86,16 @@ template <typename Key, typename Value> class Bucket
             }
          }
 
-      /*
-      void print() {
-         Bucket* b = this;
-         while (b) {
+      void print()
+         {
+         Bucket *b = this;
+         while ( b )
+            {
             b->tuple.print();
             cout << b->hashValue << endl;
             b = b->next;
+            }
          }
-      }
-      */
    };
 
 template <typename Key, typename Value> class HashTable
@@ -258,26 +258,26 @@ template <typename Key, typename Value> class HashTable
             }
          }
 
-      /*
-      void print() {
+      void print()
+         {
          Iterator it = begin();
-         while (it != end()) {
+         while ( it != end() )
+            {
             cout << "index " << it.bucketIndex << "\t";
             it->print(); // print tuple
             cout << it.bucket->hashValue << endl;
             ++it;
-         }
+            }
          cout << endl;
-         for (size_t i = 0; i < numberOfBuckets; ++i) {
-            printf("index %d\n", i);
-            if (buckets[i])
-               buckets[i]->print();
-            cout << endl;
-            //sleep(1);
-         }
+         // for (size_t i = 0; i < numberOfBuckets; ++i) {
+         //   printf("index %d\n", i);
+         //   if (buckets[i])
+         //      buckets[i]->print();
+         //   cout << endl;
+         //   //sleep(1);
+         //}
          cout << numUniqueWords << endl;
-      }
-      */
+         }
 
       ~HashTable()
          {

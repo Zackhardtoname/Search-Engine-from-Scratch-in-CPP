@@ -10,12 +10,12 @@
 #include <cstring>
 #include <fcntl.h>
 #include <malloc.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdio.h>
 
 #include "HashTable.h"
 
@@ -59,7 +59,8 @@ struct SerialTuple
 
       static size_t BytesForBucket( const HashBucket *b )
          {
-         return SerialTupleBaseSize + strlen(b->tuple.key);
+         // TODO: add roundup maybe
+         return SerialTupleBaseSize + strlen( b->tuple.key );
          }
 
       // Calculate the bytes required to encode a HashBucket as a
@@ -145,7 +146,8 @@ class HashBlob
 
       const SerialTuple *Find( const char *key ) const
          {
-         if (!strcmp(key, "would")) std::cout << "testing: blob find on " << key << std::endl;
+         // if (!strcmp(key, "would")) std::cout << "testing: blob find on " <<
+         // key << std::endl;
          // Search for the key k and return a pointer to the
          // ( key, value ) entry.  If the key is not found,
          // return nullptr.
@@ -157,7 +159,8 @@ class HashBlob
          size_t index = hashVal % NumberOfBuckets;
          // 3. check Buckets to see if the key even exists
          size_t chainStart = Buckets[ index ];
-         if (!strcmp(key, "would")) std::cout << "testing: blob find on chainStart" << std::endl;
+         // if (!strcmp(key, "would")) std::cout << "testing: blob find on
+         // chainStart" << std::endl;
          // If there's nothing at this bucket, return nullptr
          if ( chainStart == 0 )
             {
@@ -168,14 +171,16 @@ class HashBlob
          // the beginning of the blob
          const char *chainAddress =
             reinterpret_cast<const char *>( &MagicNumber ) + chainStart;
-         size_t tupleLength = chainStart;
 
-         if (!strcmp(key, "would")) std::cout << "testing: blob find on chainAddress" << std::endl;
+         // if (!strcmp(key, "would")) std::cout << "testing: blob find on
+         // chainAddress" << std::endl;
          while ( true )
             {
 
-            if (!strcmp(key, "would")) std::cout << "testing: blob find beginning loop" << std::endl;
-            tupleLength = *chainAddress;
+            // if (!strcmp(key, "would")) std::cout << "testing: blob find
+            // beginning loop" << std::endl;
+            size_t tupleLength =
+               *reinterpret_cast<const size_t *>( chainAddress );
 
             // If we reach the end of the chain
             if ( tupleLength == 0 )
@@ -183,10 +188,13 @@ class HashBlob
 
             // Need to increment by factors of 8 here since size_t is 8 bytes
             // and chainAddress is a char*
-            size_t tupleVal = *( chainAddress + 8 );
-            size_t tupleHashVal = *( chainAddress + 16 );
+            size_t tupleVal =
+               *reinterpret_cast<const size_t *>( chainAddress + 8 );
+            size_t tupleHashVal =
+               *reinterpret_cast<const size_t *>( chainAddress + 16 );
 
-            if (!strcmp(key, "would")) std::cout << "testing: blob find part through loop tupleLength: " << tupleLength  << std::endl;
+            // if (!strcmp(key, "would")) std::cout << "testing: blob find part
+            // through loop tupleLength: " << tupleLength  << std::endl;
             // Subtract by 23 since we want the 24 bytes from the Length, Value,
             // and Hash Value removed from the overall length, yet we want one
             // extra character for a null char
@@ -198,7 +206,8 @@ class HashBlob
                tupleKey[ i - 24 ] = *( chainAddress + i );
                }
 
-            if (!strcmp(key, "would")) std::cout << "testing: blob find reading portion over" << std::endl;
+            // if (!strcmp(key, "would")) std::cout << "testing: blob find
+            // reading portion over" << std::endl;
 
             tupleKey[ tupleLength - 24 ] = '\0';
             auto k = reinterpret_cast<const SerialTuple *>( chainAddress );
@@ -209,7 +218,8 @@ class HashBlob
 
             chainAddress += tupleLength;
 
-            if (!strcmp(key, "would")) std::cout << "testing: blob find ending loop" << std::endl;
+            // if (!strcmp(key, "would")) std::cout << "testing: blob find
+            // ending loop" << std::endl;
             }
 
          return nullptr;
@@ -361,9 +371,9 @@ class HashFile
             exit( 1 );
             }
 
-         // TODO: For the AG we don't need to call optimize, but we could consider
-         // calling it here for our own code in case we forget to call optimize
-         // before creating the HashBlob
+         // TODO: For the AG we don't need to call optimize, but we could
+         // consider calling it here for our own code in case we forget to call
+         // optimize before creating the HashBlob
          size_t sz = HashBlob::BytesRequired( hashtable );
          ftruncate( fd, sz );
 
