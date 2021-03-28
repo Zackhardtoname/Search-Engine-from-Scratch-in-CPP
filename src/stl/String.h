@@ -188,7 +188,7 @@ class String
          return *this;
          }
 
-      String operator+( const String &other )
+      String operator+( const String &other ) const
          {
          String copy( *this );
          for ( char c : other )
@@ -327,16 +327,62 @@ struct StringRef
    {
       String::Iterator Begin, End;
 
-      [[nodiscard]] scb::String Str() const;
+      StringRef() = default;
+      StringRef( const String &s ) : Begin( s.begin() ), End( s.end() )
+         {
+         }
+
+      [[nodiscard]] scb::String Str() const
+         {
+         return String( Begin, End );
+         }
 
       [[nodiscard]] bool
       EqualsCaseInsensitive( const scb::String &other ) const;
 
-      [[nodiscard]] bool Empty() const;
+      [[nodiscard]] bool Empty() const
+         {
+         return Length() == 0;
+         }
 
-      [[nodiscard]] unsigned Length() const;
+      [[nodiscard]] unsigned Length() const
+         {
+         return (unsigned)( End - Begin );
+         }
+
+      [[nodiscard]] StringRef Substr( size_t pos, int len = -1 ) const
+         {
+         if ( len == -1 )
+            len = Length();
+
+         auto begin = Begin + pos;
+         if ( begin >= End )
+            begin = End;
+
+         auto end = begin + len;
+         if ( end >= End )
+            end = End;
+
+         StringRef rst;
+         rst.Begin = begin;
+         rst.End = end;
+         return rst;
+         }
+
+      [[nodiscard]] String::Iterator begin() const
+         {
+         return Begin;
+         }
+
+      [[nodiscard]] String::Iterator end() const
+         {
+         return End;
+         }
    };
+
 std::ostream &operator<<( std::ostream &os, const String &s );
+
+std::istream &operator>>( std::istream &is, String &s );
 
    }      // namespace scb
 #endif // SCOOBLE_STRING_H

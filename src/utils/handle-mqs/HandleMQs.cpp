@@ -2,8 +2,8 @@
 // Created by epfeiffe on 3/18/21.
 //
 
-#include "../defs.h"
-#include "../stl/String.h"
+#include "../../defs.h"
+#include "../../stl/String.h"
 #include <cassert>
 #include <iostream>
 #include <mqueue.h>
@@ -111,7 +111,7 @@ int main( int argc, char **argv )
    if ( argc < 2 || scb::String( argv[ 1 ] ) == "-h" ||
         scb::String( argv[ 1 ] ) == "--help" )
       {
-      std::cout << "Usage: ./create-mq [mqueue-operation] [mqueue-name(s)]"
+      std::cout << "Usage: ./handle-mq [mqueue-operation] [mqueue-name(s)]"
                 << std::endl;
       std::cout << "Where [mqueue-operation] is exactly one of the following "
                    "operations:"

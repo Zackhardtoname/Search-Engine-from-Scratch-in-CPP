@@ -9,16 +9,18 @@
 
 using scb::String;
 
-class ParsedUrl {
-public:
-    String CompleteUrl;
-    String Service, Host, Port, HostPort, Path;
+class ParsedUrl
+   {
+   public:
+      String CompleteUrl;
+      String Service, Host, Port, HostPort, Path;
 
-    explicit ParsedUrl(const String &url);
+      explicit ParsedUrl( const String &url );
 
-    // Normalize the given path with this URL
-    String Normalize(const String &path);
-};
+      // Normalize the given path with this URL
+      String Normalize( const String &path ) const;
 
+      String SwitchHTTPProtocal( const String &path ) const;
+   };
 
-#endif //CRAWLER_PARSEDURL_H
+#endif // CRAWLER_PARSEDURL_H

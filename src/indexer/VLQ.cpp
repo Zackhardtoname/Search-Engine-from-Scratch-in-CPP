@@ -22,14 +22,51 @@ String VLQ::Encode( uint64_t x )
    return result;
    }
 
-uint64_t VLQ::Decode( const String &s )
+uint64_t VLQ::Decode( StringRef s, size_t *consumed )
    {
    unsigned shift = 0;
+   *consumed = 0;
    uint64_t result = 0;
    for ( uint8_t c : s )
       {
       result |= ( static_cast<uint64_t>( c & mask ) << shift );
       shift += 7;
+      ++*consumed;
+      if ( c >> 7 == 0 )
+         break;
       }
    return result;
+   }
+
+// VLQ Stream Decoder
+
+VLQStreamDecoder::VLQStreamDecoder( const char *s )
+   {
+   cursor = s;
+   }
+
+uint64_t VLQStreamDecoder::Next()
+   {
+   unsigned shift = 0;
+   uint64_t result = 0;
+   while ( ( static_cast<uint8_t>( *cursor ) >> 7 ) != 0 )
+      {
+      result |= ( static_cast<uint64_t>( *cursor & mask ) << shift );
+      shift += 7;
+      ++cursor;
+      }
+   result |= ( static_cast<uint64_t>( *cursor & mask ) << shift );
+   shift += 7;
+   ++cursor;
+   return result;
+   }
+
+const char *VLQStreamDecoder::getCursor() const
+   {
+   return cursor;
+   }
+
+void VLQStreamDecoder::setCursor( const char *cursor_in )
+   {
+   cursor = cursor_in;
    }

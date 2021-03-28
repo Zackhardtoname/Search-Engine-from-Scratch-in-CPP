@@ -5,8 +5,8 @@
 #ifndef SCOOBLE_SEARCH_ROBOTSTXT_H
 #define SCOOBLE_SEARCH_ROBOTSTXT_H
 
-#include "String.h"
-#include "Vector.h"
+#include "../stl/String.h"
+#include "../stl/Vector.h"
 
 using scb::String;
 using scb::Vector;

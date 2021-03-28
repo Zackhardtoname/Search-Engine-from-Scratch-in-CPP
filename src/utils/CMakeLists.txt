@@ -1,15 +1,8 @@
 cmake_minimum_required(VERSION 3.17)
 project(utils)
 
-set(CMAKE_CXX_STANDARD 20)
-
-
-add_executable(ReadDumpFile
-        ReadDumpFile.cpp
-        )
-
-add_executable(HandleMQ
-        HandleMQs.cpp
-        )
-
-# testing
+add_subdirectory(handle-mqs)
+add_subdirectory(make-bloom-file)
+add_subdirectory(read-chunk)
+add_subdirectory(read-dump-file)
+add_subdirectory(seeder)

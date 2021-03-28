@@ -11,3 +11,16 @@ add_executable(testParsedUrl
         )
 target_link_libraries(testParsedUrl GTest::gtest)
 gtest_discover_tests(testParsedUrl)
+
+add_executable(crawlerCmdline
+        ../parser/ParsedHtml.cpp
+        ../parser/HtmlLexer.cpp
+        ParsedHttpResponse.cpp
+        ParsedUrl.cpp
+        Crawler.cpp
+        ../stl/String.cpp
+        ../stl/utils.cpp
+        CrawlerCmdline.cpp
+        ../indexer/PorterStemming.cpp
+        )
+target_link_libraries(crawlerCmdline ssl rt crypto)

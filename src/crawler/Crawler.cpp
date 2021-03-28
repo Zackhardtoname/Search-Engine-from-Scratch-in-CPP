@@ -16,9 +16,7 @@
 #include "ParsedHttpResponse.h"
 #include "ParsedUrl.h"
 
-// TODO: make it so that we abort on lengthy response, and/or timeout
 // TODO: setup build file for test
-// TODO: make it so that we abort on binary (i.e. non html or text) response
 
 std::string getOpenSSLError()
    {
@@ -68,7 +66,11 @@ String HttpGet( const ParsedUrl &url )
       "Connection: close\r\n\r\n";
 
    String response;
-   char buffer[ 10240 ];
+   int bufferSize = 10240;
+   char buffer[ bufferSize ];
+   int maxNumBuffer = MAX_RESPONSE_SIZE / bufferSize;
+   int numBufferUsed = 0;
+
    if ( url.Service == "http" )
       {
       for ( int sent = 0;  sent < getRequest.size();  )
@@ -81,8 +83,12 @@ String HttpGet( const ParsedUrl &url )
          }
 
       int got;
-      while ( ( got = recv( sockFd, buffer, sizeof( buffer ), 0 ) ) )
+      while ( ( got = recv( sockFd, buffer, sizeof( buffer ), 0 ) ) > 0 )
+         {
          response += String( buffer, got );
+         if ( numBufferUsed++ == maxNumBuffer )
+            break;
+         }
       }
    else if ( url.Service == "https" )
       {
@@ -90,8 +96,10 @@ String HttpGet( const ParsedUrl &url )
       SSL_CTX *ctx = SSL_CTX_new( TLS_client_method() );
       SSL *ssl = SSL_new( ctx );
 
-      SSL_set_fd( ssl, sockFd );
-      SSL_connect( ssl );
+      if ( SSL_set_fd( ssl, sockFd ) == 0 )
+         throw NetworkException();
+      if ( SSL_connect( ssl ) != 1 )
+         throw NetworkException();
 
       Defer deferDestructSSL(
          [ & ]()
@@ -114,8 +122,13 @@ String HttpGet( const ParsedUrl &url )
          }
 
       int got;
-      while ( ( got = SSL_read( ssl, buffer, sizeof( buffer ) ) ) )
+      while ( ( got = SSL_read( ssl, buffer, sizeof( buffer ) ) ) > 0 )
+         {
          response += String( buffer, got );
+
+         if ( numBufferUsed++ == maxNumBuffer )
+            break;
+         }
       }
    else
       {
@@ -135,18 +148,30 @@ ParsedHttpResponse FetchUrl( String url )
       ParsedUrl parsedUrl( url );
       String resp = HttpGet( parsedUrl );
       ParsedHttpResponse parsedResp( resp );
+
+      if ( parsedResp.ContentType != "text/html" )
+         {
+         String errMsg = String( "content type " ) + parsedResp.ContentType +
+                         String( " not supported" );
+         throw HttpRequestError( errMsg.cstr() );
+         }
       if ( parsedResp.StatusCode == "200" )
          return parsedResp;
-      if ( parsedResp.StatusCode == "301" || parsedResp.StatusCode == "302" ||
-           parsedResp.StatusCode == "307" || parsedResp.StatusCode == "308" )
+      else if ( parsedResp.StatusCode == "100" ||
+                parsedResp.StatusCode == "301" ||
+                parsedResp.StatusCode == "302" ||
+                parsedResp.StatusCode == "303" ||
+                parsedResp.StatusCode == "307" ||
+                parsedResp.StatusCode == "308" )
          url = parsedUrl.Normalize( parsedResp.Location );
       else
          {
-         printf( "status: %s\n", parsedResp.StatusCode.cstr() );
-         throw HttpRequestError( "status code not handled" );
+         String errMsg = String( "status code " ) +
+                         parsedResp.StatusCode.cstr() +
+                         String( " not supported" );
+         throw HttpRequestError( errMsg.cstr() );
          }
-      // TODO: should we, and how do we, handle HTTP 50x?
       }
 
-   throw TooManyRedirectionError();
+   throw TooManyRedirectionError( url.cstr() );
    }

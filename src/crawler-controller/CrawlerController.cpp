@@ -23,7 +23,8 @@ void SIGTERMHandler( int )
 
 int main( int argc, char **argv )
    {
-   if ( argc < 2 )
+   if ( argc < 2 || scb::String( argv[ 1 ] ) == "-h" ||
+        scb::String( argv[ 1 ] ) == "--help" )
       {
       std::cerr << "Usage: " << argv[ 0 ]
                 << " [child-process-file-path] [child-process-args]\n";

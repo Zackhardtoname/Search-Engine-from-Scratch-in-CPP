@@ -2,7 +2,6 @@
 ## Auther: Emerson Pfeiffer (epfeiffe)
 
 #######################
-# TODO (begin) #
 #######################
 # Change 'executable' to match the command for the given component
 EXECUTABLE  = crawler-controller
@@ -10,7 +9,6 @@ EXECUTABLE  = crawler-controller
 # Change 'source_files' to match the component source files needed
 SOURCE_FILES = CrawlerController.cpp
 #######################
-# TODO (end) #
 #######################
 
 # designate which compiler to use
@@ -50,7 +48,7 @@ endif
 
 # make clean - remove .o files, executables, tarball
 clean:
-	rm -f $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE)_debug
+	rm -f *.o $(OBJECTS) $(EXECUTABLE) $(EXECUTABLE)_debug
 	rm -Rf *.dSYM
 
 
