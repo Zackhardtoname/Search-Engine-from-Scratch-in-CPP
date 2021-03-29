@@ -11,6 +11,8 @@
 
 #include "../stl/String.h"
 #include "../stl/UniquePointer.h"
+#include "../stl/HashTable.h"
+#include "../stl/HashBlob.h"
 #include "ContiguousChunk.h"
 #include "IndexChunk.h"
 #include "VLQ.h"
@@ -55,18 +57,20 @@ void IndexChunk::writeToDisk( const char *filename )
       }
 
    // dictionary of words -> posting list offset
-   scb::HashTable<scb::String, uint32_t> postingListOffsetMap;
+   scb::HashTable<const char*, size_t> postingListOffsetMap;
 
    // make posting lists, and fill in the offset mapping
    String serializedPostingLists;
-   for ( const String &word : PostingLists )
+   for ( scb::Tuple<const char*, scb::Vector<uint64_t>> &tuple: PostingLists )
       {
-      postingListOffsetMap[ word ] = serializedPostingLists.size();
-      serializedPostingLists += SerializePostingList( PostingLists[ word ] );
+      // tuple.key is the word
+      postingListOffsetMap[ tuple.key ] = serializedPostingLists.size();
+      serializedPostingLists += SerializePostingList( PostingLists[ tuple.key ] );
       }
 
    // make a hashblob out of the hashmap
-   String postingListOffsetHashblob = postingListOffsetMap.MakeBlob();
+   // TODO if possible, construct hashblob in the mapped location instead of having to memcpy
+   scb::HashBlob *postingListOffsetHashblob = scb::HashBlob::Create( &postingListOffsetMap ) ;
 
    // We got everything, calculate the final size and offset
    header.DocumentTableOffset = sizeof( ChunkHeader );
@@ -75,7 +79,7 @@ void IndexChunk::writeToDisk( const char *filename )
    header.WordToPostingListDictionaryOffset =
       header.UrlListOffset + urlList.size();
    header.PostingListsOffset = header.WordToPostingListDictionaryOffset +
-                               postingListOffsetHashblob.size();
+                               postingListOffsetHashblob->Size();
 
    size_t chunkSize = header.PostingListsOffset + serializedPostingLists.size();
 
@@ -102,7 +106,7 @@ void IndexChunk::writeToDisk( const char *filename )
    memcpy( chunk + header.UrlListOffset, urlList.data(), urlList.size() );
    // write word -> posting list offset dictionary
    memcpy( chunk + header.WordToPostingListDictionaryOffset,
-           postingListOffsetHashblob.data(), postingListOffsetHashblob.size() );
+           postingListOffsetHashblob, postingListOffsetHashblob->Size() );
    // write posting lists
    memcpy( chunk + header.PostingListsOffset, serializedPostingLists.data(),
            serializedPostingLists.size() );
@@ -121,7 +125,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    // record document words
    for ( const String &word : ingest.Words )
       {
-      auto &lst = PostingLists[ word ];
+      auto &lst = PostingLists[ word.cstr() ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
          EstSize += VLQ::Length( post );
@@ -133,7 +137,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    // record title words
    for ( const String &word : ingest.TitleWords )
       {
-      auto &lst = PostingLists[ String( "@" ) + word ];
+      auto &lst = PostingLists[ (String( "@" ) + word).cstr() ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
          EstSize += VLQ::Length( post );

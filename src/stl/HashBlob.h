@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HASH_BLOB_H
+#define HASH_BLOB_H
 
 // HashBlob, a serialization of a HashTable into one contiguous
 // block of memory, possibly memory-mapped to a HashFile.
@@ -146,6 +147,10 @@ class HashBlob
       size_t Buckets[ Unknown ];
 
       // The SerialTuples will follow immediately after.
+
+      const size_t Size() const {
+         return BlobSize;
+      }
 
       const SerialTuple *Find( const char *key ) const
          {
@@ -401,3 +406,5 @@ class HashFile
          }
    };
 }
+
+#endif //HASH_BLOB_H

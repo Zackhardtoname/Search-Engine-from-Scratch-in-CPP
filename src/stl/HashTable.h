@@ -2,7 +2,8 @@
 
 // Nicole Hamilton  nham@umich.edu
 
-#pragma once
+#ifndef HASH_TABLE_H
+#define HASH_TABLE_H
 
 #include <cassert>
 #include <cstdint>
@@ -42,7 +43,7 @@ template <typename Key, typename Value> class Tuple
 
       void print()
          {
-         cout << key << "\t" << value << "\t";
+         std::cout << key << "\t" << value << "\t";
          }
    };
 
@@ -90,7 +91,7 @@ template <typename Key, typename Value> class Bucket
          while ( b )
             {
             b->tuple.print();
-            cout << b->hashValue << endl;
+            std::cout << b->hashValue << std::endl;
             b = b->next;
             }
          }
@@ -230,7 +231,7 @@ template <typename Key, typename Value> class HashTable
          buckets = new Bucket<Key, Value> *[ numberOfBuckets ]();
          }
 
-      HashTable( const vector<string> &words )
+      HashTable( const scb::Vector<scb::String> &words )
          {
          numberOfBuckets = 8196;
          buckets =
@@ -238,19 +239,19 @@ template <typename Key, typename Value> class HashTable
          // Populate buckets with words
          for ( auto &str : words )
             {
-            size_t hashVal = fnvHash( str.c_str(), str.size() );
+            size_t hashVal = fnvHash( str.cstr(), str.size() );
             size_t index = hashVal % numberOfBuckets;
             // if existing bucket, append new or increment value
             if ( buckets[ index ] )
                {
-               buckets[ index ]->searchChainAndAdd( numUniqueWords, str.c_str(),
+               buckets[ index ]->searchChainAndAdd( numUniqueWords, str.cstr(),
                                                     hashVal );
                }
             // otherwise, set bucket
             else
                {
                buckets[ index ] =
-                  new Bucket<Key, Value>( str.c_str(), hashVal, 1 );
+                  new Bucket<Key, Value>( str.cstr(), hashVal, 1 );
                numUniqueWords++;
                }
             }
@@ -261,20 +262,25 @@ template <typename Key, typename Value> class HashTable
          Iterator it = begin();
          while ( it != end() )
             {
-            cout << "index " << it.bucketIndex << "\t";
+            std::cout << "index " << it.bucketIndex << "\t";
             it->print(); // print tuple
-            cout << it.bucket->hashValue << endl;
+            std::cout << it.bucket->hashValue << std::endl;
             ++it;
             }
-         cout << endl;
+         std::cout << std::endl;
          // for (size_t i = 0; i < numberOfBuckets; ++i) {
          //   printf("index %d\n", i);
          //   if (buckets[i])
          //      buckets[i]->print();
-         //   cout << endl;
+         //   std::cout << std::endl;
          //   //sleep(1);
          //}
-         cout << numUniqueWords << endl;
+         std::cout << numUniqueWords << std::endl;
+         }
+
+      Value& operator[](Key key)
+         {
+         return Find( key, Value() )->value ;
          }
 
       ~HashTable()
@@ -395,3 +401,5 @@ template <typename Key, typename Value> class HashTable
          }
    };
 }
+
+#endif
