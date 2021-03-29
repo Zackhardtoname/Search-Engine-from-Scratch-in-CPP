@@ -114,6 +114,30 @@ class String
          return npos;
          }
 
+      [[nodiscard]] int findCaseInsensitive( const String &other,
+                                             int start = 0 ) const
+         {
+         if ( start == npos )
+            return npos;
+
+         if ( size() < other.size() + start )
+            return npos;
+
+         for ( int pos = start;  pos + other.size() < size() + 1;  ++pos )
+            {
+            bool equal = true;
+            for ( int i = 0;  i < other.size();  i++ )
+               if ( tolower( str[ pos + i ] ) != tolower( other[ i ] ) )
+                  {
+                  equal = false;
+                  break;
+                  }
+            if ( equal )
+               return pos;
+            }
+         return npos;
+         }
+
       [[nodiscard]] String replace( size_t pos, size_t len, String str2 )
          {
          if ( pos < npos )
@@ -152,6 +176,16 @@ class String
             }
          }
 
+      [[nodiscard]] bool hasPrefixCaseInsensitive( const String &other ) const
+         {
+         if ( size() < other.size() )
+            return false;
+         for ( int i = 0;  i < other.size();  i++ )
+            if ( tolower( str[ i ] ) != tolower( other[ i ] ) )
+               return false;
+         return true;
+         }
+
       [[nodiscard]] bool hasPrefix( const String &other ) const
          {
          if ( size() < other.size() )
@@ -184,6 +218,7 @@ class String
          str.popBack();
          for ( int i = 0;  i < other.str.size();  i++ )
             str.pushBack( other.str[ i ] );
+         str.pushBack( '\0' );
 
          return *this;
          }
@@ -328,6 +363,7 @@ struct StringRef
       String::Iterator Begin, End;
 
       StringRef() = default;
+
       StringRef( const String &s ) : Begin( s.begin() ), End( s.end() )
          {
          }

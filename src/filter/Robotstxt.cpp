@@ -6,14 +6,15 @@
 
 Robotstxt::Robotstxt( const String &content )
    {
-   int starSectionPos = content.find( "User-agent: *" );
+   int starSectionPos = content.findCaseInsensitive( "User-agent: *" );
    // tolerate no space after semicolon.
    if ( starSectionPos == String::npos )
-      starSectionPos = content.find( "User-agent:*" );
+      starSectionPos = content.findCaseInsensitive( "User-agent:*" );
    if ( starSectionPos == String::npos )
-      throw InvalidRobotstxtError();
+      throw std::runtime_error( "no \"User-Agent: *\" section in robots.txt" );
 
-   int nextSection = content.find( "User-agent:", starSectionPos + 1 );
+   int nextSection =
+      content.findCaseInsensitive( "User-agent:", starSectionPos + 1 );
    String starSection =
       content.substr( starSectionPos, nextSection - starSectionPos );
    starSection.pushBack( '\n' ); // to guarantee that we handle the last line
@@ -54,11 +55,13 @@ bool Robotstxt::Allow( const String &path )
    int allowLen = 0, disallowLen = -1;
    for ( const CrawlingRule &rule : rules )
       {
-      int match = rule.Match( path );
-      if ( rule.Allowed )
-         allowLen = std::max( allowLen, match );
-      else
-         disallowLen = std::max( disallowLen, match );
+      if ( int match = rule.Match( path ) )
+         {
+         if ( rule.Allowed )
+            allowLen = std::max( allowLen, match );
+         else
+            disallowLen = std::max( disallowLen, match );
+         }
       }
 
    // if equal, the writer probably intend to not allow it

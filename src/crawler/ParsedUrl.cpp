@@ -5,8 +5,9 @@
 #include "ParsedUrl.h"
 #include <cstring>
 
-ParsedUrl::ParsedUrl( const String &url )
+ParsedUrl::ParsedUrl( const String &input )
    {
+   String url = input.stripped();
    // anything after pound is meaningless as page URL
    int pound = url.find( "#" );
    if ( pound == String::npos )
