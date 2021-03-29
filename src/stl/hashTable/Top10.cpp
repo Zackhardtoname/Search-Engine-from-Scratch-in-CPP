@@ -3,7 +3,7 @@
 // Nicole Hamilton  nham@umich.edu
 
 #include "Common.h"
-#include "HashTable.h"
+#include "HashTable_orig.h"
 #include "Timer.h"
 #include "TopN.h"
 #include <cstring>

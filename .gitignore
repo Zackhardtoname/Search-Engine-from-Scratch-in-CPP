@@ -18,9 +18,9 @@ src/crawler-parser-worker/crawler-parser-worker*
 src/crawler-controller/crawler-controller*
 src/utils/handle-mqs/handle-mq*
 src/utils/seeder/seeder*
-src/stl/hashTable/HashBlob*
+src/stl/hashTable/HashBlob
 src/stl/hashTable/HashFile*
-src/stl/hashTable/HashTable*
+src/stl/hashTable/HashTable
 src/stl/hashTable/Top10*
 
 # Hashblob files
