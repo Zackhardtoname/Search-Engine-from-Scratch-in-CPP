@@ -36,9 +36,10 @@ std::istream &scb::operator>>( std::istream &is, String &s )
       {
       char p;
       is >> p;
-      if ( isspace( p ) )
-         return is;
       s.pushBack( p );
+      if ( isspace( is.peek() ) )
+         return is;
       }
+
    return is;
    }

@@ -1,25 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
-project(utils)
+cmake_minimum_required(VERSION 3.10)
+project(handle-mqs)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
-
-add_executable(ReadDumpFile
-        ReadDumpFile.cpp
-        )
-
-add_executable(readChunk
-        ReadChunk.cpp
-        ../indexer/VLQ.cpp
-)
-
-add_executable(HandleMQ
-        HandleMQs.cpp
-        )
-target_link_libraries(HandleMQ rt)
-
-add_executable(MakeBloomFile
-        MakeBloomFile.cpp
-        )
-
-# testing
+add_executable(handle-mq HandleMQs.cpp)
+target_link_libraries(handle-mq rt)

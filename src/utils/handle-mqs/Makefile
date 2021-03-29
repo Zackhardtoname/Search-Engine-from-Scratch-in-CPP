@@ -2,7 +2,6 @@
 ## Author: Emerson Pfeiffer (epfeiffe)
 
 #######################
-# TODO (begin) #
 #######################
 # Change 'executable' to match the command for the given component
 EXECUTABLE  = handle-mq
@@ -10,7 +9,6 @@ EXECUTABLE  = handle-mq
 # Change 'source_files' to match the component source files needed
 SOURCE_FILES = HandleMQs.cpp
 #######################
-# TODO (end) #
 #######################
 
 # designate which compiler to use

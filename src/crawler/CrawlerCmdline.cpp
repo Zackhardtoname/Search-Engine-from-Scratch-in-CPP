@@ -24,10 +24,7 @@ int main( int argc, char **argv )
    auto httpResp = FetchUrl( argv[ 1 ] );
    // auto httpResp = GetHtml("http://anglesharp.azurewebsites.net/Chunked"); //
    // test chunked
-   std::cout << "code: " << httpResp.StatusCode << '\n'
-             << "location: " << httpResp.Location << '\n'
-             << "lang: " << httpResp.Language << '\n'
-             << "---- body ----" << '\n'
-             << httpResp.Body;
+   std::cout << "---- body ----" << '\n'
+             << httpResp;
    return 0;
    }

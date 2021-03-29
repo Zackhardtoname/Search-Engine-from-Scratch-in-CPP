@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.10)
 project(crawler-parser-worker)
 
-set(CMAKE_CXX_STANDARD 20)
-find_package(Threads REQUIRED)
+set(CMAKE_CXX_STANDARD 17)
 
 add_executable(crawler-parser-worker
         ../parser/ParsedHtml.cpp
@@ -17,5 +16,7 @@ add_executable(crawler-parser-worker
         CrawlerParserWorker.cpp
         ../indexer/PorterStemming.cpp
         )
+
 target_link_libraries(crawler-parser-worker ssl rt crypto)
+
 # testing

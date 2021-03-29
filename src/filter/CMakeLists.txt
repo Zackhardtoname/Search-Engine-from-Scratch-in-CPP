@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.10)
 project(filter)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
 
 add_executable(dummy-filter
@@ -22,3 +22,12 @@ add_executable(filter-worker
 target_link_libraries(filter-worker rt Threads::Threads ssl crypto)
 
 # testing
+
+#find_package(GTest)
+#
+#add_executable(testRobotstxt
+#        testRobotstxt.cpp
+#        ../stl/String.cpp
+#        Robotstxt.cpp)
+#target_link_libraries(testRobotstxt ssl GTest::gtest)
+#gtest_discover_tests(testRobotstxt)
