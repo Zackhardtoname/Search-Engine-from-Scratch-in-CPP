@@ -10,7 +10,7 @@
 // Individual pairs are to be C-strings as keys and size_t's
 // as values.
 
-#include "HashTable.h"
+#include "HashTable_orig.h"
 
 Tuple< const char *, size_t > **TopN( HashTable< const char *,
       size_t > *hashtable, int N = 10 );

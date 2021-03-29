@@ -1,15 +1,15 @@
 all:  Top10 HashTable HashBlob HashFile #test
 
-Top10: Top10.cpp Common.h Common.cpp TopN.h TopN.cpp HashTable.h 
+Top10: Top10.cpp Common.h Common.cpp TopN.h TopN.cpp HashTable_orig.h 
 	g++ -std=c++1z -g3 Top10.cpp Common.cpp TopN.cpp -o Top10
 
-HashTable: HashTable.cpp Common.h Common.cpp HashTable.h Timer.h
-	g++ -std=c++1z -g3 HashTable.cpp Common.cpp -o HashTable
+HashTable: HashTable_orig.cpp Common.h Common.cpp HashTable_orig.h Timer.h
+	g++ -std=c++1z -g3 HashTable_orig.cpp Common.cpp -o HashTable
 
-HashBlob:  HashBlob.cpp HashTable.h HashBlob.h Common.h Common.cpp Timer.h
-	g++ -std=c++1z -g3 HashBlob.cpp Common.cpp -o HashBlob
+HashBlob:  HashBlob_orig.cpp HashTable_orig.h HashBlob_orig.h Common.h Common.cpp Timer.h
+	g++ -std=c++1z -g3 HashBlob_orig.cpp Common.cpp -o HashBlob
 
-HashFile:  HashFile.cpp HashTable.h HashBlob.h Common.h Timer.h
+HashFile:  HashFile.cpp HashTable_orig.h HashBlob_orig.h Common.h Timer.h
 	g++ -std=c++1z -g3 HashFile.cpp Common.cpp -o HashFile
 
 test: Top10 HashTable HashBlob HashFile BigJunkHtml.txt Top10.correct.txt HashTable.correct.txt
