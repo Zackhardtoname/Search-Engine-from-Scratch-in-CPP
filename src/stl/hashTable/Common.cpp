@@ -3,7 +3,6 @@
 // Nicole Hamilton nham@umich.edu
 
 #include "Common.h"
-#include "HashTable.h"
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -20,13 +19,15 @@ bool optVerbose = false;
 // Common.h.
 
 // Compare C-strings, return true if they are the same.
-
+/*
 bool CompareEqual( const char *L, const char *R )
    {
-   // Your code here.
-
+   while ( *L == *R )
+      if ( *L++ == '\0' && *R++ == '\0' ) // checking both for extra safety
+         return true;
    return false;
    }
+*/
 
 using Hash = HashTable<const char *, size_t>;
 using Pair = Tuple<const char *, size_t>;
@@ -42,9 +43,10 @@ using Pair = Tuple<const char *, size_t>;
 
 Hash *BuildHashTable( const vector<string> &words )
    {
-   // Your code here.
-
-   return nullptr.
+   Hash *hashTable = new Hash( words );
+   // hashTable->print();
+   // sleep(10);
+   return hashTable;
    }
 
 // Collect words read from a file specified on the command line
