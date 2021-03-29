@@ -9,7 +9,7 @@
 // as values.
 
 #include "TopN.h"
-#include "HashTable.h"
+#include "HashTable_orig.h"
 
 using namespace std;
 
