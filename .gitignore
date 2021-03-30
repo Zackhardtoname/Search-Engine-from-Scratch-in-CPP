@@ -4,6 +4,12 @@
 # CLion
 .idea/
 
+# macOS
+.DS_Store
+
+# Swap files
+*.swp
+
 # Executables
 *.o
 src/crawler/crawler*
@@ -12,6 +18,13 @@ src/crawler-parser-worker/crawler-parser-worker*
 src/crawler-controller/crawler-controller*
 src/utils/handle-mqs/handle-mq*
 src/utils/seeder/seeder*
+src/stl/hashTable/HashBlob
+src/stl/hashTable/HashFile*
+src/stl/hashTable/HashTable
+src/stl/hashTable/Top10*
+
+# Hashblob files
+src/stl/hashTable/HashBlob.bin
 
 # Chunk and dump files from indexer
 *.dump

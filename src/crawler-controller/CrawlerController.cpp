@@ -23,17 +23,25 @@ void SIGTERMHandler( int )
 
 int main( int argc, char **argv )
    {
-   if ( argc < 2 || scb::String( argv[ 1 ] ) == "-h" ||
+   if ( argc < 3 || scb::String( argv[ 1 ] ) == "-h" ||
         scb::String( argv[ 1 ] ) == "--help" )
       {
       std::cerr << "Usage: " << argv[ 0 ]
-                << " [child-process-file-path] [child-process-args]\n";
+                << " [num-child] [child-path] [child-args]\n";
       std::cerr << "This watchdog starts a number of child processes and makes "
                    "sure they are alive\n";
 
       return 1;
       }
-   char *childExecPath = argv[ 1 ];
+
+   char *endptr;
+   int numChildren = strtol( argv[ 1 ], &endptr, 10 );
+   if ( *endptr )
+      {
+      std::cerr << "cannot parse number of children " << argv[ 1 ] << std::endl;
+      return 1;
+      }
+   char *childExecPath = argv[ 2 ];
 
    // Register signals and signal handlers
    signal( SIGINT, SIGINTHandler );
@@ -41,14 +49,14 @@ int main( int argc, char **argv )
 
    std::cout << "crawler controller starting" << std::endl;
    // spin-up NUM_CRAWLERS crawlers
-   for ( int i = 0;  i < NUM_CRAWLERS;  ++i )
+   for ( int i = 0;  i < numChildren;  ++i )
       if ( pid_t child = fork() )
          {
          std::cout << "started child " << child << std::endl;
          }
       else
          // 5.1.2.2.1 Program startup ... -- argv[argc] shall be a null pointer.
-         execvp( childExecPath, ++argv );
+         execvp( childExecPath, argv + 2 );
 
    // watch for death of children and restart them
    int childStatus;
@@ -78,7 +86,7 @@ int main( int argc, char **argv )
          }
       else
          // 5.1.2.2.1 Program startup ... -- argv[argc] shall be a null pointer.
-         execvp( childExecPath, ++argv );
+         execvp( childExecPath, argv + 2 );
       }
 
    return 0;

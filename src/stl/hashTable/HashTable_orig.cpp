@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "Common.h"
-#include "HashTable.h"
+#include "HashTable_orig.h"
 #include "Timer.h"
 
 using namespace std;

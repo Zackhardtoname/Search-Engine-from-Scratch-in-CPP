@@ -36,15 +36,16 @@ ParsedHttpResponse::ParsedHttpResponse( const String &resp )
 
       // now, [headerStart, lineEnd) contains one header, without the \r\n part
       String headerLine = resp.substr( headerStart, lineEnd - headerStart );
-      if ( headerLine.hasPrefix( CONTENT_LANGUAGE_HEADER ) )
+      if ( headerLine.hasPrefixCaseInsensitive( CONTENT_LANGUAGE_HEADER ) )
          {
          Language = parseHeaderValue( headerLine, CONTENT_LANGUAGE_HEADER );
          }
-      else if ( headerLine.hasPrefix( LOCATION_HEADER ) )
+      else if ( headerLine.hasPrefixCaseInsensitive( LOCATION_HEADER ) )
          {
          Location = parseHeaderValue( headerLine, LOCATION_HEADER );
          }
-      else if ( headerLine.hasPrefix( TRANSFER_ENCODING_HEADER ) )
+      else if ( headerLine.hasPrefixCaseInsensitive(
+                   TRANSFER_ENCODING_HEADER ) )
          {
          String encoding =
             parseHeaderValue( headerLine, TRANSFER_ENCODING_HEADER );
@@ -53,7 +54,7 @@ ParsedHttpResponse::ParsedHttpResponse( const String &resp )
          if ( encoding == "chunked" )
             chunked = true;
          }
-      else if ( headerLine.hasPrefix( CONTENT_TYPE_HEADER ) )
+      else if ( headerLine.hasPrefixCaseInsensitive( CONTENT_TYPE_HEADER ) )
          {
          ContentType = parseHeaderValue( headerLine, CONTENT_TYPE_HEADER );
          }

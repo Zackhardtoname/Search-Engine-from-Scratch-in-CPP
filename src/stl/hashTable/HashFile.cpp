@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "HashBlob.h"
+#include "HashBlob_orig.h"
 #include "Timer.h"
 
 using namespace std;
@@ -50,9 +50,9 @@ int main( int argc, char **argv )
    if ( argc < 2 )
       Usage();
 
-   if ( *argv[ 0 ] == '-' )
+   if ( *argv[ 1 ] == '-' )
       {
-      switch ( *argv[ 1 ] )
+      switch ( *(argv[ 1 ] + 1) )
          {
          case 'v':
          case 'V':
@@ -63,13 +63,13 @@ int main( int argc, char **argv )
 
    if ( optVerbose )
       {
-      cout << "Loading HashBlob from " << argv[ 1 ] << endl;
+      cout << "Loading HashBlob from " << argv[ 2 ] << endl;
 
       Timer time;
 
       time.Start();
 
-      HashFile hashfile( argv[ 1 ] );
+      HashFile hashfile( argv[ 2 ] );
 
       time.Finish();
       time.PrintElapsed();

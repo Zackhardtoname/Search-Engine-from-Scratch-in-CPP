@@ -107,7 +107,7 @@ int main()
          buf[ sz ] = '\0';
 
          std::string url( buf );
-         if ( seen.contains( url ) )
+         if ( seen.count( url ) )
             {
             std::cout << "seen: " << url << std::endl;
             continue;

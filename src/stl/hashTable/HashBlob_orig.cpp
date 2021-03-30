@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "Common.h"
-#include "HashBlob.h"
+#include "HashBlob_orig.h"
 #include "Timer.h"
 
 using namespace std;
@@ -20,7 +20,7 @@ void Usage()
    {
    cout <<
 
-      "Usage:  HashBlob [ -L ] wordsin.txt [ blobfile ]\n"
+      "Usage:  HashBlob [ -vL ] wordsin.txt [ blobfile ]\n"
       "\n"
       "Reads words from wordsin.txt, creates a hashblob,\n"
       "then searches it for words read from cin.\n"
@@ -78,7 +78,7 @@ int main( int argc, char **argv )
       time.Finish();
       time.PrintElapsed();
 
-      if ( argc < 3 )
+      if ( argc < 4 )
          {
          // Build the Hasblob in memory only.
 
