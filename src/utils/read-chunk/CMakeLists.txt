@@ -3,4 +3,4 @@ project(read-chunk)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(read-chunk ReadChunk.cpp ../../indexer/VLQ.cpp)
+# add_executable(read-chunk ReadChunk.cpp ../../indexer/VLQ.cpp)
