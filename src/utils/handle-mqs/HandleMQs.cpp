@@ -1,6 +1,10 @@
-//
-// Created by epfeiffe on 3/18/21.
-//
+/*
+ * Utility functions for Linux message queue
+ * Since it changes queue configurations, it must be run with sudo
+ *
+ * Created by epfeiffe on 3/18/21.
+*/
+
 
 #include "../../defs.h"
 #include "../../stl/String.h"
@@ -146,7 +150,7 @@ int main( int argc, char **argv )
       std::cout << "Usage: ./handle-mq [mqueue-operation] [mqueue-name(s)]"
                 << std::endl;
       std::cout << "Where [mqueue-operation] is exactly one of the following "
-                   "operations:"
+                   "operations (check gives stats like num of queued messages):"
                 << std::endl;
       std::cout << "  create" << std::endl;
       std::cout << "  check" << std::endl;

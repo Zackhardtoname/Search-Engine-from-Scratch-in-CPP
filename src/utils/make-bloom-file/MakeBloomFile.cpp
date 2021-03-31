@@ -1,6 +1,14 @@
-//
-// Created by youh on 3/22/21.
-//
+/*
+ * It creates the bloom file that bloomfilter stores info into
+ *
+ * n: the estimated (aka non-strict) number of objects we insert
+ * prop: false positive error rate
+ * The tradeoff is the size of the bloom file (the better, the larger)
+ *
+ * To learn more about how it works (and the formula), read up the spec for bloomfilter
+ *
+ * Created by youh on 3/22/21.
+*/
 
 #include <cassert>
 #include <cstdint>
