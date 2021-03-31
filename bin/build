@@ -1,8 +1,27 @@
 #!/bin/bash
+
+# Use flag '-d' to compile with debugging symbols
+
+DEBUG=0
+
+while [ "$1" != "" ]; do
+    echo "$1"
+    if [ "$1" == "-d" ]; then
+        DEBUG=1
+    fi
+    shift
+done
+
 DIR=$(pwd)
 BUILD_DIR="/tmp/scb_build"
 mkdir ${BUILD_DIR}
 cd ${BUILD_DIR} || exit
-cmake "${DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${DIR}"
+
+if [ "$DEBUG" -eq 1 ]; then
+    cmake -DCMAKE_BUILD_TYPE=Debug "${DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${DIR}"
+else
+    cmake "${DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${DIR}"
+fi
+
 cmake --build . -- -j "$(nproc)"
 rm -rf ${BUILD_DIR}
