@@ -44,7 +44,9 @@ int main()
          String msg( buf, sz );
          size_t consumed;
          auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
-         assert( consumed == sz );
+
+         // Pretty sure consumed doesn't necessarily equal size due to variable-length encoding
+         // assert( consumed == sz );
 
          curChunk->Ingest( ingest );
          if ( curChunk->EstSize >= INDEX_CHUNK_TARGET_SIZE )
