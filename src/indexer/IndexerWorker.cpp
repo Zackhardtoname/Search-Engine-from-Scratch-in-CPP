@@ -9,6 +9,7 @@
 #include <mqueue.h>
 #include <pthread.h>
 
+
 void *threadPersistChunk( void *p )
    {
    // get current time
@@ -37,21 +38,25 @@ int main()
       ssize_t sz =
          mq_receive( mq, buf, PARSED_DOCS_QUEUE_MAX_MSGSIZE, nullptr );
 
-      String msg( buf, sz );
-      size_t consumed;
-      auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
-      assert( consumed == sz );
+      // ? can messages be split into multiple buffers?
 
-      curChunk->Ingest( ingest );
-      if ( curChunk->EstSize >= INDEX_CHUNK_TARGET_SIZE )
-         {
-         auto *oldChunk = curChunk;
-         curChunk = new IndexChunk();
+      if( sz > 0 ) {
+         String msg( buf, sz );
+         size_t consumed;
+         auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
+         assert( consumed == sz );
 
-         // spin up new thread to persist the old chunk
-         pthread_t pth;
-         pthread_create( &pth, nullptr, threadPersistChunk, oldChunk );
-         pthread_detach( pth );
+         curChunk->Ingest( ingest );
+         if ( curChunk->EstSize >= INDEX_CHUNK_TARGET_SIZE )
+            {
+            auto *oldChunk = curChunk;
+            curChunk = new IndexChunk();
+
+            // spin up new thread to persist the old chunk
+            pthread_t pth;
+            pthread_create( &pth, nullptr, threadPersistChunk, oldChunk );
+            pthread_detach( pth );
+            }
          }
       }
    }
