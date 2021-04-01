@@ -56,3 +56,11 @@ void SetNonBlocking( int fd )
    assert( fcntl( fd, F_SETFL, flags | O_NONBLOCK ) == 0 &&
            "error in fcntl()" );
    }
+
+scb::String RandAlphaString( int len )
+   {
+   scb::String str;
+   for ( int i = 0;  i < len;  i++ )
+      str.pushBack( 'a' + rand() % 26 );
+   return str;
+   }
