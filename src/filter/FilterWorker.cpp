@@ -13,16 +13,18 @@
 #include "../stl/utils.h"
 #include <cassert>
 #include <csignal>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <mqueue.h>
+#include <netdb.h>
 #include <poll.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
-#include <netdb.h>
+#include <wait.h>
 
 using scb::String;
 using scb::Vector;
@@ -344,13 +346,60 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
       }
    }
 
+void *FilterWorker::threadOffloadUrls( void *p )
+   {
+   // cast and relegate the argument pointer to a smart pointer
+   scb::UniquePointer urls( static_cast<Vector<ParsedUrl> *>( p ) );
+
+   // get current time
+   time_t timestamp = std::time( nullptr );
+   tm *timeRepr = std::gmtime( &timestamp );
+   char timeStr[ 1000 ];
+   strftime( timeStr, sizeof( timeStr ), "%Y_%m_%d_%H_%M_%S_", timeRepr );
+
+   // write to a file named like 2021_03_22_15_30_21_random.urls.txt
+   scb::String filename =
+      scb::String( timeStr ) + RandAlphaString( 6 ) + ".urls.txt";
+   std::fstream fs( filename.cstr(), std::ios::out | std::ios::app );
+
+   std::cout << "offloading " << urls->size() << " URLs to " << filename
+             << std::endl;
+   for ( ParsedUrl &url : *urls )
+      fs << url.CompleteUrl << '\n';
+
+   return nullptr;
+   }
+
 void *FilterWorker::threadFilteredUrls( void *inst )
    {
    auto &self = *static_cast<FilterWorker *>( inst );
    while ( true )
       {
-      // number of URLs issued for this host in this tick
       pthread_mutex_lock( &self.lockFilteredUrls );
+
+      // offload some urls to disk if we have too many in memory
+      if ( self.filteredUrls.size() >
+           PENDING_LINKS_OFFLOAD_FACTOR * MAX_PENDING_LINKS )
+         {
+         // make a vector of URLs to offload
+         auto *offload = new Vector<ParsedUrl>;
+         while ( self.filteredUrls.size() > MAX_PENDING_LINKS )
+            {
+            offload->pushBack( std::move( self.filteredUrls.front() ) );
+            self.filteredUrls.popFront();
+            }
+
+         // spawn a new thread to offload the URLs to not block this thread
+         pthread_t th;
+         if ( pthread_create( &th, nullptr, threadOffloadUrls, offload ) != 0 )
+            {
+            // if new thread failed, just do the offloading here
+            threadOffloadUrls( offload );
+            delete offload;
+            }
+         else
+            pthread_detach( th );
+         }
 
       // count how many times have we hit this host in this tick
       Counter hostCounter;
@@ -382,7 +431,9 @@ void *FilterWorker::threadFilteredUrls( void *inst )
             if ( errno == EAGAIN )
                {
                self.filteredUrls.pushBack( url ); // requeue
-               std::cout << "frontier blocked" << std::endl;
+               std::cout
+                  << "frontier mqueue blocked: crawling isn't fast enough"
+                  << std::endl;
                break; // wait until the next tick
                }
             else
@@ -482,7 +533,7 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
       exit( 1 );
       }
 
-   qFrontier = mq_open( FRONTIER_MQ, O_WRONLY );
+   qFrontier = mq_open( FRONTIER_MQ, O_WRONLY | O_NONBLOCK );
    if ( qFrontier == -1 )
       {
       std::cerr << "mq_open(FRONTIER_MQ) failed: " << strerror( errno )

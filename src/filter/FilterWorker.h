@@ -91,6 +91,10 @@ class FilterWorker
 
       [[noreturn]] static void *threadFilteredUrls( void * );
 
+      // this thread takes in a scb::Vector<ParsedUrl>, and offload them to a
+      // file on disk.
+      static void *threadOffloadUrls( void * );
+
       // If the URL is not seen before, mark it seen.
       // Return true if it has already been seen before this operation.
       bool markIfNotSeen( const scb::String &url );
