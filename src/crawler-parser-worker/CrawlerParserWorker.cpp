@@ -34,18 +34,15 @@ int main( int argc, char **argv )
    EnglishDictChecker englishDictChecker( argv[ 1 ] );
 
    char buf[ MAX_URL_LEN + 1 ];
-   for ( int numPages = 0;  ;  numPages++ )
+   for ( int numIndexedPages = 0;  ;  )
       {
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
       assert( sz != -1 && "mq_receive() failed" );
       buf[ sz ] = '\0';
-
-      std::cout << "crawling: " << buf << std::endl;
+      String url( buf );
 
       try
          {
-         String url( buf );
-
          auto httpResp = FetchUrl( url );
 
          ParsedHtml parsedHtml( httpResp );
@@ -53,7 +50,7 @@ int main( int argc, char **argv )
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )
             {
-            std::cout << "not english by html" << std::endl;
+            std::cout << "not english by html: " << url << std::endl;
             continue;
             }
 
@@ -68,7 +65,7 @@ int main( int argc, char **argv )
          // check dictionary for language
          if ( !englishDictChecker.Check( parsedHtml ) )
             {
-            std::cout << "not english by dict" << std::endl;
+            std::cout << "not english by dict: " << url << std::endl;
             continue;
             }
 
@@ -80,11 +77,14 @@ int main( int argc, char **argv )
          // if too large a document, ignore
          if ( blob.size() <= PARSED_DOCS_QUEUE_MAX_MSGSIZE )
             {
-            mq_send( parsedDocs, blob.data(), blob.size(), 0 );
-            std::cout << numPages << " posted to indexer queue" << std::endl;
+            if ( mq_send( parsedDocs, blob.data(), blob.size(), 0 ) != 0 )
+               std::cout << "mq_send() error: " << strerror( errno ) << " : "
+                         << url << std::endl;
+            std::cout << "posted to indexer queue, total " << ++numIndexedPages
+                      << ": " << url << std::endl;
             }
          else
-            std::cout << numPages << " doc too large" << std::endl;
+            std::cout << "doc too large: " << url << std::endl;
 
          // post URLs to the bloom filter queue
          ParsedUrl pageUrl( buf );
@@ -92,13 +92,14 @@ int main( int argc, char **argv )
             {
             String normalizedUrl = pageUrl.Normalize( link.Href );
             mq_send( newLinks, normalizedUrl.data(), normalizedUrl.size(), 0 );
-            std::cout << "posted to filter: " << normalizedUrl << std::endl;
             }
+         std::cout << "posted " << parsedHtml.Links.size()
+                   << " to filter: " << url << std::endl;
          }
       catch ( std::exception &s )
          {
          // we're not going to recover anyway
-         std::cout << "failed: " << s.what() << std::endl;
+         std::cout << "failed: " << s.what() << ": " << url << std::endl;
          continue;
          }
       }
