@@ -348,6 +348,7 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
 
 void *FilterWorker::threadOffloadUrls( void *p )
    {
+   // cast and relegate the argument pointer to a smart pointer
    scb::UniquePointer urls( static_cast<Vector<ParsedUrl> *>( p ) );
 
    // get current time
@@ -355,6 +356,8 @@ void *FilterWorker::threadOffloadUrls( void *p )
    tm *timeRepr = std::gmtime( &timestamp );
    char timeStr[ 1000 ];
    strftime( timeStr, sizeof( timeStr ), "%Y_%m_%d_%H_%M_%S_", timeRepr );
+
+   // write to a file named like 2021_03_22_15_30_21_random.urls.txt
    scb::String filename =
       scb::String( timeStr ) + RandAlphaString( 6 ) + ".urls.txt";
    std::fstream fs( filename.cstr(), std::ios::out | std::ios::app );
@@ -372,7 +375,6 @@ void *FilterWorker::threadFilteredUrls( void *inst )
    auto &self = *static_cast<FilterWorker *>( inst );
    while ( true )
       {
-      // number of URLs issued for this host in this tick
       pthread_mutex_lock( &self.lockFilteredUrls );
 
       // offload some urls to disk if we have too many in memory
@@ -386,6 +388,8 @@ void *FilterWorker::threadFilteredUrls( void *inst )
             offload->pushBack( std::move( self.filteredUrls.front() ) );
             self.filteredUrls.popFront();
             }
+
+         // spawn a new thread to offload the URLs to not block this thread
          pthread_t th;
          if ( pthread_create( &th, nullptr, threadOffloadUrls, offload ) != 0 )
             {
