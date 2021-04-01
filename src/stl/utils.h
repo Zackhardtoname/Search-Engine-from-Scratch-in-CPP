@@ -13,12 +13,14 @@
 
 constexpr size_t MAX_HOSTNAME_LEN = 255;
 
-scb::String AddrToString(const sockaddr_storage &addr, socklen_t addrLen );
+scb::String AddrToString( const sockaddr_storage &addr, socklen_t addrLen );
 
 void SetTCPNoDelay( int fd );
 
 void SetNonBlocking( int fd );
 
 addrinfo *QueryHost( const char *host, const char *service );
+
+scb::String RandAlphaString( int len );
 
 #endif // IO_UTILS_H
