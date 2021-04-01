@@ -427,7 +427,9 @@ void *FilterWorker::threadFilteredUrls( void *inst )
             if ( errno == EAGAIN )
                {
                self.filteredUrls.pushBack( url ); // requeue
-               std::cout << "frontier blocked" << std::endl;
+               std::cout
+                  << "frontier mqueue blocked: crawling isn't fast enough"
+                  << std::endl;
                break; // wait until the next tick
                }
             else
@@ -527,7 +529,7 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
       exit( 1 );
       }
 
-   qFrontier = mq_open( FRONTIER_MQ, O_WRONLY );
+   qFrontier = mq_open( FRONTIER_MQ, O_WRONLY | O_NONBLOCK );
    if ( qFrontier == -1 )
       {
       std::cerr << "mq_open(FRONTIER_MQ) failed: " << strerror( errno )
