@@ -26,11 +26,35 @@ void *threadPersistChunk( void *p )
    return nullptr;
    }
 
+scb::String RandAlphaString( int len )
+{
+   scb::String str;
+   for ( int i = 0;  i < len;  i++ )
+      str.pushBack( 'a' + rand() % 26 );
+   return str;
+}
+
 int main()
    {
-   mqd_t mq = mq_open( PARSED_DOCS_QUEUE, O_RDONLY );
+   mqd_t mq = 0;// mq_open( PARSED_DOCS_QUEUE, O_RDONLY );
+   srand(0);
 
    auto *curChunk = new IndexChunk();
+
+      IndexerIngest testIngest;
+      for (int i = 0; i < 100; i++)
+         testIngest.Words.pushBack(RandAlphaString(10));
+      for (int i = 0; i < 10; i++)
+         testIngest.TitleWords.pushBack(RandAlphaString(10));
+      testIngest.Url = RandAlphaString(50);
+
+      auto msg = Serialize(testIngest);
+      size_t consumed;
+   auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
+    assert( consumed == msg.size() );
+   curChunk->Ingest( ingest );
+   threadPersistChunk(curChunk);
+   return 0;
 
    while ( true )
       {

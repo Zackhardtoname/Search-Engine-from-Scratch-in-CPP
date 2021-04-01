@@ -15,7 +15,8 @@
 #include <unistd.h>
 #include <vector>
 
-namespace scb {
+namespace scb
+   {
 
 // Compare C-strings, return true if they are the same.
 static bool CompareEqual( const char *L, const char *R )
@@ -135,19 +136,36 @@ template <typename Key, typename Value> class HashTable
 
          // search bucket chain for string
          Bucket<Key, Value> *bucket = buckets[ index ];
-         while ( bucket )
-            {
-            // check if string matches
-            if ( CompareEqual( bucket->tuple.key, k ) )
-               return &bucket->tuple;
-            // otherwise, check next in chain
-            else
-               bucket = bucket->next;
-            }
 
-         // kvp not in chain, so add to end of end (bucket)
-         bucket->next = new Bucket<Key, Value>( k, keyHash, initialValue );
-         return &bucket->next->tuple;
+         if ( !bucket )
+            {
+            // if bucket is nullptr, nothing at this index yet
+            buckets[ index ] =
+               new Bucket<Key, Value>( k, keyHash, initialValue );
+            ++numUniqueWords;
+            return &buckets[ index ]->tuple;
+            }
+         else
+            {
+            // while we're not at the last bucket of chain
+            Bucket<Key, Value> *prev = nullptr;
+            while ( bucket )
+               {
+               // check if string matches
+               if ( CompareEqual( bucket->tuple.key, k ) )
+                  return &bucket->tuple;
+               // otherwise, check next in chain
+               else
+                  {
+                  prev = bucket;
+                  bucket = bucket->next;
+                  }
+               }
+            // kvp not in chain, so add to end of end (bucket)
+            prev->next = new Bucket<Key, Value>( k, keyHash, initialValue );
+            ++numUniqueWords;
+            return &prev->next->tuple;
+            }
          }
 
       Tuple<Key, Value> *Find( const Key k ) const
@@ -161,14 +179,33 @@ template <typename Key, typename Value> class HashTable
 
          // search bucket chain for string
          Bucket<Key, Value> *bucket = buckets[ index ];
-         while ( bucket )
+         if ( !bucket )
             {
-            // check if string matches
-            if ( CompareEqual( bucket->tuple.key, k ) )
-               return &bucket->tuple;
-            // otherwise, check next in chain
-            else
-               bucket = bucket->next;
+            // if bucket is nullptr, nothing at this index yet
+            buckets[ index ] = new Bucket<Key, Value>( k, keyHash, Value() );
+            //++numUniqueWords;
+            return &buckets[ index ]->tuple;
+            }
+         else
+            {
+            // while we're not at the last bucket of chain
+            Bucket<Key, Value> *prev = nullptr;
+            while ( bucket )
+               {
+               // check if string matches
+               if ( CompareEqual( bucket->tuple.key, k ) )
+                  return &bucket->tuple;
+               // otherwise, check next in chain
+               else
+                  {
+                  prev = bucket;
+                  bucket = bucket->next;
+                  }
+               }
+            // kvp not in chain, so add to end of end (bucket)
+            prev->next = new Bucket<Key, Value>( k, keyHash, Value() );
+            //++numUniqueWords;
+            return &prev->next->tuple;
             }
          return nullptr;
          }
@@ -278,9 +315,9 @@ template <typename Key, typename Value> class HashTable
          std::cout << numUniqueWords << std::endl;
          }
 
-      Value& operator[](Key key)
+      Value &operator[]( Key key )
          {
-         return Find( key, Value() )->value ;
+         return Find( key, Value() )->value;
          }
 
       ~HashTable()
@@ -338,19 +375,22 @@ template <typename Key, typename Value> class HashTable
             // Prefix ++
             Iterator &operator++()
                {
+               // If this chain has another bucket
                if ( bucket->next )
-                  {
-                  // bucket has another link
                   bucket = bucket->next;
-                  }
+
+               // If not, find the next chain with a filled bucket
                else
                   {
-                  // no more in chain, move to next filled bucket
-                  if ( bucketIndex != hashTable->numberOfBuckets -
-                                         1 ) // only if not reached end
-                     while ( !( bucket = hashTable->buckets[ ++bucketIndex ] ) )
-                        ;
-                  else // end of table
+                  ++bucketIndex, bucket = hashTable->buckets[ bucketIndex ];
+
+                  // Iterate to next bucket with contents (may be the current
+                  // one)
+                  for ( ;
+                        bucketIndex < hashTable->numberOfBuckets && !bucket;  )
+                     ++bucketIndex, bucket = hashTable->buckets[ bucketIndex ];
+                  // If end of table
+                  if ( bucketIndex >= hashTable->numberOfBuckets )
                      bucket = nullptr;
                   }
                return *this;
@@ -360,21 +400,7 @@ template <typename Key, typename Value> class HashTable
             Iterator operator++( int )
                {
                Iterator ret = *this;
-               if ( bucket->next )
-                  {
-                  // bucket has another link
-                  bucket = bucket->next;
-                  }
-               else
-                  {
-                  // no more in chain, move to next filled bucket
-                  if ( bucketIndex != hashTable->numberOfBuckets -
-                                         1 ) // only if not reached end
-                     while ( !( bucket = hashTable->buckets[ ++bucketIndex ] ) )
-                        ;
-                  else // end of table
-                     bucket = nullptr;
-                  }
+               ++( *this );
                return ret;
                }
 
@@ -400,6 +426,6 @@ template <typename Key, typename Value> class HashTable
          return Iterator();
          }
    };
-}
+   } // namespace scb
 
 #endif

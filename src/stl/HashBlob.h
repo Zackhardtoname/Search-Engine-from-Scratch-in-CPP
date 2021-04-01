@@ -22,7 +22,8 @@
 
 #define NullTerminatorSize 8
 
-namespace scb {
+namespace scb
+   {
 
 constexpr size_t SerialTupleBaseSize = 3 * sizeof( size_t );
 
@@ -148,9 +149,10 @@ class HashBlob
 
       // The SerialTuples will follow immediately after.
 
-      const size_t Size() const {
+      const size_t Size() const
+         {
          return BlobSize;
-      }
+         }
 
       const SerialTuple *Find( const char *key ) const
          {
@@ -405,6 +407,6 @@ class HashFile
          close( fd );
          }
    };
-}
+   } // namespace scb
 
-#endif //HASH_BLOB_H
+#endif // HASH_BLOB_H
