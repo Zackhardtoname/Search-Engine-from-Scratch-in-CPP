@@ -3,6 +3,7 @@
 //
 
 #include "IndexChunk.h"
+#include "../stl/utils.h"
 #include <cassert>
 #include <ctime>
 #include <iostream>
@@ -15,13 +16,15 @@ void *threadPersistChunk( void *p )
    // get current time
    time_t timestamp = std::time( nullptr );
    tm *timeRepr = std::gmtime( &timestamp );
-   char filename[ 1000 ];
-   strftime( filename, 1000, "%Y_%m_%d_%H_%M_%S.dump", timeRepr );
+   char timeStr[ 1000 ];
+   strftime(timeStr, 1000, "%Y_%m_%d_%H_%M_%S_", timeRepr );
+   String filename(timeStr);
+   filename += RandAlphaString(6);
 
    auto *chunk = static_cast<IndexChunk *>( p );
-   chunk->writeToDisk( filename );
+   chunk->writeToDisk(timeStr );
 
-   std::cout << "written chunk to " << filename << std::endl;
+   std::cout << "written chunk to " << timeStr << std::endl;
    delete chunk;
    return nullptr;
    }

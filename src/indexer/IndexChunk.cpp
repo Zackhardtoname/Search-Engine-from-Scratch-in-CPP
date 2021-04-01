@@ -84,7 +84,7 @@ void IndexChunk::writeToDisk( const char *filename )
    size_t chunkSize = header.PostingListsOffset + serializedPostingLists.size();
 
    // open the file for writing, and resize it
-   int fd = open( filename, O_CREAT | O_RDWR );
+   int fd = open( filename, O_CREAT | O_RDWR, 0644 );
    ftruncate( fd, chunkSize );
 
    // mmap it in
