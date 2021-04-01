@@ -163,5 +163,23 @@ int main( int argc, char **argv )
 
    scb::String operation = scb::String( argv[ 1 ] );
 
-   handleMqueue( argc, argv, operation );
+   char frontier[] = "frontier";
+   char newLinks[] = "newLinks";
+   char docs[] = "docs";
+
+   char *allPossibleArgs[5] = {
+      argv[0],
+      argv[1],
+      frontier,
+      newLinks,
+      docs
+   };
+
+   if (argc == 2) {
+      argc = 5;
+      argv = allPossibleArgs;
    }
+   
+   handleMqueue( argc, argv, operation );
+
+}
