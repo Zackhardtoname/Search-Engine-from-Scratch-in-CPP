@@ -25,16 +25,6 @@ size_t fileSize( int f )
    return fileInfo.st_size;
    }
 
-
-void blobHeaderPrint(const HashBlob *curr){
-   std::cout<<"Blob Header:\n\tMagic Number: "<<curr->MagicNumber<<
-      "\n\tVersion: "<<curr->Version<<"\n\tBlobSize: "<<
-      "\n\tBlobSize: "<<curr->BlobSize<<"\n\tNumber of Buckets: "<<
-      curr->NumberOfBuckets<<"\n";
-   
-}
-
-
 int main( int argc, char **argv )
    {
    if ( argc != 2 )
@@ -72,20 +62,19 @@ int main( int argc, char **argv )
         << endl;
 
 
-   // * ===== Read header =====
+   // * ===== Read Document Table =====
    const DocumentTableEntry *currentEntry = reinterpret_cast<DocumentTableEntry*>(header + 1);
 
    cout << "Document Table:" << endl;
    cout << "\tIndex\tUrlOffs\tLastPost" << endl; 
    // For each Document Table Entry
    for ( size_t i = 0 ; i < header->DocumentCount; ++i ) {
-      cout << "\t" << i << ":\t" << currentEntry->UrlOffset << "\t" << currentEntry->LastPost << endl;
+      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << "\t" << currentEntry->LastPost << endl;
    }
 
    // * ===== Read URL List =====
    const char *currentURL = reinterpret_cast<const char*>(currentEntry + 1);
 
-   std::cout<<"URL is: "<<currentURL<<"\n";
    //std::cout<<"The thing tested against is: " << reinterpret_cast<const char*> (header) + header->PostingListsOffset<<"\n";
    //exit(0);
    cout << "URLs:" << endl;
@@ -96,49 +85,110 @@ int main( int argc, char **argv )
       currentURL += strlen( currentURL ) + 1;
    }
 
-   // ===== Read Dictionary HashBlob =====
+   // * ===== Read Dictionary HashBlob =====
    const auto blob = reinterpret_cast<const HashBlob*>(currentURL);
 
-   std::cout << "Dictionary HashBlob:" << endl;
+   cout << "Dictionary HashBlob:" << endl;
    
-   // Print blob header
-   blobHeaderPrint(blob);
-   blob->Print(cout);
+   // Print blob header and contents
+   cout << *blob << endl;
    
-   
-   // Print Contents
-   
-   
-   
-   
-   
-   /*
-   cursor = chunk->data + chunk->header.PostingListsOffset;
-   // Print decoded posts
-   VLQStreamDecoder decoder( cursor );
-   cout << "Posting Lists:" << endl;
+
+   // * ===== Read Posting Lists =====
+
+   const char *cursor = reinterpret_cast<const char*>(header) + header->PostingListsOffset;
    int plCounter = 0;
+   VLQStreamDecoder decoder( cursor );
    uint64_t decoded;
 
-   // For each posting list
-   while ( cursor < chunk->data + chunk->header.EndOffset )
+   while ( cursor < reinterpret_cast<const char*>(header) + fileSize(f) )
       {
 
+      cout << "Posting List " << plCounter++ << ":" << endl;
+
+      // Read and print Posting List Header
       const PostingListHeader *plHeader =
          reinterpret_cast<const PostingListHeader *>( cursor );
 
-      cursor += sizeof( PostingListHeader ) + plHeader->postsOffset;
+      cout << "\tHeader:" << std::endl;
+      cout << "\t\tNumber of posts: " << plHeader->NumPosts 
+      << "\n\t\tNumber of Sync Table Entries: " << plHeader->NumSyncTableEntries << endl;
+
+      // Read and print Sync Table
+      cout << "\tSync Table:\tOffs:\tPost:" << std::endl;
+      const SyncTableEntry *syncEntry = reinterpret_cast<const SyncTableEntry*>(plHeader+1);
+      for ( size_t i = 0; i < plHeader->NumSyncTableEntries; ++i) {
+         cout << "\t\t[" << i << "]\t" << syncEntry->Offset << "\t" << syncEntry->Post << std::endl;
+      }
+
+      size_t postsOffset = static_cast<uint32_t>( sizeof( PostingListHeader ) + plHeader->NumSyncTableEntries * sizeof( SyncTableEntry ) );
+
+      cursor += postsOffset;
 
       decoder.setCursor( cursor );
 
-      cout << "\t" << plCounter++ << " (postsOffset = " << plHeader->postsOffset
-           << "):" << endl;
+      cout << "\tPosts:" << std::endl;
+      
+      // for(size_t i = 0; i < plHeader->NumPosts ; ++i) {
+      //    cout << "\t\t" << decoder.Next() << "\n";
+      // }
+      
       while ( ( decoded = decoder.Next() ) != 0 )
          {
          cout << "\t\t" << decoded << endl;
          }
 
       cursor = decoder.getCursor();
+
       }
-   */
    }
+
+   /*
+   auto PlIt = blob->begin();
+   ++PlIt;
+   
+   // For each posting list
+   for ( auto PlIt = blob->begin(); PlIt != blob->end() ; ++PlIt) {
+      exit(0);
+      const char *cursor = reinterpret_cast<const char*>(header) + header->PostingListsOffset + PlIt->Value;
+      
+      VLQStreamDecoder decoder( cursor );
+      uint64_t decoded;
+      cout << "Posting List for '" << PlIt->Key << "':" << endl;
+
+      const PostingListHeader *plHeader =
+         reinterpret_cast<const PostingListHeader *>( cursor );
+
+      cout << "\tHeader:" << std::endl;
+      cout << "\t\tNumber of posts: " << plHeader->NumPosts 
+      << "\n\t\tNumber of Sync Table Entries: " << plHeader->NumSyncTableEntries << endl;
+
+      // Read and print Sync Table
+      cout << "\tSync Table:\tOffs:\tPost:" << std::endl;
+      const SyncTableEntry *syncEntry = reinterpret_cast<const SyncTableEntry*>(plHeader+1);
+      for ( size_t i = 0; i < plHeader->NumSyncTableEntries; ++i) {
+         cout << "\t\t[" << i << "]\t" << syncEntry->Offset << "\t" << syncEntry->Post << std::endl;
+      }
+
+      size_t postsOffset = static_cast<uint32_t>( sizeof( PostingListHeader ) + plHeader->NumSyncTableEntries * sizeof( SyncTableEntry ) );
+
+      cursor += postsOffset;
+
+      decoder.setCursor( cursor );
+
+      cout << "\tPosts:" << std::endl;
+      
+      // for(size_t i = 0; i < plHeader->NumPosts ; ++i) {
+      //    cout << "\t\t" << decoder.Next() << "\n";
+      // }
+      
+      while ( ( decoded = decoder.Next() ) != 0 )
+         {
+         cout << "\t\t" << decoded << endl;
+         }
+
+      cursor = decoder.getCursor();
+
+      }
+   }
+*/

@@ -28,8 +28,9 @@ void IndexChunk::writeToDisk( const char *filename )
    //
    // Header:
    // [i32 num of documents]
-   // [i32 offset for posting list idx (the Dictionary)]
-   // [i32 offset for posting lists]
+   // [i32 offset of document table]
+   // [i32 offset of dictionary (the word->posting list offset mapping)]
+   // [i32 offset of the posting lists section]
    //
    // document table entry:
    // [i32 offset of first char of URL]
@@ -190,13 +191,17 @@ String SerializePostingList( const Vector<uint64_t> &lst )
       encodedPosts += VLQ::Encode( post - prevPost );
       prevPost = post;
       }
+   
+   // Add null terminator to posting list
+   encodedPosts.pushBack(0);
 
    // make header
    PostingListHeader header{
-      .PostsOffset = static_cast<uint32_t>(
-         sizeof( PostingListHeader ) + nEntries * sizeof( SyncTableEntry ) ),
       .NumSyncTableEntries = static_cast<uint32_t>( nEntries ),
       .NumPosts = lst.size()
+      // We only need the sync table size or the PostsOffset
+      // .PostsOffset = static_cast<uint32_t>(
+      //    sizeof( PostingListHeader ) + nEntries * sizeof( SyncTableEntry ) ),
    };
 
    // combine the three

@@ -38,7 +38,7 @@ struct SyncTableEntry
 struct PostingListHeader
    {
       // Offset from the beginning of the posting list to the first post
-      uint32_t PostsOffset;
+      // uint32_t PostsOffset;
       // Number of entries in the sync table
       uint32_t NumSyncTableEntries;
       // Number of posts

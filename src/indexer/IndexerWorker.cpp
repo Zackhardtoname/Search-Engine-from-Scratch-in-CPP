@@ -44,6 +44,8 @@ int main()
 
    auto *curChunk = new IndexChunk();
 
+   // ===== Test =====
+
       IndexerIngest testIngest;
       for (int i = 0; i < 100; i++)
          testIngest.Words.pushBack(RandAlphaString(10));
@@ -53,6 +55,9 @@ int main()
 
       auto msg = Serialize(testIngest);
       size_t consumed;
+
+   // ===== End Test =====
+
    auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
     assert( consumed == msg.size() );
    curChunk->Ingest( ingest );
