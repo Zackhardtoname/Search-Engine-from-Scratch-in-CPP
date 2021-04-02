@@ -82,6 +82,7 @@ int main( int argc, char **argv )
                 << std::endl;
       if ( pid_t child = fork() )
          {
+         sleep ( 1 ); // this gives us chance to abort if children exit immediately
          std::cout << "started child " << child << std::endl;
          }
       else
