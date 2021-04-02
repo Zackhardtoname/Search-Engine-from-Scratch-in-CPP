@@ -12,6 +12,13 @@
 #include "../parser/ParsedHtml.h"
 #include "EnglishDictChecker.h"
 
+bool die = false;
+
+void SigtermHandler( int signum )
+   {
+   die = true;
+   }
+
 int main( int argc, char **argv )
    {
    if ( argc != 2 )
@@ -19,6 +26,7 @@ int main( int argc, char **argv )
       fprintf( stderr, "Usage: %s [english_dict]\n", argv[ 1 ] );
       return 1;
       }
+   signal( SIGTERM, SigtermHandler );
 
    // If we want to go with multiple queues with different priorities,
    //    add flag O_NONBLOCK and poll from them.
@@ -34,8 +42,9 @@ int main( int argc, char **argv )
    EnglishDictChecker englishDictChecker( argv[ 1 ] );
 
    char buf[ MAX_URL_LEN + 1 ];
-   for ( int numIndexedPages = 0;  ;  )
+   for ( int numIndexedPages = 0;  !die;  )
       {
+
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
       assert( sz != -1 && "mq_receive() failed" );
       buf[ sz ] = '\0';
