@@ -358,6 +358,17 @@ template <typename Key, typename Value> class HashTable
                {
                }
 
+            Iterator(HashTable *table) : Iterator( table, 0, nullptr )
+               {
+                  for ( ;
+                        bucketIndex < hashTable->numberOfBuckets && !bucket;  )
+                     ++bucketIndex, bucket = hashTable->buckets[ bucketIndex ];
+
+                  // If end of table
+                  if ( bucketIndex >= hashTable->numberOfBuckets )
+                     bucket = nullptr;
+               }
+
             ~Iterator()
                {
                }
@@ -417,7 +428,7 @@ template <typename Key, typename Value> class HashTable
 
       Iterator begin()
          {
-         return Iterator( this, 0, buckets[ 0 ] );
+         return Iterator( this );
          }
 
       Iterator end()

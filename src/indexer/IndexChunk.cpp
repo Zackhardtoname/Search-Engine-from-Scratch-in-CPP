@@ -65,6 +65,10 @@ void IndexChunk::writeToDisk( const char *filename )
    for ( scb::Tuple<const char*, scb::Vector<uint64_t>> &tuple: PostingLists )
       {
       // tuple.key is the word
+      if(strlen(tuple.key) == 0) {
+         int c = 3;
+         ++c;
+      }
       postingListOffsetMap[ tuple.key ] = serializedPostingLists.size();
       serializedPostingLists += SerializePostingList( PostingLists[ tuple.key ] );
       }
