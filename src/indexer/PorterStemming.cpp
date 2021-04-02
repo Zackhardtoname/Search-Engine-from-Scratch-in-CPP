@@ -343,6 +343,12 @@ void step5b( String &word )
 String PorterStem( const String &input )
    {
    String word;
+   // remove 's
+   if ( word.hasSuffix( "'s" ) )
+      {
+      word.popBack();
+      word.popBack();
+      }
 
    // convert to lower case and remove non-alphanum characters
    for ( char &c : input )
