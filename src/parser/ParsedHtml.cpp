@@ -43,6 +43,31 @@ ParsedHtml::ParsedHtml( const String &buffer )
          continue;
          }
 
+      // Handle <meta>
+      if ( entity.TagName.EqualsCaseInsensitive( "meta" ) )
+         {
+         if ( auto *attr = entity.FindAttr( "name" ) )
+            {
+            if ( attr->second.EqualsCaseInsensitive( "description" ) )
+               {
+               if ( auto *attr = entity.FindAttr( "content" ) )
+                  splitText( attr->second, Words );
+               }
+            else if ( attr->second.EqualsCaseInsensitive( "author" ) )
+               {
+               if ( auto *attr = entity.FindAttr( "content" ) )
+                  splitText( attr->second, Words );
+               }
+            else if ( attr->second.EqualsCaseInsensitive( "keywords" ) )
+               {
+               if ( auto *attr = entity.FindAttr( "content" ) )
+                  splitText( attr->second, Words );
+               }
+            }
+
+         continue;
+         }
+
       // Handle <html>
       if ( entity.TagName.EqualsCaseInsensitive( "html" ) )
          {
@@ -98,7 +123,7 @@ void ParsedHtml::splitText( StringRef s, Vector<String> &sink )
    for ( String::Iterator i = s.Begin;  i != s.End;  i++ )
       {
       char c = *i;
-      if ( isspace( c ) )
+      if ( !isalnum( c ) )
          {
          if ( !buf.empty() )
             {
