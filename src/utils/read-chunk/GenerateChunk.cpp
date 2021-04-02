@@ -44,7 +44,7 @@ scb::String RandWord() {
    return words[rand() % words.size()];
 }
 
-scb::String RandURl() {
+scb::String randURL() {
    scb::String res;
 
    // Protocol
@@ -91,8 +91,16 @@ scb::String RandURl() {
    return res;
 }
 
-int main()
+int main(int argc, char **argv)
    {
+
+   if (argc < 2) {
+      std::cout << "Usage: " << argv[0] << " <Number of Sites>\n";
+      return 1;
+   }
+
+   int numSites = atoi(argv[1]);
+
    // Read in common words
    
    std::ifstream commonWordsStream;
@@ -112,8 +120,7 @@ int main()
    scb::Vector<IndexerIngest> ingests; 
 
    // Create 2 - 4 ingests
-   size_t numIngests = 2 + (rand() % 3);
-   for ( size_t i = 0 ; i < numIngests ; ++i ) {
+   for ( int i = 0 ; i < numSites ; ++i ) {
       
       IndexerIngest testIngest;
 
@@ -130,7 +137,9 @@ int main()
       }
 
       // Generate URL
-      std::cout << RandURl().cstr() << std::endl;
+      scb::String url = randURL();
+      std::cout << url.cstr() << std::endl;
+      testIngest.Url = url.cstr();
 
       // Create Ingest, Print ingestfile
       auto msg = Serialize(testIngest);
