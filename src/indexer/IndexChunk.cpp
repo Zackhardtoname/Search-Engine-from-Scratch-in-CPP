@@ -140,9 +140,12 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
       }
 
    // record title words
-   for ( const String &word : ingest.TitleWords )
+   for ( String &word : ingest.TitleWords )
       {
-      auto &lst = PostingLists[ (String( "@" ) + word).cstr() ];
+
+      word += "@";
+
+      auto &lst = PostingLists[ word.cstr() ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
          EstSize += VLQ::Length( post );
@@ -150,6 +153,8 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
          EstSize += VLQ::Length( post - lst.back() );
       lst.pushBack( post );
       }
+
+   PostingLists.print();
 
    // record document metadata
    Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );
