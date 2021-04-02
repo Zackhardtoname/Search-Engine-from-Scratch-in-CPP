@@ -57,6 +57,8 @@ String ParsedUrl::Normalize( const String &path ) const
    // edge case
    if ( path.empty() )
       return Service + "://" + HostPort;
+   if ( path.hasPrefix( "//" ) )
+      return ParsedUrl( Service + ":" + path ).CompleteUrl;
    // if fully qualified
    if ( path.hasPrefix( "http://" ) || path.hasPrefix( "https://" ) )
       return ParsedUrl( path ).CompleteUrl;
