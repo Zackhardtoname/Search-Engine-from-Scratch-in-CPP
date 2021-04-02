@@ -44,7 +44,7 @@ template <typename Key, typename Value> class Tuple
 
       void print()
          {
-         std::cout << key << "\t" << value << "\t";
+         std::cout << key << "\n" ; //<< value << "\t";
          }
    };
 

@@ -154,7 +154,8 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
       lst.pushBack( post );
       }
 
-   PostingLists.print();
+   // Debug
+   // PostingLists.print();
 
    // record document metadata
    Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );
