@@ -45,14 +45,14 @@ String FetchUrl( const String &url )
          "--max-filesize", "5m",    // abort on files larger than this
          "--location",              // follow redirections
          "--max-redirs", "10",      // at most 10 times
-         "--connect-timeout", "5", // 10 sec connect timeout
-         "--max-time", "15",        // 30 sec total timeout
+         "--connect-timeout", "10", // 10 sec connect timeout
+         "--max-time", "30",        // 30 sec total timeout
          "--user-agent",
          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
          "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu",
          "--retry", "1", // retry once if transient failure
          "--write-out",
-         "%{stderr}%{content_type}\n%{http_code}", // put these to stderr
+         "%{stderr}%{content_type} code: %{http_code}", // put these to stderr
          url.cstr(), nullptr );
       assert( !"execl() failed" );
       }
@@ -87,7 +87,11 @@ String FetchUrl( const String &url )
       }
 
    if ( !mime.empty() && !mime.hasPrefixCaseInsensitive( "text" ) )
-      throw std::runtime_error( "not a text/* file" );
+      {
+      scb::String errMsg = "not a text/* file, actually ";
+      errMsg += mime;
+      throw std::runtime_error( errMsg.cstr() );
+      }
 
    int stat;
    while ( waitpid( pid, &stat, 0 ) == -1 )
@@ -96,8 +100,15 @@ String FetchUrl( const String &url )
          assert( !"waitpid() failed" );
       }
 
-   if ( WEXITSTATUS( stat ) != 0 )
-      throw std::runtime_error( "curl error" );
+   int retCode = WEXITSTATUS( stat );
+   if ( retCode != 0 )
+      {
+      scb::String errMsg = "curl error: ";
+      errMsg += std::to_string( retCode ).c_str();
+      errMsg += " extra: ";
+      errMsg += mime;
+      throw std::runtime_error( errMsg.cstr() );
+      }
 
    return content;
    }
