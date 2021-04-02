@@ -13,12 +13,12 @@
 
 bool interruptReceived = false;
 
-void SIGINTHandler( int )
+void GroupSIGINTHandler( int )
    {
    interruptReceived = true;
    }
 
-void SIGTERMHandler( int )
+void GroupSIGTERMHandler( int )
    {
    // so that we do not get killed by killpg() and can die after reaping our
    // children.
@@ -62,8 +62,20 @@ int main( int argc, char **argv )
 
    // Register signals and signal handlers
    // our children would register their own handler
-   signal( SIGINT, SIGINTHandler );
-   signal( SIGTERM, SIGTERMHandler );
+   struct sigaction sigactionTERM
+      {
+      };
+   sigactionTERM.sa_handler = GroupSIGTERMHandler;
+   sigactionTERM.sa_flags =
+      0; // no SA_RESTART so that wait() can be interrupted
+   sigaction( SIGTERM, &sigactionTERM, nullptr );
+
+   struct sigaction sigactionINT
+      {
+      };
+   sigactionINT.sa_handler = GroupSIGINTHandler;
+   sigactionINT.sa_flags = 0; // no SA_RESTART so that wait() can be interrupted
+   sigaction( SIGINT, &sigactionINT, nullptr );
 
    std::cout << "crawler controller starting" << std::endl;
    // spin-up NUM_CRAWLERS crawlers
@@ -80,7 +92,7 @@ int main( int argc, char **argv )
    int childStatus;
    while ( pid_t deadChild = wait( &childStatus ) )
       {
-      if ( deadChild == -1 )
+      if ( deadChild == -1 && errno != EINTR )
          {
          std::cout << "wait(): " << strerror( errno ) << std::endl;
          return 255;

@@ -15,22 +15,34 @@
 
 bool die = false;
 
-void SigtermHandler( int signum )
+void WorkerSIGTERMHandler( int signum )
    {
    die = true;
+   std::cout << "dying....." << std::endl;
    }
 
 int CrawlerParserWorkerMain( mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
                              EnglishDictChecker &englishDictChecker )
    {
 
-   signal( SIGTERM, SigtermHandler );
+   struct sigaction sigactionTERM
+      {
+      };
+   sigactionTERM.sa_handler = WorkerSIGTERMHandler;
+   sigactionTERM.sa_flags =
+      0; // no SA_RESTART so that wait() can be interrupted
+   sigaction( SIGTERM, &sigactionTERM, nullptr );
 
    char buf[ MAX_URL_LEN + 1 ];
    for ( int numIndexedPages = 0;  !die;  )
       {
 
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
+      if ( sz == -1 && errno == EINTR )
+         {
+         die = true;
+         break;
+         }
       assert( sz != -1 && "mq_receive() failed" );
       buf[ sz ] = '\0';
       String url( buf );
