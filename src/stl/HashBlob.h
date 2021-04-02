@@ -23,7 +23,7 @@
 #define NullTerminatorSize 8
 
 namespace scb
-   {
+{
 
 constexpr size_t SerialTupleBaseSize = 3 * sizeof( size_t );
 
@@ -153,6 +153,32 @@ class HashBlob
          {
          return BlobSize;
          }
+
+      // Print the contents of the hasblob
+      void Print(std::ostream& os) const {
+         for (size_t i = 0; i<NumberOfBuckets; ++i){
+
+            // If there is a chain in this bucket
+            if (Buckets[i] != 0) {
+
+               const char* start = reinterpret_cast<const char*> (&this->MagicNumber);
+
+               const char* currentPos = start + Buckets[i];
+               const scb::SerialTuple* currentTuple;
+               
+               os << "\tkey: " << currentTuple->Key;
+               
+               // Print the whole chain
+               while (currentTuple->Length != 0){
+
+                  currentTuple = reinterpret_cast<const scb::SerialTuple*>( currentPos );
+                  os << "\n\t\t" << currentTuple->Value << "\t" << currentTuple->HashValue;
+                  currentPos += currentTuple->Length;
+                  
+               }
+            }
+         }
+      }
 
       const SerialTuple *Find( const char *key ) const
          {
@@ -306,8 +332,6 @@ class HashBlob
 
       static HashBlob *Create( const Hash *hashTable )
          {
-         // TODO: use malloc() here based on BytesRequired
-         // TODO: maybe avoid duplicate call to BytesRequired?
          size_t numBytes = BytesRequired( hashTable );
          return Write( reinterpret_cast<HashBlob *>( malloc( numBytes ) ),
                        numBytes, hashTable );
@@ -317,7 +341,6 @@ class HashBlob
 
       static void Discard( HashBlob *blob )
          {
-         // TODO: this is effectively a destructor!
          // need to call free on the blob!
          free( reinterpret_cast<void *>( blob ) );
          }
@@ -407,6 +430,7 @@ class HashFile
          close( fd );
          }
    };
-   } // namespace scb
+} // namespace scb
+
 
 #endif // HASH_BLOB_H
