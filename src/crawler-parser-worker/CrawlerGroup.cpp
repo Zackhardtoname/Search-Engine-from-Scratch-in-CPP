@@ -1,10 +1,13 @@
 #include "../defs.h"
 #include "../stl/RAII.h"
 #include "../stl/utils.h"
+#include "CrawlerParserWorker.h"
+#include "EnglishDictChecker.h"
 #include <assert.h>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <mqueue.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -23,12 +26,13 @@ void SIGTERMHandler( int )
 
 int main( int argc, char **argv )
    {
-   if ( argc < 3 || scb::String( argv[ 1 ] ) == "-h" ||
+   if ( argc != 3 || scb::String( argv[ 1 ] ) == "-h" ||
         scb::String( argv[ 1 ] ) == "--help" )
       {
       std::cerr << "Usage: " << argv[ 0 ]
-                << " [num-child] [child-path] [child-args]\n";
-      std::cerr << "This watchdog starts a number of child processes and makes "
+                << " [group-size] [stemmed-english-dict]\n";
+      std::cerr << "This crawler group controller starts a number of crawler "
+                   "workers and makes "
                    "sure they are alive\n";
 
       return 1;
@@ -41,9 +45,23 @@ int main( int argc, char **argv )
       std::cerr << "cannot parse number of children " << argv[ 1 ] << std::endl;
       return 1;
       }
-   char *childExecPath = argv[ 2 ];
+
+   // If we want to go with multiple queues with different priorities,
+   //    add flag O_NONBLOCK and poll from them.
+   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
+   assert( frontier != -1 && "mq_open() failed" );
+
+   mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
+   assert( newLinks != -1 && "mq_open() failed" );
+
+   mqd_t parsedDocs = mq_open( PARSED_DOCS_QUEUE, O_WRONLY );
+   assert( parsedDocs != -1 && "mq_open() failed" );
+
+   // get resources for the children
+   EnglishDictChecker englishDictChecker( argv[ 2 ] );
 
    // Register signals and signal handlers
+   // our children would register their own handler
    signal( SIGINT, SIGINTHandler );
    signal( SIGTERM, SIGTERMHandler );
 
@@ -55,8 +73,8 @@ int main( int argc, char **argv )
          std::cout << "started child " << child << std::endl;
          }
       else
-         // 5.1.2.2.1 Program startup ... -- argv[argc] shall be a null pointer.
-         execvp( childExecPath, argv + 2 );
+         return CrawlerParserWorkerMain( frontier, newLinks, parsedDocs,
+                                         englishDictChecker );
 
    // watch for death of children and restart them
    int childStatus;
@@ -82,12 +100,13 @@ int main( int argc, char **argv )
                 << std::endl;
       if ( pid_t child = fork() )
          {
-         sleep ( 1 ); // this gives us chance to abort if children exit immediately
+         sleep(
+            1 ); // this gives us chance to abort if children exit immediately
          std::cout << "started child " << child << std::endl;
          }
       else
-         // 5.1.2.2.1 Program startup ... -- argv[argc] shall be a null pointer.
-         execvp( childExecPath, argv + 2 );
+         return CrawlerParserWorkerMain( frontier, newLinks, parsedDocs,
+                                         englishDictChecker );
       }
 
    return 0;
