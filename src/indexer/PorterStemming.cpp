@@ -90,6 +90,8 @@ bool suffixMeasure( String &word, const String &suffix, const String &rpl,
 
 void step1a( String &word )
    {
+   if ( !word.hasSuffix( "s" ) )
+      return;
    if ( word.hasSuffix( "sses" ) )
       {
       word.popBack();
@@ -113,18 +115,21 @@ void step1a( String &word )
 
 bool step1b( String &word )
    {
-   if ( suffixMeasure( word, "eed", "ee" ) )
-      return false;
-   if ( word.hasSuffix( "ed" ) )
+   if ( word.hasSuffix( "d" ) )
       {
-      String stem = word.substr( 0, word.length() - 2 );
-      if ( label( stem ).find( "v" ) != String::npos )
+      if ( suffixMeasure( word, "eed", "ee" ) )
+         return false;
+      if ( word.hasSuffix( "ed" ) )
          {
-         word.popBack();
-         word.popBack();
-         return true;
+         String stem = word.substr( 0, word.length() - 2 );
+         if ( label( stem ).find( "v" ) != String::npos )
+            {
+            word.popBack();
+            word.popBack();
+            return true;
+            }
+         return false;
          }
-      return false;
       }
    if ( word.hasSuffix( "ing" ) )
       {
@@ -189,114 +194,182 @@ void step1c( String &word )
 
 void step2( String &word )
    {
-   if ( suffixMeasure( word, "ational", "ate" ) )
+   if ( word.size() < 2 )
       return;
-   if ( suffixMeasure( word, "tional", "tion" ) )
-      return;
-   if ( suffixMeasure( word, "enci", "ence" ) )
-      return;
-   if ( suffixMeasure( word, "anci", "ance" ) )
-      return;
-   if ( suffixMeasure( word, "izer", "ize" ) )
-      return;
-   if ( suffixMeasure( word, "logi", "log" ) )
-      return;
-   if ( suffixMeasure( word, "bli", "ble" ) )
-      return;
-   if ( suffixMeasure( word, "alli", "al" ) )
-      return;
-   if ( suffixMeasure( word, "entli", "ent" ) )
-      return;
-   if ( suffixMeasure( word, "eli", "e" ) )
-      return;
-   if ( suffixMeasure( word, "ousli", "ous" ) )
-      return;
-   if ( suffixMeasure( word, "ization", "ize" ) )
-      return;
-   if ( suffixMeasure( word, "ation", "ate" ) )
-      return;
-   if ( suffixMeasure( word, "ator", "ate" ) )
-      return;
-   if ( suffixMeasure( word, "alism", "al" ) )
-      return;
-   if ( suffixMeasure( word, "iveness", "ive" ) )
-      return;
-   if ( suffixMeasure( word, "fulness", "ful" ) )
-      return;
-   if ( suffixMeasure( word, "ousness", "ous" ) )
-      return;
-   if ( suffixMeasure( word, "aliti", "al" ) )
-      return;
-   if ( suffixMeasure( word, "iviti", "ive" ) )
-      return;
-   if ( suffixMeasure( word, "biliti", "ble" ) )
-      return;
+
+   switch ( word[ word.length() - 2 ] )
+      {
+      case 'a':
+         if ( suffixMeasure( word, "ational", "ate" ) )
+            return;
+         if ( suffixMeasure( word, "tional", "tion" ) )
+            return;
+         break;
+      case 'c':
+         if ( suffixMeasure( word, "enci", "ence" ) )
+            return;
+         if ( suffixMeasure( word, "anci", "ance" ) )
+            return;
+         break;
+      case 'e':
+         if ( suffixMeasure( word, "izer", "ize" ) )
+            return;
+         break;
+      case 'g':
+         if ( suffixMeasure( word, "logi", "log" ) )
+            return;
+         break;
+      case 'l':
+         if ( suffixMeasure( word, "bli", "ble" ) )
+            return;
+         if ( suffixMeasure( word, "alli", "al" ) )
+            return;
+         if ( suffixMeasure( word, "entli", "ent" ) )
+            return;
+         if ( suffixMeasure( word, "eli", "e" ) )
+            return;
+         if ( suffixMeasure( word, "ousli", "ous" ) )
+            return;
+         break;
+      case 'o':
+         if ( suffixMeasure( word, "ization", "ize" ) )
+            return;
+         if ( suffixMeasure( word, "ation", "ate" ) )
+            return;
+         if ( suffixMeasure( word, "ator", "ate" ) )
+            return;
+         break;
+      case 's':
+         if ( suffixMeasure( word, "alism", "al" ) )
+            return;
+         if ( suffixMeasure( word, "iveness", "ive" ) )
+            return;
+         if ( suffixMeasure( word, "fulness", "ful" ) )
+            return;
+         if ( suffixMeasure( word, "ousness", "ous" ) )
+            return;
+         break;
+      case 't':
+         if ( suffixMeasure( word, "aliti", "al" ) )
+            return;
+         if ( suffixMeasure( word, "iviti", "ive" ) )
+            return;
+         if ( suffixMeasure( word, "biliti", "ble" ) )
+            return;
+         break;
+      }
    }
 
 void step3( String &word )
    {
-   if ( suffixMeasure( word, "icate", "ic" ) )
+   if ( word.size() < 2 )
       return;
-   if ( suffixMeasure( word, "ative", "" ) )
-      return;
-   if ( suffixMeasure( word, "alize", "al" ) )
-      return;
-   if ( suffixMeasure( word, "iciti", "ic" ) )
-      return;
-   if ( suffixMeasure( word, "ical", "ic" ) )
-      return;
-   if ( suffixMeasure( word, "ful", "" ) )
-      return;
-   if ( suffixMeasure( word, "ness", "" ) )
-      return;
+   switch ( word[ word.length() - 2 ] )
+      {
+      case 't':
+         if ( suffixMeasure( word, "icate", "ic" ) )
+            return;
+         if ( suffixMeasure( word, "iciti", "ic" ) )
+            return;
+         break;
+      case 'v':
+         if ( suffixMeasure( word, "ative", "" ) )
+            return;
+         break;
+      case 'z':
+         if ( suffixMeasure( word, "alize", "al" ) )
+            return;
+         break;
+      case 'a':
+         if ( suffixMeasure( word, "ical", "ic" ) )
+            return;
+         break;
+      case 'u':
+         if ( suffixMeasure( word, "ful", "" ) )
+            return;
+         break;
+      case 's':
+         if ( suffixMeasure( word, "ness", "" ) )
+            return;
+         break;
+      }
    }
 
 void step4( String &word )
    {
-   if ( suffixMeasure( word, "al", "", 1 ) )
+   if ( word.size() < 2 )
       return;
-   if ( suffixMeasure( word, "ance", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ence", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "er", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ic", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "able", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ible", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ant", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ement", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ment", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ent", "", 1 ) )
-      return;
-   if ( word.hasSuffix( "ion" ) )
+   switch ( word[ word.length() - 2 ] )
       {
-      String stem = word.substr( 0, word.length() - 3 );
-      if ( !stem.empty() && ( stem.back() == 's' || stem.back() == 't' ) )
-         if ( measure( stem ) > 1 )
-            word = stem;
-      return;
+      case 'a':
+         if ( suffixMeasure( word, "al", "", 1 ) )
+            return;
+         break;
+      case 'c':
+         if ( suffixMeasure( word, "ance", "", 1 ) )
+            return;
+         if ( suffixMeasure( word, "ence", "", 1 ) )
+            return;
+         break;
+      case 'e':
+         if ( suffixMeasure( word, "er", "", 1 ) )
+            return;
+         break;
+      case 'i':
+         if ( suffixMeasure( word, "ic", "", 1 ) )
+            return;
+         break;
+      case 'l':
+         if ( suffixMeasure( word, "able", "", 1 ) )
+            return;
+         if ( suffixMeasure( word, "ible", "", 1 ) )
+            return;
+         break;
+      case 'n':
+         if ( suffixMeasure( word, "ant", "", 1 ) )
+            return;
+         if ( suffixMeasure( word, "ement", "", 1 ) )
+            return;
+         if ( suffixMeasure( word, "ment", "", 1 ) )
+            return;
+         if ( suffixMeasure( word, "ent", "", 1 ) )
+            return;
+         break;
+      case 'o':
+         if ( word.hasSuffix( "ion" ) )
+            {
+            String stem = word.substr( 0, word.length() - 3 );
+            if ( !stem.empty() && ( stem.back() == 's' || stem.back() == 't' ) )
+               if ( measure( stem ) > 1 )
+                  word = stem;
+            return;
+            }
+         if ( suffixMeasure( word, "ou", "", 1 ) )
+            return;
+         break;
+      case 's':
+         if ( suffixMeasure( word, "ism", "", 1 ) )
+            return;
+         break;
+      case 't':
+         if ( suffixMeasure( word, "ate", "", 1 ) )
+            return;
+         if ( suffixMeasure( word, "iti", "", 1 ) )
+            return;
+         break;
+      case 'u':
+         if ( suffixMeasure( word, "ous", "", 1 ) )
+            return;
+         break;
+      case 'v':
+         if ( suffixMeasure( word, "ive", "", 1 ) )
+            return;
+         break;
+      case 'z':
+         if ( suffixMeasure( word, "ize", "", 1 ) )
+            return;
+         break;
       }
-   if ( suffixMeasure( word, "ou", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ism", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ate", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "iti", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ous", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ive", "", 1 ) )
-      return;
-   if ( suffixMeasure( word, "ize", "", 1 ) )
-      return;
    }
 
 void step5a( String &word )
