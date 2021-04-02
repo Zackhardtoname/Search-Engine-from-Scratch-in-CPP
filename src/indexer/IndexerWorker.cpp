@@ -25,7 +25,7 @@ void *threadPersistChunk( void *p )
    auto *chunk = static_cast<IndexChunk *>( p );
    chunk->writeToDisk(filename.data() );
 
-   std::cout << "written chunk to " << timeStr << std::endl;
+   std::cout << "written chunk to " << filename.cstr() << std::endl;
    delete chunk;
    return nullptr;
    }
