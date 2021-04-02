@@ -154,30 +154,42 @@ class HashBlob
          return BlobSize;
          }
 
-      // Print the contents of the hasblob
+      // Print the header and contents of the hasblob
       void Print(std::ostream& os) const {
+
+         // Print header
+         std::cout<<"\tMagic Number: "<< MagicNumber <<
+            "\n\tVersion: " << Version <<
+            "\n\tBlobSize: " << BlobSize << 
+            "\n\tNumber of Buckets: " << NumberOfBuckets << "\n";
+
+         //Print contents
+         const char* start = reinterpret_cast<const char*> (this);
+         // For all buckets
          for (size_t i = 0; i<NumberOfBuckets; ++i){
 
             // If there is a chain in this bucket
             if (Buckets[i] != 0) {
-
-               const char* start = reinterpret_cast<const char*> (&this->MagicNumber);
-
                const char* currentPos = start + Buckets[i];
-               const scb::SerialTuple* currentTuple;
+               const scb::SerialTuple* currentTuple = reinterpret_cast<const scb::SerialTuple*>( currentPos );
                
-               os << "\tkey: " << currentTuple->Key;
-               
+               os << "\tBucket: " << i << "\tHash Value: " << currentTuple->HashValue << "\n";
+
                // Print the whole chain
                while (currentTuple->Length != 0){
-
-                  currentTuple = reinterpret_cast<const scb::SerialTuple*>( currentPos );
-                  os << "\n\t\t" << currentTuple->Value << "\t" << currentTuple->HashValue;
-                  currentPos += currentTuple->Length;
                   
+                  os << "\t\tKey: " << currentTuple->Key << "\tVal: " << currentTuple->Value << "\n";
+                  currentPos += currentTuple->Length;
+                  currentTuple = reinterpret_cast<const scb::SerialTuple*>( currentPos );
                }
             }
          }
+      }
+
+      // Stream insertion override for HashBlob
+      friend std::ostream &operator<<( std::ostream &output, const HashBlob &blob ) {
+         blob.Print(output);
+         return output;
       }
 
       const SerialTuple *Find( const char *key ) const
@@ -343,6 +355,110 @@ class HashBlob
          {
          // need to call free on the blob!
          free( reinterpret_cast<void *>( blob ) );
+         }
+
+      class Iterator
+         {
+         private:
+            friend class HashBlob;
+
+            const HashBlob *hashBlob;
+            size_t currentBucket;
+            const SerialTuple *currentTuple;
+
+            Iterator( const HashBlob *blob, size_t bucketIdxIn, SerialTuple *tuplePtrIn )
+                : hashBlob{ blob }, currentBucket{ bucketIdxIn }, currentTuple{ tuplePtrIn }
+               {
+               }
+
+         public:
+               
+            Iterator(const HashBlob *blob) : Iterator( blob, 0, nullptr )
+               {
+                  // Increment to first bucket with something
+                  for ( ; currentBucket < hashBlob->NumberOfBuckets && hashBlob->Buckets[currentBucket] == 0; ++currentBucket );
+                  // If end of table
+                  if ( currentBucket >= hashBlob->NumberOfBuckets ) {
+                     currentTuple == nullptr;
+                  }
+                  else {
+                     currentTuple = reinterpret_cast<const SerialTuple*> (reinterpret_cast<const char*> (hashBlob) + hashBlob->Buckets[currentBucket] );
+                  }
+               }
+
+            Iterator() : Iterator( nullptr, 0, nullptr )
+               {
+               }
+
+            ~Iterator()
+               {
+               }
+
+            const SerialTuple &operator*()
+               {
+               return *currentTuple;
+               }
+
+            const SerialTuple *operator->() const
+               {
+               return currentTuple;
+               }
+
+            // Prefix ++
+            Iterator &operator++()
+               {
+               // Move to next entry in chain
+               currentTuple = reinterpret_cast<const scb::SerialTuple*> ( reinterpret_cast<const char*> ( currentTuple ) + currentTuple->Length );
+               
+               // If the length is 0, it's actually the end of the chain.
+               // Find the next chain with a filled bucket
+               if ( currentTuple->Length == 0 )
+                  {
+                  
+                     // Start with the next bucket
+                     ++currentBucket;
+
+                     // Iterate to next bucket with contents (may be current one)
+                     for ( ; currentBucket < hashBlob->NumberOfBuckets && hashBlob->Buckets[currentBucket] == 0; ++currentBucket );
+                     // If end of table
+                     if ( currentBucket >= hashBlob->NumberOfBuckets ) {
+                        currentTuple = nullptr;
+                     }
+                     else {
+                        currentTuple = reinterpret_cast<const SerialTuple*> (reinterpret_cast<const char*> (hashBlob) + hashBlob->Buckets[currentBucket] );
+                     }
+                  }
+               return *this;
+               }
+
+            // Postfix ++
+            Iterator operator++( int )
+               {
+               Iterator ret = *this;
+               ++( *this );
+               return ret;
+               }
+
+            bool operator==( const Iterator &rhs ) const
+               {
+               return currentTuple == rhs.currentTuple;
+               }
+
+            bool operator!=( const Iterator &rhs ) const
+               {
+               return currentTuple != rhs.currentTuple;
+               }
+         };
+
+      Iterator begin() const
+         {
+         return Iterator( this );
+         }
+
+      Iterator end() const
+         {
+         // one past the end
+         return Iterator();
          }
    };
 

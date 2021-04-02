@@ -96,6 +96,7 @@ int main( int argc, char **argv )
 
    // * ===== Read Posting Lists =====
 
+   /*
    const char *cursor = reinterpret_cast<const char*>(header) + header->PostingListsOffset;
    int plCounter = 0;
    VLQStreamDecoder decoder( cursor );
@@ -142,19 +143,19 @@ int main( int argc, char **argv )
 
       }
    }
-
-   /*
+   */
+   
    auto PlIt = blob->begin();
    ++PlIt;
+   size_t ctr = 0;
    
    // For each posting list
    for ( auto PlIt = blob->begin(); PlIt != blob->end() ; ++PlIt) {
-      exit(0);
       const char *cursor = reinterpret_cast<const char*>(header) + header->PostingListsOffset + PlIt->Value;
       
       VLQStreamDecoder decoder( cursor );
       uint64_t decoded;
-      cout << "Posting List for '" << PlIt->Key << "':" << endl;
+      cout << "Posting List [" << ctr++ << "] for '" << PlIt->Key << "':" << endl;
 
       const PostingListHeader *plHeader =
          reinterpret_cast<const PostingListHeader *>( cursor );
@@ -190,5 +191,6 @@ int main( int argc, char **argv )
       cursor = decoder.getCursor();
 
       }
+
+   cout << "End of chunk." << endl;
    }
-*/
