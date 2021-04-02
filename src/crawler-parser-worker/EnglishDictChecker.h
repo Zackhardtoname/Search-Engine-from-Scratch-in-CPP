@@ -5,9 +5,9 @@
 #ifndef SCOOBLE_SEARCH_ENGLISHDICTCHECKER_H
 #define SCOOBLE_SEARCH_ENGLISHDICTCHECKER_H
 
+#include <cassert>
 #include <fstream>
 #include <string>
-#include <cassert>
 #include <unordered_set>
 
 #include "../indexer/IndexChunk.h"
@@ -18,8 +18,8 @@
 using scb::String;
 
 /// Check if a given HTML is in English by comparing the words
-/// with those in a given dictionary. The dictionary should not
-/// be stemmed, but any HTML passed in is assumed to have been
+/// with those in a given dictionary. The dictionary should
+/// be stemmed, and the HTML passed in is assumed to have been
 /// stemmed.
 class EnglishDictChecker
    {
@@ -47,7 +47,7 @@ class EnglishDictChecker
          std::fstream f( vocabFile );
          if ( !f )
             throw std::runtime_error( "cannot open dictionary file" );
-         // read in words from the dictionary and stem them
+         // read in pre-stemmed words from the dictionary
          scb::String word;
          while ( f >> word )
             vocab.insert( word );

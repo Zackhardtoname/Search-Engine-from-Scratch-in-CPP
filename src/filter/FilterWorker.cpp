@@ -432,7 +432,7 @@ void *FilterWorker::threadFilteredUrls( void *inst )
             if ( errno == EAGAIN )
                {
                self.filteredUrls.pushBack( url ); // requeue
-               // only log if not previously blocked
+               // log only if not previously blocked, instead of every tick
                if ( !blocked )
                   std::cout
                      << "frontier mqueue blocked: crawling isn't fast enough"

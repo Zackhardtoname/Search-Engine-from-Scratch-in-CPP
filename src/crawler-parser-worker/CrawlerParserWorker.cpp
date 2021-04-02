@@ -25,6 +25,9 @@ int CrawlerParserWorkerMain( mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
                              EnglishDictChecker &englishDictChecker )
    {
 
+   // Set signal signal so that when killed, crawler-parser-worker
+   // finishes the last URL it receives before exiting.
+
    struct sigaction sigactionTERM
       {
       };

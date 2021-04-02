@@ -30,10 +30,9 @@ int main( int argc, char **argv )
         scb::String( argv[ 1 ] ) == "--help" )
       {
       std::cerr << "Usage: " << argv[ 0 ]
-                << " [group-size] [stemmed-english-dict]\n";
+                << " [num-crawler] [stemmed-english-dict]\n";
       std::cerr << "This crawler group controller starts a number of crawler "
-                   "workers and makes "
-                   "sure they are alive\n";
+                   "workers and makes sure they are alive\n";
 
       return 1;
       }
@@ -46,16 +45,33 @@ int main( int argc, char **argv )
       return 1;
       }
 
+   // These mqueues and the englishDictChecker is opened once by this
+   // group, and inherited by the children workers.
    // If we want to go with multiple queues with different priorities,
    //    add flag O_NONBLOCK and poll from them.
    mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
-   assert( frontier != -1 && "mq_open() failed" );
+   if ( frontier == -1 )
+      {
+      std::cerr << "mq_open() failed for frontier: " << strerror( errno )
+                << std::endl;
+      return 1;
+      }
 
    mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
-   assert( newLinks != -1 && "mq_open() failed" );
+   if ( newLinks == -1 )
+      {
+      std::cerr << "mq_open() failed for newLinks: " << strerror( errno )
+                << std::endl;
+      return 1;
+      }
 
    mqd_t parsedDocs = mq_open( PARSED_DOCS_QUEUE, O_WRONLY );
-   assert( parsedDocs != -1 && "mq_open() failed" );
+   if ( parsedDocs == -1 )
+      {
+      std::cerr << "mq_open() failed for parsedDocs: " << strerror( errno )
+                << std::endl;
+      return 1;
+      }
 
    // get resources for the children
    EnglishDictChecker englishDictChecker( argv[ 2 ] );
@@ -85,6 +101,8 @@ int main( int argc, char **argv )
          std::cout << "started child " << child << std::endl;
          }
       else
+         // Q. why not exec?
+         // A. fork and continue running so that children can inherit resources
          return CrawlerParserWorkerMain( frontier, newLinks, parsedDocs,
                                          englishDictChecker );
 
