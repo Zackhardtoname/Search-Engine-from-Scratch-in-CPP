@@ -48,12 +48,9 @@ class EnglishDictChecker
          if ( !f )
             throw std::runtime_error( "cannot open dictionary file" );
          // read in words from the dictionary and stem them
-         std::string word;
+         scb::String word;
          while ( f >> word )
-            {
-            String stem = PorterStem( String( word.c_str() ) );
-            vocab.insert( stem );
-            }
+            vocab.insert( word );
          assert( !vocab.empty() && "empty vocabulary" );
          }
    };
