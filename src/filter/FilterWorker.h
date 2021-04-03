@@ -34,15 +34,16 @@ class FilterWorker
       /// preceded by the resources they use.
 
       /// Thread that handles: newLinks mqueue -> unfilteredUrls
-      mqd_t qNewLinks;
-      pthread_t pthNewLinksMqueue;
+      mqd_t qNewLinks = -1;
+      pthread_t pthNewLinksMqueue = -1;
 
+      // param: FilterWorker::this
       [[noreturn]] static void *threadNewLinksMqueue( void * );
 
       /// Thread that handles: remote workers -> unfilteredUrls
       // Host and port for other workers to post URLs.
       String hostname, port;
-      pthread_t pthRemoteWorkers;
+      pthread_t pthRemoteWorkers = -1;
 
       struct RemoteWorkerConnectionArgs
          {
@@ -50,30 +51,39 @@ class FilterWorker
             int connFd;
          };
 
+      // Handler thread for each remote worker connection
+      // param [this thread takes ownership]: RemoteWorkerConnectionArgs*
       static void *threadRemoteWorkerConnection( void * );
 
+      // Thread for waiting for connections from other remote workers
+      // param: FilterWorker::this
       [[noreturn]] static void *threadRemoteWorkers( void * );
 
       /// Thread that handles: unfilteredUrls -> ( remoteUrls | filteredUrls )
       static constexpr int NUM_FILTER_THREADS = 10;
       Queue<String> unfilteredUrls; // URLs waiting to be filtered.
-      pthread_mutex_t lockUnfilteredUrls;
-      sem_t semUnfilteredUrls;
-      pthread_t pthUnfilteredUrls[ NUM_FILTER_THREADS ];
+      pthread_mutex_t lockUnfilteredUrls{};
+      sem_t semUnfilteredUrls{};
+      pthread_t pthUnfilteredUrls[ NUM_FILTER_THREADS ] = {};
 
       [[noreturn]] static void *threadUnfilteredUrls( void * );
 
       /// Thread that handles: remoteUrls -> other workers
-      int worldSize, rank;
+      int worldSize = -1, rank = -1;
       Vector<ParsedUrl> remoteWorkerAddrs;
-      pthread_mutex_t lockRemoteWorkersSendBuffer;
+      pthread_mutex_t lockRemoteWorkersSendBuffer{};
       Vector<String> remoteWorkersSendBuffer;
-      pthread_t pthRemoteUrls;
+      int sendBufferAvailEventFd = -1;
+      pthread_t pthRemoteUrls{};
 
-      void queueRemoteUrl( int remote, const String &s );
+      // Send the url to the remote worker (eventually)
+      void queueRemoteUrl( int remote, const String &url );
 
+      // Connect to an address and returns the sockfd.
+      // Throws a runtime_exception if error.
       static int connectTo( const ParsedUrl &addr );
 
+      // param: FilterWorker::this
       [[noreturn]] static void *threadRemoteUrls( void * );
 
       /// Thread that handles: filteredUrls -> frontier mqueue, with rate
@@ -81,15 +91,17 @@ class FilterWorker
       // URLs that we have filtered, but have not gotten around to push into the
       // frontier mqueue.
       Queue<ParsedUrl> filteredUrls;
-      pthread_mutex_t lockFilteredUrls;
-      sem_t semFilteredUrls;
-      mqd_t qFrontier;
-      pthread_t pthFilteredUrls;
+      pthread_mutex_t lockFilteredUrls{};
+      sem_t semFilteredUrls{};
+      mqd_t qFrontier = -1;
+      pthread_t pthFilteredUrls{};
 
+      // param: FilterWorker::this
       [[noreturn]] static void *threadFilteredUrls( void * );
 
       // this thread takes in a scb::Vector<ParsedUrl>, and offload them to a
       // file on disk.
+      // param [this thread takes ownership]: Vector<ParsedUrl>* urls to offload
       static void *threadOffloadUrls( void * );
 
       // If the URL is not seen before, mark it seen.
@@ -99,10 +111,17 @@ class FilterWorker
       // Get the maximum rate for a host per tick
       int getHostRateLimit( const String &host );
 
-      pthread_mutex_t lockRobotstxtMap;
+      pthread_mutex_t lockRobotstxtMap{};
+      // Sentinels for a pending robots.txt (when many threads want to
+      // download the same one at the same time), and a dummy robots.txt,
+      // for when we cannot download/parse the robots.txt for a website.
       static Robotstxt *const ROBOTS_TXT_PENDING, *const DummyRobotstxt;
-      std::unordered_map<scb::String, Robotstxt *, StringHash>
-         robotstxtMap; // TODO: use our own hashmap
+      // TODO: use our own hashmap
+      std::unordered_map<scb::String, Robotstxt *, StringHash> robotstxtMap;
+
+      // Query robots.txt to check if a URL is allowed
+      // This will try to download robots.txt if not already in cache.
+      // Blocking!
       bool allowedByRobotstxt( const ParsedUrl &url );
 
       Bloomfilter bloomfilter;
