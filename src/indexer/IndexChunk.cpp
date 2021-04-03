@@ -73,6 +73,9 @@ void IndexChunk::writeToDisk( const char *filename )
       serializedPostingLists += SerializePostingList( PostingLists[ tuple.key ] );
       }
 
+   // Debug
+   //postingListOffsetMap.print();
+
    // make a hashblob out of the hashmap
    // TODO if possible, construct hashblob in the mapped location instead of having to memcpy
    scb::HashBlob *postingListOffsetHashblob = scb::HashBlob::Create( &postingListOffsetMap ) ;
@@ -129,7 +132,10 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
 
    // record document words
    for ( const String &word : ingest.Words )
-      {
+   {
+      // ! This is the evil line. it inserts a pointer into the PostingLists HashTable
+      // ! It is evil because once Ingest is called, we  no longer have a guarantee that the 
+      // ! input ingest object will exist, so the pointer will become invalid.
       auto &lst = PostingLists[ word.cstr() ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
@@ -153,9 +159,6 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
          EstSize += VLQ::Length( post - lst.back() );
       lst.pushBack( post );
       }
-
-   // Debug
-   // PostingLists.print();
 
    // record document metadata
    Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );
