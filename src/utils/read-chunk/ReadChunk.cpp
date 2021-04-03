@@ -52,7 +52,6 @@ int main( int argc, char **argv )
       }
 
    // * ===== Read header =====
-
    cout << "Chunk Header:" << endl;
    cout << "\tDocument count: " << header->DocumentCount << endl;
    cout << "\tDocument Table Start: " << header->DocumentTableOffset << endl;
@@ -62,18 +61,20 @@ int main( int argc, char **argv )
         << endl;
 
 
+   sizeof ( DocumentTableEntry );
+
    // * ===== Read Document Table =====
    const DocumentTableEntry *currentEntry = reinterpret_cast<DocumentTableEntry*>(header + 1);
 
    cout << "Document Table:" << endl;
    cout << "\tIndex\tUrlOffs\tLastPost" << endl; 
    // For each Document Table Entry
-   for ( size_t i = 0 ; i < header->DocumentCount; ++i ) {
+   for ( size_t i = 0 ; i < header->DocumentCount; ++i, ++currentEntry ) {
       cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << "\t" << currentEntry->LastPost << endl;
    }
 
    // * ===== Read URL List =====
-   const char *currentURL = reinterpret_cast<const char*>(currentEntry + 1);
+   const char *currentURL = reinterpret_cast<const char*>(currentEntry);
 
    //std::cout<<"The thing tested against is: " << reinterpret_cast<const char*> (header) + header->PostingListsOffset<<"\n";
    //exit(0);
