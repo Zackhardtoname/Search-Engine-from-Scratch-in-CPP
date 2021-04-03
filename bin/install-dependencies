@@ -1,3 +1,4 @@
 #!/bin/bash
 sudo apt-get install g++ cmake libssl-dev
-mkfs.ext4 -m 0 -T largefile /dev/device
+sleep 1
+sudo mkfs.ext4 -m 0 -T largefile /dev/device

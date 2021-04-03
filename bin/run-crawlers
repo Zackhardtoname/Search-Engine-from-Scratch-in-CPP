@@ -1,0 +1,45 @@
+#!/bin/bash
+DIR=$(pwd)
+if [[ $DIR != *"/scooble_search/bin"* ]]; then
+	echo "Error: You are not in the /scooble_search/bin directory!"
+	echo "This bash script is set to use filepaths realative to the bin folder."
+	echo "Change your directory with:"
+	echo "	  cd [path-to-scooble_search]/scooble_search/bin"
+	echo "Then run ./run-crawlers directly from the bin directory instead."
+	exit 1
+fi
+
+if [ ! -f $DIR/make-bloom-file ]; then
+	echo "Could not find executables needed to run. HINT: Did you forget to run ./build?"
+	exit 1
+fi
+
+echo " --- Step 1) Initialize bloom filter --- "
+# First setup the bloom filter parameters
+# TODO: Finalize the bloom filter parameters to determine the optimal bloom
+# filter size
+./make-bloom-file 100000000 0.0001 bloom
+
+echo " --- Step 2) Setup message queues --- "
+# Setup the mqueues for the frontier, newLinks, and docs.
+# TODO: Determine optimal size for each mqueue. This parameter is specified in
+# the /scooble_search/src/defs.h file.
+sudo ./handle-mq create frontier newLinks docs
+
+
+echo " --- Step 3) Setup indexer --- "
+# Setup the indexer.
+# TODO: Replace the dummy indexer with the real indexer.
+./dummy-indexer 2000000 &
+
+echo " --- Step 4) Start filter worker --- "
+# Start up the filter worker with thte remote config, bloom file, and worker count.
+# TODO: Determine number of machines we are using and ip addresses of them.
+# TODO: Put the machine namespaces in a file.
+./filter-worker [add remote config file here] bloom [add num_servers - 1] &
+
+echo " --- Step 5) Start running the crawlers --- "
+# Start up all the crawler workers to begin crawling.
+# TODO: Determine the number of crawlers we will use and slowly scale up to match.
+./crawler-group 50 ../data/english.stemmed.dict &
+

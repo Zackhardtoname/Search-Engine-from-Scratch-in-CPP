@@ -1,0 +1,17 @@
+#!/bin/bash
+DIR=$(pwd)
+if [[ $DIR != *"/scooble_search/bin"* ]]; then
+	echo "Error: You are not in the /scooble_search/bin directory!"
+	echo "This bash script is set to use filepaths realative to the bin folder."
+	echo "Change your directory with:"
+	echo "	  cd [path-to-scooble_search]/scooble_search/bin"
+	echo "Then run ./pause-crawlers directly from the bin directory instead."
+	exit 1
+fi
+
+# Kill all the indexer, filter, and crawler processes
+pkill -9 dummy-indexer &> /dev/null
+pkill -9 filter-worker &> /dev/null
+pkill -9 crawler-group &> /dev/null
+
+echo "The crawler has been paused. To continue, run ./continue-crawlers"
