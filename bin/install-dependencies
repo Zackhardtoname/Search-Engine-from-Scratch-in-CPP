@@ -1,4 +1,6 @@
 #!/bin/bash
 sudo apt-get install g++ cmake libssl-dev
 sleep 1
+# TODO: Make sure to attach a disk to the google cloud machine to prevent this
+# from erroring
 sudo mkfs.ext4 -m 0 -T largefile /dev/device
