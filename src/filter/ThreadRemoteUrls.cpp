@@ -9,6 +9,7 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 
+#include "../stl/DevOps.h"
 #include "../stl/RAII.h"
 #include "../stl/utils.h"
 #include "FilterWorker.h"
@@ -24,6 +25,7 @@ void FilterWorker::queueRemoteUrl( int remote, const String &url )
    remoteWorkersSendBuffer[ remote ].pushBack( 0 ); // null-terminate
    pthread_mutex_unlock( &lockRemoteWorkersSendBuffer );
 
+   // notify that new content is available in sendBuffer
    uint64_t avail = 1;
    write( sendBufferAvailEventFd, &avail, sizeof( avail ) );
    }
@@ -56,7 +58,7 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
 
    // connect to remote workers
    // initialize the connections for polling
-   auto *events = new pollfd[ self.worldSize ];
+   Vector<pollfd> events( self.worldSize );
    for ( int i = 0;  i < self.worldSize;  i++ )
       // for our slot, put in an eventfd to get notification from other
       // threads about change to remoteWorkersSendBuffer
@@ -64,8 +66,8 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
          {
          // don't use EFD_SEMAPHORE here, because multiple write events
          // is handled in a single iteration.
-         self.sendBufferAvailEventFd = events->fd = eventfd( 0, 0 );
-         assert( events->fd != -1 && "eventfd() failed" );
+         self.sendBufferAvailEventFd = events[ i ].fd = eventfd( 0, 0 );
+         assert( events[ i ].fd != -1 && "eventfd() failed" );
          }
       else
          {
@@ -106,38 +108,53 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
       events[ self.rank ].events = POLLIN;
       pthread_mutex_unlock( &self.lockRemoteWorkersSendBuffer );
 
-      int nEvents = poll( events, self.worldSize, -1 );
+      int nEvents = poll( events.data(), self.worldSize, -1 );
       assert( nEvents != -1 && "error in poll()" );
       for ( int i = 0;  nEvents != 0 && i < self.worldSize;  i++ )
          if ( events[ i ].revents )
             {
-            nEvents--;
+            //            nEvents--;
             if ( ( POLLHUP | POLLERR ) & events[ i ].revents )
                {
                // remote worker disconnected, try to reconnect
                std::cerr << "connection broken with peer " << i << " at "
                          << self.remoteWorkerAddrs[ i ].HostPort << std::endl;
 
+               events[ i ].fd = 0;
                // reconnect
-               while ( events[ i ].fd == 0 )
+               // if we blocked every other threads
+               bool blocked = false;
+               for ( int nRetries = 0;  events[ i ].fd == 0;  nRetries++ )
                   {
+                  // if we have retried too many times, block and warn devops
+                  if ( nRetries > REMOTE_WORKER_DOWN_RETRY_LIMIT && !blocked )
+                     {
+                     self.block();
+                     blocked = true;
+                     // issue a warning
+                     String errMsg = self.remoteWorkerAddrs[ i ].CompleteUrl +
+                                     " lost connection to " +
+                                     self.remoteWorkerAddrs[ i ].CompleteUrl;
+                     DiscordAlert( errMsg );
+                     }
                   try
                      {
                      events[ i ].fd = connectTo( self.remoteWorkerAddrs[ i ] );
                      }
                   catch ( std::exception &e )
                      {
-                     std::cout << "cannot connect to peer " << i << " at "
+                     std::cout << "cannot reconnect to peer " << i << " at "
                                << self.remoteWorkerAddrs[ i ].HostPort << ": "
                                << e.what() << std::endl;
                      events[ i ].fd = 0;
                      usleep( 500 * 1000 );
-                     // TODO: block and issue warning htere
                      }
                   }
 
                std::cerr << "reconnected to peer " << i << " at "
                          << self.remoteWorkerAddrs[ i ].HostPort << std::endl;
+               if ( blocked )
+                  self.unblock();
                }
             else if ( POLLOUT & events[ i ].revents )
                {

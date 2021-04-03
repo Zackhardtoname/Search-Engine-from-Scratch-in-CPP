@@ -86,13 +86,13 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
       // everything before buf[start] has been posted, that leaves us
       // (got + sz - start) bytes
       int bytesLeft = got + sz - start;
-      // if we did consume some bytes
+      // if we did consume some bytes, left shift the remaining bytes
       if ( start != 0 )
          memmove( buf, buf + start, bytesLeft );
       got = bytesLeft;
 
       // if we got a lot of bytes without seeing a null-terminated string,
-      // the other side must be misbehaving.
+      // the other side must be misbehaving. Close connection.
       if ( got == sizeof( buf ) )
          break;
       }

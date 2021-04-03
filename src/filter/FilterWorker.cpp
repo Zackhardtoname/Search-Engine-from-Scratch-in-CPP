@@ -165,6 +165,22 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
       }
    }
 
+void FilterWorker::block()
+   {
+   pthread_mutex_lock( &lockUnfilteredUrls );
+   pthread_mutex_lock( &lockRemoteWorkersSendBuffer );
+   pthread_mutex_lock( &lockFilteredUrls );
+   pthread_mutex_lock( &lockRobotstxtMap );
+   }
+
+void FilterWorker::unblock()
+   {
+   pthread_mutex_unlock( &lockUnfilteredUrls );
+   pthread_mutex_unlock( &lockRemoteWorkersSendBuffer );
+   pthread_mutex_unlock( &lockFilteredUrls );
+   pthread_mutex_unlock( &lockRobotstxtMap );
+   }
+
 int main( int argc, char **argv )
    {
 

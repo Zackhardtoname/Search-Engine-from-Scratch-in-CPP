@@ -126,6 +126,12 @@ class FilterWorker
 
       Bloomfilter bloomfilter;
 
+      // block the whole process by acquiring all locks imaginable
+      void block();
+
+      // unblock the process
+      void unblock();
+
    public:
       void run();
 
