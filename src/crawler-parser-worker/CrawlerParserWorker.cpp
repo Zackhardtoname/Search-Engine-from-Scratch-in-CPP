@@ -10,33 +10,42 @@
 #include "../defs.h"
 #include "../indexer/PorterStemming.h"
 #include "../parser/ParsedHtml.h"
+#include "CrawlerParserWorker.h"
 #include "EnglishDictChecker.h"
 
-int main( int argc, char **argv )
+bool die = false;
+
+void WorkerSIGTERMHandler( int signum )
    {
-   if ( argc != 2 )
+   die = true;
+   std::cout << "dying....." << std::endl;
+   }
+
+int CrawlerParserWorkerMain( mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
+                             EnglishDictChecker &englishDictChecker )
+   {
+
+   // Set signal signal so that when killed, crawler-parser-worker
+   // finishes the last URL it receives before exiting.
+
+   struct sigaction sigactionTERM
       {
-      fprintf( stderr, "Usage: %s [english_dict]\n", argv[ 1 ] );
-      return 1;
-      }
-
-   // If we want to go with multiple queues with different priorities,
-   //    add flag O_NONBLOCK and poll from them.
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
-   assert( frontier != -1 && "mq_open() failed" );
-
-   mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
-   assert( newLinks != -1 && "mq_open() failed" );
-
-   mqd_t parsedDocs = mq_open( PARSED_DOCS_QUEUE, O_WRONLY );
-   assert( parsedDocs != -1 && "mq_open() failed" );
-
-   EnglishDictChecker englishDictChecker( argv[ 1 ] );
+      };
+   sigactionTERM.sa_handler = WorkerSIGTERMHandler;
+   sigactionTERM.sa_flags =
+      0; // no SA_RESTART so that wait() can be interrupted
+   sigaction( SIGTERM, &sigactionTERM, nullptr );
 
    char buf[ MAX_URL_LEN + 1 ];
-   for ( int numIndexedPages = 0;  ;  )
+   for ( int numIndexedPages = 0;  !die;  )
       {
+
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
+      if ( sz == -1 && errno == EINTR )
+         {
+         die = true;
+         break;
+         }
       assert( sz != -1 && "mq_receive() failed" );
       buf[ sz ] = '\0';
       String url( buf );
