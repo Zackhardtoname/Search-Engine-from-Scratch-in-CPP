@@ -1,5 +1,13 @@
 #!/bin/bash
 DIR=$(pwd)
+if [[ $DIR != *"/scooble_search/bin"* ]]; then
+	echo "Error: You are not in the /scooble_search/bin directory!"
+	echo "This bash script is set to use filepaths realative to the bin folder."
+	echo "Change your directory with:"
+	echo "	  cd [path-to-scooble_search]/scooble_search/bin"
+	echo "Then run ./build directly from the bin directory instead."
+	exit 1
+fi
 BUILD_DIR="/tmp/scb_build"
 mkdir ${BUILD_DIR}
 cd ${BUILD_DIR} || exit
