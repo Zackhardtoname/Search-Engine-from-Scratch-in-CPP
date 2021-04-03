@@ -1,0 +1,11 @@
+#!/bin/bash
+DIR=$(pwd)
+if [[ $DIR != *"/scooble_search/bin"* ]]; then
+	echo "Error: You are not in the /scooble_search/bin directory!"
+	echo "This bash script is set to use filepaths realative to the bin folder."
+	echo "Change your directory with:"
+	echo "	  cd [path-to-scooble_search]/scooble_search/bin"
+	echo "Then run ./clean directly from the bin directory instead."
+	exit 1
+fi
+rm -rf crawler-group crawlerCmdline crawler-controller crawler-parser-worker create_test_chunk dummy-filter dummy-indexer filter-worker handle-mq make-bloom-file read-chunk read-dump-file seeder
