@@ -144,17 +144,25 @@ void *FilterWorker::threadFilteredUrls( void *inst )
       }
 
    // graceful exit
+   pthread_mutex_lock( &self.lockFilteredUrls );
 
-   // has to be a pointer because we transfer ownership to the offload function
-   auto *save = new Vector<ParsedUrl>;
-   while ( !self.filteredUrls.empty() )
+   if ( self.filteredUrls.empty() )
+      std::cout << "no URLs pending, skipping offloading" << std::endl;
+   else
       {
-      save->pushBack( std::move( self.filteredUrls.front() ) );
-      self.filteredUrls.popFront();
+      // has to be a pointer because we transfer ownership to the offload
+      // function
+      auto *save = new Vector<ParsedUrl>;
+      while ( !self.filteredUrls.empty() )
+         {
+         save->pushBack( std::move( self.filteredUrls.front() ) );
+         self.filteredUrls.popFront();
+         }
+
+      threadOffloadUrls( save );
       }
 
-   threadOffloadUrls( save );
-
    // kill my other brothers as well
+   std::cout << "gracefully exiting" << std::endl;
    exit( 0 );
    }
