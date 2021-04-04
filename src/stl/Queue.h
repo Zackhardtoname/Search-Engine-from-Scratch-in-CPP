@@ -6,6 +6,7 @@
 #define SCOOBLE_SEARCH_QUEUE_H
 
 #include "Vector.h"
+#include <cassert>
 
 namespace scb
    {
@@ -27,6 +28,7 @@ template <typename T> class Queue
 
       T &front()
          {
+         assert( !empty() );
          return data[ start ];
          }
 

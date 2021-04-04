@@ -218,7 +218,6 @@ class String
          str.popBack();
          for ( int i = 0;  i < other.str.size();  i++ )
             str.pushBack( other.str[ i ] );
-         str.pushBack( '\0' );
 
          return *this;
          }
