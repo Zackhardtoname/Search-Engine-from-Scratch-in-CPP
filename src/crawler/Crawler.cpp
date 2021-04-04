@@ -24,9 +24,9 @@ String FetchUrl( const String &url )
          close( infoFd[ 0 ] );
       } );
 
-   pid_t pid = fork();
-   assert( pid != -1 && "fork() failed" );
-   if ( pid == 0 )
+   pid_t childPID = fork();
+   assert( childPID != -1 && "fork() failed" );
+   if ( childPID == 0 )
       {
       // child
       dup2( contentFd[ 1 ], STDOUT_FILENO ); // redirect stdout to content
@@ -94,10 +94,20 @@ String FetchUrl( const String &url )
       }
 
    int stat;
-   while ( waitpid( pid, &stat, 0 ) == -1 )
+   pid_t waited;
+   while ( true )
       {
-      if ( errno != EINTR )
-         assert( !"waitpid() failed" );
+      waited = waitpid( childPID, &stat, 0 );
+      if ( waited == -1 )
+         {
+         if ( errno != EINTR )
+            assert( !"waitpid() failed" );
+         }
+      else
+         {
+         assert( waited == childPID );
+         break;
+         }
       }
 
    int retCode = WEXITSTATUS( stat );
