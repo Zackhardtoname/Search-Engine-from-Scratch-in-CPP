@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo apt-get install g++ cmake libssl-dev
+sudo apt-get -y install g++ cmake libssl-dev
 sleep 1
 # TODO: Make sure to attach a disk to the google cloud machine to prevent this
 # from erroring

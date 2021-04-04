@@ -10,8 +10,8 @@ if [[ $DIR != *"/scooble_search/bin"* ]]; then
 fi
 
 # Kill all the indexer, filter, and crawler processes
-pkill -9 dummy-indexer &> /dev/null
-pkill -9 filter-worker &> /dev/null
-pkill -9 crawler-group &> /dev/null
+pkill -SIGINT dummy-indexer &> /dev/null
+pkill -SIGINT filter-worker &> /dev/null
+pkill -SIGINT crawler-group &> /dev/null
 
 echo "The crawler has been paused. To continue, run ./continue-crawlers"
