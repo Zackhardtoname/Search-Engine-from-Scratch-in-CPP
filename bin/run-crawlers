@@ -34,9 +34,9 @@ echo " --- Step 3) Setup indexer --- "
 
 echo " --- Step 4) Start filter worker --- "
 # Start up the filter worker with thte remote config, bloom file, and worker count.
-# TODO: Determine number of machines we are using and ip addresses of them.
-# TODO: Put the machine namespaces in a file.
-./filter-worker [add remote config file here] bloom [add num_servers - 1] &
+# TODO: Determine number of machines we are using and ip addresses of them. Also
+# update the filter-config.txt file appropriately.
+./filter-worker filter-config.txt bloom 0 &
 
 echo " --- Step 5) Start running the crawlers --- "
 # Start up all the crawler workers to begin crawling.
