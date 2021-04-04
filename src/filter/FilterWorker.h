@@ -118,6 +118,8 @@ class FilterWorker
       static Robotstxt *const ROBOTS_TXT_PENDING, *const DummyRobotstxt;
       // TODO: use our own hashmap
       std::unordered_map<scb::String, Robotstxt *, StringHash> robotstxtMap;
+      std::unordered_map<scb::String, pthread_cond_t *, StringHash>
+         pendingRobotstxtCond;
 
       // Query robots.txt to check if a URL is allowed
       // This will try to download robots.txt if not already in cache.

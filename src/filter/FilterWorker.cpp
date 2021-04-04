@@ -65,9 +65,15 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
    if ( !robotstxtMap.count( url.Host ) )
       {
       std::cout << "no robots.txt for " << url.Host << std::endl;
+
+      // we'll take the responsibility of downloading it, set as pending
       robotstxtMap[ url.Host ] = ROBOTS_TXT_PENDING;
-      pthread_mutex_unlock(
-         &lockRobotstxtMap ); // unlock to allow other threads to proceed
+      auto *cond = new pthread_cond_t;
+      pthread_cond_init( cond, nullptr );
+      pendingRobotstxtCond[ url.Host ] = cond;
+
+      // unlock to allow other threads to proceed
+      pthread_mutex_unlock( &lockRobotstxtMap );
 
       // if either downloading failed, or parsing failed, use dummy robots.txt
       try
@@ -86,22 +92,25 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
          std::cout << "robots.txt for " << url.Host << " failed: " << ex.what()
                    << std::endl;
          }
+
+      // signal other threads
+      pthread_cond_broadcast( pendingRobotstxtCond[ url.Host ] );
+      pendingRobotstxtCond.erase( url.Host );
       }
 
-   // now that we can be sure that we have a robots.txt
-   auto *robotstxt = robotstxtMap[ url.Host ];
+   // now that we can be sure that we have a robots.txt,
+   // or at least a pending one
+   Robotstxt *robotstxt = nullptr;
 
    // while pending, sleep until it is ready
-   while ( robotstxt == ROBOTS_TXT_PENDING )
+   while ( ( robotstxt = robotstxtMap[ url.Host ] ) == ROBOTS_TXT_PENDING )
       {
-      // unlock to allow other threads to proceed while we wait
-      pthread_mutex_unlock( &lockRobotstxtMap );
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
-      usleep( 500 * 1000 );
-      pthread_mutex_lock( &lockRobotstxtMap );
-      robotstxt = robotstxtMap[ url.Host ];
+      auto *cond = pendingRobotstxtCond[ url.Host ];
+      pthread_cond_wait( cond, &lockRobotstxtMap );
       }
 
+   // check if allowed
    bool allowed = robotstxt->Allow( url.CompleteUrl );
    pthread_mutex_unlock( &lockRobotstxtMap );
    return allowed;
