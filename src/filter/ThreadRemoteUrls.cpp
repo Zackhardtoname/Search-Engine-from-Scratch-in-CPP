@@ -113,7 +113,7 @@ int FilterWorker::connectTo( const ParsedUrl &addr )
       for ( int i = 0;  nEvents != 0 && i < self.worldSize;  i++ )
          if ( events[ i ].revents )
             {
-            //            nEvents--;
+            nEvents--;
             if ( ( POLLHUP | POLLERR ) & events[ i ].revents )
                {
                // remote worker disconnected, try to reconnect

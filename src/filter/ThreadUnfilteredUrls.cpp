@@ -46,8 +46,5 @@
       pthread_mutex_lock( &self.lockFilteredUrls );
       self.filteredUrls.pushBack( std::move( url ) );
       pthread_mutex_unlock( &self.lockFilteredUrls );
-
-      // notify the downstream
-      sem_post( &self.semFilteredUrls );
       }
    }

@@ -13,6 +13,7 @@
 #include "BloomFilter.h"
 #include "Robotstxt.h"
 
+#include <atomic>
 #include <mqueue.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -92,7 +93,6 @@ class FilterWorker
       // frontier mqueue.
       Queue<ParsedUrl> filteredUrls;
       pthread_mutex_t lockFilteredUrls{};
-      sem_t semFilteredUrls{};
       mqd_t qFrontier = -1;
       pthread_t pthFilteredUrls{};
 
@@ -133,7 +133,7 @@ class FilterWorker
       void unblock();
 
    public:
-      void run();
+      void Run();
 
       FilterWorker( const char *remoteConfigFile, int rank,
                     const char *bloomFile );

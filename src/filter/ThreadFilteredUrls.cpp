@@ -2,6 +2,7 @@
 // Created by youh on 4/3/21.
 //
 
+#include <csignal>
 #include <ctime>
 #include <fstream>
 #include <unistd.h>
@@ -34,11 +35,32 @@ void *FilterWorker::threadOffloadUrls( void *p )
    return nullptr;
    }
 
+std::atomic<bool> gotSIGINT = false;
+void SIGINTHandler( int )
+   {
+   gotSIGINT.store( true );
+   }
+
 void *FilterWorker::threadFilteredUrls( void *inst )
    {
+   // unmask SIGINT such that only this thread can get that signal
+   sigset_t sigset;
+   sigemptyset( &sigset );
+   sigaddset( &sigset, SIGINT );
+   pthread_sigmask( SIG_UNBLOCK, &sigset, nullptr );
+
+   // set handler for SIGINT so that we stop the loop on SIGINT
+   struct sigaction sigactionINT
+      {
+      };
+   sigactionINT.sa_handler = SIGINTHandler;
+   sigactionINT.sa_flags = 0;
+   sigaction( SIGINT, &sigactionINT, nullptr );
+
+   // actual work
    auto &self = *static_cast<FilterWorker *>( inst );
    bool blocked = false; // if mqueue is full and blocks us
-   while ( true )
+   while ( !gotSIGINT.load() )
       {
       pthread_mutex_lock( &self.lockFilteredUrls );
 
@@ -120,4 +142,19 @@ void *FilterWorker::threadFilteredUrls( void *inst )
 
       usleep( 200 * 1000 ); // wait until next tick
       }
+
+   // graceful exit
+
+   // has to be a pointer because we transfer ownership to the offload function
+   auto *save = new Vector<ParsedUrl>;
+   while ( !self.filteredUrls.empty() )
+      {
+      save->pushBack( std::move( self.filteredUrls.front() ) );
+      self.filteredUrls.popFront();
+      }
+
+   threadOffloadUrls( save );
+
+   // kill my other brothers as well
+   exit( 0 );
    }

@@ -25,8 +25,14 @@ Robotstxt *const FilterWorker::ROBOTS_TXT_PENDING =
 Robotstxt *const FilterWorker::DummyRobotstxt =
    new Robotstxt( "User-agent: *\n" );
 
-void FilterWorker::run()
+void FilterWorker::Run()
    {
+   // mask SIGINT such that our children have that masked by default
+   sigset_t sigset;
+   sigemptyset( &sigset );
+   sigaddset( &sigset, SIGINT );
+   pthread_sigmask( SIG_BLOCK, &sigset, nullptr );
+
    // spawn the threads
    pthread_create( &pthNewLinksMqueue, nullptr, threadNewLinksMqueue, this );
    pthread_create( &pthRemoteWorkers, nullptr, threadRemoteWorkers, this );
@@ -105,9 +111,6 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
                             const char *bloomFile )
     : bloomfilter( bloomFile )
    {
-   // according to SSL document, we should ignore this
-   signal( SIGPIPE, SIG_IGN );
-
    // open the queues
    qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDONLY );
    if ( qNewLinks == -1 )
@@ -133,7 +136,6 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
            "mutex_init() failed" );
    assert( pthread_mutex_init( &lockUnfilteredUrls, nullptr ) == 0 &&
            "mutex_init() failed" );
-   assert( sem_init( &semFilteredUrls, 0, 0 ) != -1 && "sem_init() failed" );
    assert( pthread_mutex_init( &lockRobotstxtMap, nullptr ) == 0 &&
            "mutex_init() failed" );
 
@@ -191,7 +193,14 @@ int main( int argc, char **argv )
       return 1;
       }
 
-   FilterWorker worker( argv[ 1 ], strtol( argv[ 3 ], nullptr, 10 ),
-                        argv[ 2 ] );
-   worker.run();
+   char *endptr;
+   int rank = strtol( argv[ 3 ], &endptr, 10 );
+   if ( *endptr )
+      {
+      fprintf( stderr, "cannot parse rank %s\n", argv[ 3 ] );
+      return 1;
+      }
+
+   FilterWorker worker( argv[ 1 ], rank, argv[ 2 ] );
+   worker.Run();
    }
