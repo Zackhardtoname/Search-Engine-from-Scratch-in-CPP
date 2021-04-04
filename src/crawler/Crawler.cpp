@@ -24,9 +24,8 @@ String FetchUrl( const String &url )
          close( infoFd[ 0 ] );
       } );
 
-   pid_t childPID = fork();
-   assert( childPID != -1 && "fork() failed" );
-   if ( childPID == 0 )
+   ForkedChild curlProc;
+   if ( curlProc.IsChild() )
       {
       // child
       dup2( contentFd[ 1 ], STDOUT_FILENO ); // redirect stdout to content
@@ -63,6 +62,7 @@ String FetchUrl( const String &url )
    close( contentFd[ 1 ] );
    close( infoFd[ 1 ] );
 
+   // read stdout output
    scb::String content;
    char buf[ 2000 ];
    while ( true )
@@ -75,7 +75,8 @@ String FetchUrl( const String &url )
       content += String( buf, got );
       }
 
-   scb::String mime;
+   // read stderr output
+   scb::String meta;
    while ( true )
       {
       int got = read( infoFd[ 0 ], buf, sizeof( buf ) );
@@ -83,40 +84,23 @@ String FetchUrl( const String &url )
          break;
       if ( got == -1 )
          throw std::runtime_error( strerror( errno ) );
-      mime += String( buf, got );
+      meta += String( buf, got );
       }
 
-   if ( !mime.empty() && !mime.hasPrefixCaseInsensitive( "text" ) )
+   if ( !meta.empty() && !meta.hasPrefixCaseInsensitive( "text" ) )
       {
       scb::String errMsg = "not a text/* file, actually ";
-      errMsg += mime;
+      errMsg += meta;
       throw std::runtime_error( errMsg.cstr() );
       }
 
-   int stat;
-   pid_t waited;
-   while ( true )
-      {
-      waited = waitpid( childPID, &stat, 0 );
-      if ( waited == -1 )
-         {
-         if ( errno != EINTR )
-            assert( !"waitpid() failed" );
-         }
-      else
-         {
-         assert( waited == childPID );
-         break;
-         }
-      }
-
-   int retCode = WEXITSTATUS( stat );
+   int retCode = curlProc.Wait();
    if ( retCode != 0 )
       {
       scb::String errMsg = "curl error: ";
       errMsg += std::to_string( retCode ).c_str();
       errMsg += " extra: ";
-      errMsg += mime;
+      errMsg += meta;
       throw std::runtime_error( errMsg.cstr() );
       }
 
