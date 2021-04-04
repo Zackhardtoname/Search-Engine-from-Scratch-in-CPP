@@ -61,7 +61,7 @@ class FilterWorker
       [[noreturn]] static void *threadRemoteWorkers( void * );
 
       /// Thread that handles: unfilteredUrls -> ( remoteUrls | filteredUrls )
-      static constexpr int NUM_FILTER_THREADS = 10;
+      static constexpr int NUM_FILTER_THREADS = 50;
       Queue<String> unfilteredUrls; // URLs waiting to be filtered.
       pthread_mutex_t lockUnfilteredUrls{};
       sem_t semUnfilteredUrls{};
