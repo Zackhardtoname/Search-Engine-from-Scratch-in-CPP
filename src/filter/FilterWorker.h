@@ -123,7 +123,7 @@ class FilterWorker
       // for when we cannot download/parse the robots.txt for a website.
       static const Robotstxt DummyRobotstxt;
       // TODO: use our own containers
-      static const int MAX_NUM_ROBOTSTXT = 5000;
+      static const int MAX_NUM_ROBOTSTXT = 50000;
       struct LRUEntry
          {
             String Host;
