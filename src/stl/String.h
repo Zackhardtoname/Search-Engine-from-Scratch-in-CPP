@@ -23,6 +23,12 @@ class String
          str.pushBack( '\0' );
          }
 
+      String(const char c)
+         {
+         str.pushBack( c );
+         str.pushBack( '\0' );
+         }
+
       String( const char *cstr )
          {
          while ( *cstr )
