@@ -19,7 +19,9 @@ void *FilterWorker::threadNewLinksMqueue( void *inst )
          }
 
       String url( buf, sz );
+#ifndef NDEBUG
       std::cout << "from local mq: " << url << std::endl;
+#endif
 
       self.handleUnfilteredLink( url );
       }

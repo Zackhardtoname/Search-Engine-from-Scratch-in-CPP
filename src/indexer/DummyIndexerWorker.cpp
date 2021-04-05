@@ -58,7 +58,7 @@ int main( int argc, char **argv )
          assert( written == 1 && "fwrite() failed" );
          curSize += sizeof( int32_t ) + msgSize;
 
-         if ( numDocs % 10000 == 0 )
+         if ( numDocs % 2000 == 0 )
             std::cout << "doc count: " << numDocs << std::endl;
          }
 

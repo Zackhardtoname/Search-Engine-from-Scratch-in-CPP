@@ -99,7 +99,9 @@ void *FilterWorker::threadFilteredUrls( void *inst )
          // this should not happen, but check just in case
          if ( url.CompleteUrl.size() > MAX_URL_LEN )
             {
+#ifndef NDEBUG
             std::cout << "URL too long: " << url.CompleteUrl << std::endl;
+#endif
             continue;
             }
 
@@ -134,7 +136,9 @@ void *FilterWorker::threadFilteredUrls( void *inst )
          // update rate count
          hostCounter.Increment( url.Host );
 
+#ifndef NDEBUG
          std::cout << "posted to frontier: " << url.CompleteUrl << std::endl;
+#endif
          }
 
       pthread_mutex_unlock( &self.lockFilteredUrls );

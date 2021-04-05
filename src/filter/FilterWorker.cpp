@@ -87,7 +87,9 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
          // filter by bloom filter
          if ( args->self->markIfNotSeen( pendingUrl.CompleteUrl ) )
             {
+#ifndef NDEBUG
             std::cout << "seen: " << pendingUrl.CompleteUrl << std::endl;
+#endif
             continue;
             }
 
@@ -120,7 +122,9 @@ void FilterWorker::handleUnfilteredLink( const String &link )
    int rightfulHandler = url.Host.hash() % worldSize;
    if ( rightfulHandler != rank )
       {
+#ifndef NDEBUG
       std::cout << "not our host: " << url.Host << std::endl;
+#endif
       queueRemoteUrl( rightfulHandler, url.CompleteUrl );
       return;
       }
@@ -131,7 +135,9 @@ void FilterWorker::handleUnfilteredLink( const String &link )
    // if no robots.txt yet, fetch and set in a new thread
    if ( !robotstxtMap.count( url.Host ) )
       {
+#ifndef NDEBUG
       std::cout << "no robots.txt for " << url.Host << std::endl;
+#endif
 
       // we'll take the responsibility of downloading it, so set as pending
       robotstxtMap[ url.Host ] =
@@ -156,7 +162,9 @@ void FilterWorker::handleUnfilteredLink( const String &link )
    // handle it
    if ( cache.Pending )
       {
+#ifndef NDEBUG
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
+#endif
       cache.WaitingURLs.emplaceBack( std::move( url ) );
       pthread_mutex_unlock( &lockRobotstxtMap );
       return;
@@ -170,7 +178,9 @@ void FilterWorker::handleUnfilteredLink( const String &link )
       {
       if ( markIfNotSeen( url.CompleteUrl ) )
          {
+#ifndef NDEBUG
          std::cout << "seen: " << url.CompleteUrl << std::endl;
+#endif
          return;
          }
 
@@ -181,8 +191,10 @@ void FilterWorker::handleUnfilteredLink( const String &link )
       }
    else
       {
+#ifndef NDEBUG
       std::cout << "not allowed by robots.txt: " << url.CompleteUrl
                 << std::endl;
+#endif
       return;
       }
    }

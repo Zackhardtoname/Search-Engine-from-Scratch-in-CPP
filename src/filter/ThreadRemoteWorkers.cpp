@@ -72,7 +72,9 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
             {
             // found a null-terminated string at buf[start...i], where buf[i] is
             // NULL
+#ifndef NDEBUG
             std::cout << "from remote: " << buf + start << std::endl;
+#endif
             args->self->handleUnfilteredLink( String( buf + start, buf + i ) );
 
             // resume searching from buf[i+1]
