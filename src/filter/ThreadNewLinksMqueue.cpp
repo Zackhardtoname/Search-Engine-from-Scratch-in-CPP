@@ -22,7 +22,9 @@ void *FilterWorker::threadNewLinksMqueue( void *inst )
       std::cout << "from local mq: " << buf << std::endl;
 
       pthread_mutex_lock( &self.lockUnfilteredUrls );
-      self.unfilteredUrls.pushBack( String( buf ) );
+      String bufStr( buf );
+      bufStr.shrinkToFit();
+      self.unfilteredUrls.pushBack( std::move( bufStr ) );
       pthread_mutex_unlock( &self.lockUnfilteredUrls );
 
       // notify the downstream

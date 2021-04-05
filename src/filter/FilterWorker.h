@@ -14,6 +14,7 @@
 #include "Robotstxt.h"
 
 #include <atomic>
+#include <list>
 #include <mqueue.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -61,7 +62,7 @@ class FilterWorker
       [[noreturn]] static void *threadRemoteWorkers( void * );
 
       /// Thread that handles: unfilteredUrls -> ( remoteUrls | filteredUrls )
-      static constexpr int NUM_FILTER_THREADS = 50;
+      static constexpr int NUM_FILTER_THREADS = 20;
       Queue<String> unfilteredUrls; // URLs waiting to be filtered.
       pthread_mutex_t lockUnfilteredUrls{};
       sem_t semUnfilteredUrls{};
@@ -115,9 +116,27 @@ class FilterWorker
       // Sentinels for a pending robots.txt (when many threads want to
       // download the same one at the same time), and a dummy robots.txt,
       // for when we cannot download/parse the robots.txt for a website.
-      static Robotstxt *const ROBOTS_TXT_PENDING, *const DummyRobotstxt;
-      // TODO: use our own hashmap
-      std::unordered_map<scb::String, Robotstxt *, StringHash> robotstxtMap;
+      static const Robotstxt DummyRobotstxt;
+      // TODO: use our own containers
+      const int MAX_NUM_ROBOTSTXT = 5000;
+      struct LRUEntry
+         {
+            String Host;
+            Robotstxt robotstxt;
+
+            LRUEntry( String host, Robotstxt rb )
+                : Host( std::move( host ) ), robotstxt( ( std::move( rb ) ) )
+               {
+               }
+         };
+      std::list<LRUEntry> robotstxtLRU;
+
+      struct CacheInfo
+         {
+            bool Pending;
+            decltype( robotstxtLRU )::iterator Pointer;
+         };
+      std::unordered_map<String, CacheInfo, StringHash> robotstxtMap;
       pthread_cond_t pendingRobotstxtCond;
 
       // Query robots.txt to check if a URL is allowed

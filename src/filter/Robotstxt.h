@@ -34,6 +34,7 @@ struct CrawlingRule
 
       CrawlingRule( const String &path, bool allowed );
       CrawlingRule( CrawlingRule && ) = default;
+      CrawlingRule( const CrawlingRule & ) = default;
 
       /// If this rule matches the given PATH.
       /// Do not pass in protocol, domain, and port.

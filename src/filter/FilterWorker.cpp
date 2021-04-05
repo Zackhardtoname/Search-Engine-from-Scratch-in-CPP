@@ -20,10 +20,7 @@
 using scb::String;
 using scb::Vector;
 
-Robotstxt *const FilterWorker::ROBOTS_TXT_PENDING =
-   reinterpret_cast<Robotstxt *const>( 1 );
-Robotstxt *const FilterWorker::DummyRobotstxt =
-   new Robotstxt( "User-agent: *\n" );
+const Robotstxt FilterWorker::DummyRobotstxt( "User-agent: *\n" );
 
 void FilterWorker::Run()
    {
@@ -67,9 +64,7 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
       std::cout << "no robots.txt for " << url.Host << std::endl;
 
       // we'll take the responsibility of downloading it, set as pending
-      robotstxtMap[ url.Host ] = ROBOTS_TXT_PENDING;
-      auto *cond = new pthread_cond_t;
-      pthread_cond_init( cond, nullptr );
+      robotstxtMap[ url.Host ] = CacheInfo{ .Pending = true };
 
       // unlock to allow other threads to proceed
       pthread_mutex_unlock( &lockRobotstxtMap );
@@ -78,18 +73,28 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
       try
          {
          auto result = FetchUrl( url.Normalize( "robots.txt" ) );
-         auto *robotstxt = new Robotstxt( result );
+         Robotstxt robotstxt( result ); // warning: this may throw
          pthread_mutex_lock( &lockRobotstxtMap );
-         robotstxtMap[ url.Host ] = robotstxt;
+         robotstxtLRU.emplace_front( url.Host, std::move( robotstxt ) );
          std::cout << "robots.txt for " << url.Host << " downloaded and parsed"
                    << std::endl;
          }
       catch ( std::exception &ex )
          {
          pthread_mutex_lock( &lockRobotstxtMap );
-         robotstxtMap[ url.Host ] = DummyRobotstxt;
+         robotstxtLRU.emplace_front( url.Host, DummyRobotstxt );
          std::cout << "robots.txt for " << url.Host << " failed: " << ex.what()
                    << std::endl;
+         }
+
+      // here, the robotstxtLRU.front() must be a robots.txt, albeit maybe dummy
+      robotstxtMap[ url.Host ] = CacheInfo{ false, robotstxtLRU.begin() };
+
+      // LRU evict
+      if ( robotstxtLRU.size() > MAX_NUM_ROBOTSTXT )
+         {
+         robotstxtMap.erase( robotstxtLRU.back().Host );
+         robotstxtLRU.pop_back();
          }
 
       // signal other threads
@@ -98,17 +103,36 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
 
    // now that we can be sure that we have a robots.txt,
    // or at least a pending one
-   Robotstxt *robotstxt = nullptr;
+   auto cache = robotstxtMap.end();
 
    // while pending, sleep until it is ready
-   while ( ( robotstxt = robotstxtMap[ url.Host ] ) == ROBOTS_TXT_PENDING )
+   while ( true )
       {
+      cache = robotstxtMap.find( url.Host );
+      // it's possible for a pending robotstxt to be evicted, consider
+      // A             B            C
+      // Download
+      //         Wait pending
+      // Done
+      // Broadcast
+      //                        10000x operations
+      //                        **Evict**
+      //            Scheduled
+      // Therefore, we must check again for the existence of the entry,
+      // and if not found, do the whole process again.
+      if ( cache == robotstxtMap.end() )
+         {
+         pthread_mutex_unlock( &lockRobotstxtMap );
+         return allowedByRobotstxt( url );
+         }
+      if ( !cache->second.Pending )
+         break;
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
       pthread_cond_wait( &pendingRobotstxtCond, &lockRobotstxtMap );
       }
 
    // check if allowed
-   bool allowed = robotstxt->Allow( url.CompleteUrl );
+   bool allowed = cache->second.Pointer->robotstxt.Allow( url.CompleteUrl );
    pthread_mutex_unlock( &lockRobotstxtMap );
    return allowed;
    }
