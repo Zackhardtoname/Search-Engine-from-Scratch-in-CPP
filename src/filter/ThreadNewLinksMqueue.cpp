@@ -18,8 +18,9 @@ void *FilterWorker::threadNewLinksMqueue( void *inst )
          exit( 1 );
          }
 
-      std::cout << "from local mq: " << buf << std::endl;
+      String url( buf, sz );
+      std::cout << "from local mq: " << url << std::endl;
 
-      self.handleUnfilteredLink( String( buf, sz ) );
+      self.handleUnfilteredLink( url );
       }
    }

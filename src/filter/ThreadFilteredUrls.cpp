@@ -107,7 +107,6 @@ void *FilterWorker::threadFilteredUrls( void *inst )
          if ( hostCounter.Get( url.Host ) >= self.getHostRateLimit( url.Host ) )
             {
             self.filteredUrls.pushBack( url );
-            std::cout << "rate limit hit for: " << url.CompleteUrl << std::endl;
             continue;
             }
 

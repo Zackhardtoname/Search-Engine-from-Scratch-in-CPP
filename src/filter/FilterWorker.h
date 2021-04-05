@@ -37,8 +37,17 @@ class FilterWorker
 
       /// Thread that handles: newLinks mqueue -> ?
       mqd_t qNewLinks = -1;
-      static constexpr int NUM_NEW_LINKS_THREADS = 50;
-      pthread_t pthNewLinksMqueue[ NUM_NEW_LINKS_THREADS ] = {};
+      pthread_t pthNewLinksMqueue;
+
+      struct FetchRobotstxtArgs
+         {
+            FilterWorker *self;
+            ParsedUrl Url;
+         };
+
+      // Thread to fetch robots.txt and handle URLs pending on it
+      // param [this thread takes ownership]: FetchRobotstxtArgs*
+      static void *threadFetchRobotstxt( void * );
 
       // param: FilterWorker::this
       [[noreturn]] static void *threadNewLinksMqueue( void * );
@@ -51,7 +60,7 @@ class FilterWorker
       struct RemoteWorkerConnectionArgs
          {
             FilterWorker *self;
-            int connFd;
+            int ConnFd;
          };
 
       // Handler thread for each remote worker connection
@@ -114,7 +123,7 @@ class FilterWorker
       // for when we cannot download/parse the robots.txt for a website.
       static const Robotstxt DummyRobotstxt;
       // TODO: use our own containers
-      const int MAX_NUM_ROBOTSTXT = 5000;
+      static const int MAX_NUM_ROBOTSTXT = 5000;
       struct LRUEntry
          {
             String Host;
@@ -130,15 +139,11 @@ class FilterWorker
       struct CacheInfo
          {
             bool Pending;
+            // a list of urls waiting for this pending robots.txt
+            Vector<ParsedUrl> WaitingURLs;
             decltype( robotstxtLRU )::iterator Pointer;
          };
       std::unordered_map<String, CacheInfo, StringHash> robotstxtMap;
-      pthread_cond_t pendingRobotstxtCond;
-
-      // Query robots.txt to check if a URL is allowed
-      // This will try to download robots.txt if not already in cache.
-      // Blocking!
-      bool allowedByRobotstxt( const ParsedUrl &url );
 
       Bloomfilter bloomfilter;
 

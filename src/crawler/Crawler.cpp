@@ -37,7 +37,7 @@ String FetchUrl( const String &url )
       close( infoFd[ 1 ] );
 
       execl(
-         "/usr/bin/curl",
+         "/usr/bin/curl", "curl",
          "--disable",               // don't read .curlrc
          "--fail",                  // error whenever not HTTP 200 OK
          "--silent",                // no progress bar to mess up stderr
@@ -46,6 +46,7 @@ String FetchUrl( const String &url )
          "--max-redirs", "10",      // at most 10 times
          "--connect-timeout", "10", // 10 sec connect timeout
          "--max-time", "30",        // 30 sec total timeout
+         "--insecure",              // allow downgrade
          "--user-agent",
          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
          "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu",

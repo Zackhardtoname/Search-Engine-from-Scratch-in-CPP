@@ -49,7 +49,7 @@ void *FilterWorker::threadRemoteWorkers( void *inst )
       pthread_t handlerThread;
       auto *args = new RemoteWorkerConnectionArgs{
          .self = static_cast<FilterWorker *>( inst ),
-         .connFd = fd,
+         .ConnFd = fd,
       };
       pthread_create( &handlerThread, nullptr, threadRemoteWorkerConnection,
                       args );
@@ -64,7 +64,7 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
 
    char buf[ MAX_URL_LEN + 1 ];
    int got = 0;
-   while ( auto sz = recv( args->connFd, buf + got, sizeof( buf ) - got, 0 ) )
+   while ( auto sz = recv( args->ConnFd, buf + got, sizeof( buf ) - got, 0 ) )
       {
       int start = 0;
       for ( int i = got;  i < got + sz;  i++ )
@@ -93,6 +93,6 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
          break;
       }
 
-   close( args->connFd );
+   close( args->ConnFd );
    return nullptr;
    }
