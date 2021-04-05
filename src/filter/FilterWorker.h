@@ -104,7 +104,7 @@ class FilterWorker
 
       pthread_mutex_t lockRobotstxtMap;
       static Robotstxt *const ROBOTS_TXT_PENDING, *const DummyRobotstxt;
-      std::unordered_map<scb::String, Robotstxt *, StringHash>
+      std::unordered_map<scb::String, Robotstxt *, scb::StringHash>
          robotstxtMap; // TODO: use our own hashmap
       bool allowedByRobotstxt( const ParsedUrl &url );
 

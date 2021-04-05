@@ -61,7 +61,7 @@ template <typename Key, typename Value> class Bucket
             // reached end of chain, append
             else if ( !b->next )
                {
-               b->next = new Bucket( k, hashVal, v );
+               b->next = new Bucket( k, v, hashVal );
                ++numUniqueWords;
                return true; // appended to chain
                }
@@ -71,6 +71,9 @@ template <typename Key, typename Value> class Bucket
                b = b->next;
                }
             }
+
+            assert (false && "should never run");
+            return false;
          }
 
       void print()
@@ -130,16 +133,13 @@ template <typename Key, typename Value, typename Hash> class HashTable
       // if not in table, create new bucket with default value
       Value& operator[]( const Key k )
          {
-         std::cout << "WORD: " << k << std::endl;
          size_t keyHash = hash( k );
          size_t index = keyHash % numBuckets;
          
-         std::cout << "IDX: " << index << std::endl;
          Bucket<Key, Value> *bucket = buckets[ index ];
          // if nothing at this bucket, insert new bucket here
          if ( !bucket )
             {
-            std::cout << "NEW: " << Value() << std::endl;
             buckets[ index ] = new Bucket<Key, Value>( k, Value(), keyHash );
             ++numUniqueWords;
             }
@@ -148,7 +148,6 @@ template <typename Key, typename Value, typename Hash> class HashTable
          if ( find( k, index ) == end() )
          {
             buckets[ index ]->insert( k, Value(), keyHash, numUniqueWords );
-            std::cout << "CHAIN: " << Value() << std::endl;
          }
          // otherwise already in table
          return buckets[ index ]->tuple.value;

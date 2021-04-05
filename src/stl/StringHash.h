@@ -1,8 +1,9 @@
 #ifndef SCOOBLE_STRINGHASH
-#define STRINGHASH
+#define SCOOBLE_STRINGHASH
 
 #include "String.h"
 
+namespace scb {
 struct StringHash {
    size_t operator()(const scb::String& s) {
       const char* data = s.cstr();
@@ -18,5 +19,7 @@ struct StringHash {
       return hash;
    }
 };
+
+}
 
 #endif // SCOOBLE_STRINGHASH

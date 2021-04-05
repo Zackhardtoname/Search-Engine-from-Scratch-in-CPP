@@ -10,10 +10,12 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "../stl/HashTable.h"
+#include "../stl/StringHash.h"
 #include "ContiguousChunk.h"
 #include "IndexerIngest.h"
 
 using scb::String;
+using scb::StringHash;
 using scb::Vector;
 
 struct Document
@@ -30,7 +32,7 @@ class IndexChunk
       size_t EstSize = 0;
 
       Vector<Document> Documents;
-      scb::HashTable<const char*, Vector<uint64_t> > PostingLists;
+      scb::HashTable<scb::String, Vector<uint64_t>, StringHash> PostingLists;
 
       void Ingest( const IndexerIngest &ingest );
 

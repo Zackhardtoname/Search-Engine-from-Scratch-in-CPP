@@ -13,9 +13,14 @@
 #include "../stl/UniquePointer.h"
 #include "../stl/HashTable.h"
 #include "../stl/HashBlob.h"
+#include "../stl/StringHash.h"
+#include "../stl/utils.h"
 #include "ContiguousChunk.h"
 #include "IndexChunk.h"
 #include "VLQ.h"
+
+const scb::String DocEnd = scb::String(DocEndDecorator);
+const scb::String TitleDec = scb::String(TitleDecorator);
 
 void IndexChunk::writeToDisk( const char *filename )
    {
@@ -58,14 +63,14 @@ void IndexChunk::writeToDisk( const char *filename )
       }
 
    // dictionary of words -> posting list offset
-   scb::HashTable<const char*, size_t> postingListOffsetMap;
+   scb::HashTable<scb::String, size_t, scb::StringHash> postingListOffsetMap;
 
    // make posting lists, and fill in the offset mapping
    String serializedPostingLists;
-   for ( scb::Tuple<const char*, scb::Vector<uint64_t>> &tuple: PostingLists )
+   for ( scb::Tuple<scb::String, scb::Vector<uint64_t>> &tuple: PostingLists )
       {
       // tuple.key is the word
-      if(strlen(tuple.key) == 0) {
+      if(tuple.key.length() == 0) {
          int c = 3;
          ++c;
       }
@@ -133,10 +138,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    // record document words
    for ( const String &word : ingest.Words )
    {
-      // ! This is the evil line. it inserts a pointer into the PostingLists HashTable
-      // ! It is evil because once Ingest is called, we  no longer have a guarantee that the 
-      // ! input ingest object will exist, so the pointer will become invalid.
-      auto &lst = PostingLists[ word.cstr() ];
+      auto &lst = PostingLists[ word ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
          EstSize += VLQ::Length( post );
@@ -149,9 +151,9 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    for ( String &word : ingest.TitleWords )
       {
 
-      word += "@";
+      word = TitleDec + word;
 
-      auto &lst = PostingLists[ word.cstr() ];
+      auto &lst = PostingLists[ word ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
          EstSize += VLQ::Length( post );
@@ -159,6 +161,9 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
          EstSize += VLQ::Length( post - lst.back() );
       lst.pushBack( post );
       }
+   
+   // Record document end
+   PostingLists[ DocEnd ];
 
    // record document metadata
    Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );

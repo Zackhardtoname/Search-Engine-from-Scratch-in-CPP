@@ -19,6 +19,7 @@
 #include "../stl/StringHash.h"
 
 using scb::String;
+using scb::StringHash;
 
 /// Check if a given HTML is in English by comparing the words
 /// with those in a given dictionary. The dictionary should not
