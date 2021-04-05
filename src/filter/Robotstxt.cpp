@@ -10,6 +10,9 @@ Robotstxt::Robotstxt( const String &content )
    // tolerate no space after semicolon.
    if ( starSectionPos == String::npos )
       starSectionPos = content.findCaseInsensitive( "User-agent:*" );
+   // tolerate double space after semicolon.
+   if ( starSectionPos == String::npos )
+      starSectionPos = content.findCaseInsensitive( "User-agent:  *" );
    if ( starSectionPos == String::npos )
       throw std::runtime_error( "no \"User-Agent: *\" section in robots.txt" );
 

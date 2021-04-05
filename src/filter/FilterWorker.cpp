@@ -63,14 +63,16 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host,
                                               std::move( robotstxt ) );
+#ifdef VERY_VERBOSE
       std::cout << "robots.txt for " << args->Url.Host
                 << " downloaded and parsed" << std::endl;
+#endif
       }
    catch ( std::exception &ex )
       {
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host, DummyRobotstxt );
-      std::cout << "robots.txt " << args->Url.Normalize( "robots.txt" )
+      std::cerr << "robots.txt " << args->Url.Normalize( "robots.txt" )
                 << " failed: " << ex.what() << std::endl;
       }
 
@@ -87,7 +89,7 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
          // filter by bloom filter
          if ( args->self->markIfNotSeen( pendingUrl.CompleteUrl ) )
             {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
             std::cout << "seen: " << pendingUrl.CompleteUrl << std::endl;
 #endif
             continue;
@@ -122,7 +124,7 @@ void FilterWorker::handleUnfilteredLink( const String &link )
    int rightfulHandler = url.Host.hash() % worldSize;
    if ( rightfulHandler != rank )
       {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
       std::cout << "not our host: " << url.Host << std::endl;
 #endif
       queueRemoteUrl( rightfulHandler, url.CompleteUrl );
@@ -135,7 +137,7 @@ void FilterWorker::handleUnfilteredLink( const String &link )
    // if no robots.txt yet, fetch and set in a new thread
    if ( !robotstxtMap.count( url.Host ) )
       {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
       std::cout << "no robots.txt for " << url.Host << std::endl;
 #endif
 
@@ -162,7 +164,7 @@ void FilterWorker::handleUnfilteredLink( const String &link )
    // handle it
    if ( cache.Pending )
       {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
 #endif
       cache.WaitingURLs.emplaceBack( std::move( url ) );
@@ -178,7 +180,7 @@ void FilterWorker::handleUnfilteredLink( const String &link )
       {
       if ( markIfNotSeen( url.CompleteUrl ) )
          {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
          std::cout << "seen: " << url.CompleteUrl << std::endl;
 #endif
          return;
@@ -191,7 +193,7 @@ void FilterWorker::handleUnfilteredLink( const String &link )
       }
    else
       {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
       std::cout << "not allowed by robots.txt: " << url.CompleteUrl
                 << std::endl;
 #endif

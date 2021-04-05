@@ -43,7 +43,7 @@ void *ThreadCrawlerParserWorker( void * )
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )
             {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
             std::cout << "not english by html: " << url << std::endl;
 #endif
             continue;
@@ -60,7 +60,7 @@ void *ThreadCrawlerParserWorker( void * )
          // check dictionary for language
          if ( !englishDictChecker->Check( parsedHtml ) )
             {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
             std::cout << "not english by dict: " << url << std::endl;
 #endif
             continue;
@@ -77,7 +77,7 @@ void *ThreadCrawlerParserWorker( void * )
             if ( mq_send( parsedDocs, blob.data(), blob.size(), 0 ) != 0 )
                std::cout << "mq_send() error: " << strerror( errno ) << " : "
                          << url << std::endl;
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
             std::cout << "posted to indexer queue, total " << ++numSentToIndexer
                       << ": " << url << std::endl;
 #else
@@ -87,7 +87,7 @@ void *ThreadCrawlerParserWorker( void * )
             }
          else
             {
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
             std::cout << "doc too large: " << url << std::endl;
 #endif
             }
@@ -99,7 +99,7 @@ void *ThreadCrawlerParserWorker( void * )
             String normalizedUrl = pageUrl.Normalize( link.Href );
             mq_send( newLinks, normalizedUrl.data(), normalizedUrl.size(), 0 );
             }
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
          std::cout << "posted " << parsedHtml.Links.size()
                    << " to filter: " << url << std::endl;
 #endif

@@ -19,7 +19,7 @@ void *FilterWorker::threadNewLinksMqueue( void *inst )
          }
 
       String url( buf, sz );
-#ifndef NDEBUG
+#ifdef VERY_VERBOSE
       std::cout << "from local mq: " << url << std::endl;
 #endif
 
