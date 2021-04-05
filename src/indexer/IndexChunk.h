@@ -21,7 +21,7 @@ using scb::Vector;
 struct Document
    {
       String Url;
-      uint32_t LastPost;
+      // uint32_t LastPost; // Redundant with document end posting list
    };
 
 class IndexChunk

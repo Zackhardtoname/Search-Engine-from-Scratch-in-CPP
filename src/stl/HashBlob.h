@@ -63,6 +63,16 @@ struct SerialTuple
       // The Key will be a C-string of whatever length.
       char Key[ Unknown ];
 
+      String GetKey() const {
+         /* If no null terminator, need this to print properly */
+         size_t keyLength = Length - sizeof(SerialTuple);
+         char keyBuffer[keyLength + 1];
+         strncpy(keyBuffer, Key, keyLength);
+         keyBuffer[keyLength] = '\0';
+
+         return String(keyBuffer);
+      }
+
       static size_t BytesForBucket( const HashBucket *b )
          {
          // TODO: add roundup maybe
@@ -116,6 +126,9 @@ struct SerialTuple
                ++i;
                }
             
+            // Key null terminator
+            *buffer++ = '\0';
+
             // Next bucket
             b = b->next;
             }
@@ -181,8 +194,9 @@ class HashBlob
 
                // Print the whole chain
                while (currentTuple->Length != 0){
-                  
-                  os << "\t\tKey: " << currentTuple->Key << "\tVal: " << currentTuple->Value << "\n";
+
+                  os << "\t\tKey: " << currentTuple->GetKey() << "\tVal: " << currentTuple->Value << 
+                     "\tSerialTuple Length: " << currentTuple->Length << "\n";
                   currentPos += currentTuple->Length;
                   currentTuple = reinterpret_cast<const scb::SerialTuple*>( currentPos );
                }

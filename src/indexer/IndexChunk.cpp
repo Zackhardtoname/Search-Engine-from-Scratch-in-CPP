@@ -57,7 +57,7 @@ void IndexChunk::writeToDisk( const char *filename )
    for ( int i = 0;  i < Documents.size();  i++ )
       {
       docTable[ i ].UrlOffset = urlList.size();
-      docTable[ i ].LastPost = Documents[ i ].LastPost;
+      // docTable[ i ].LastPost = Documents[ i ].LastPost;
 
       urlList += Documents[ i ].Url;
       urlList.pushBack( '\0' );
@@ -84,6 +84,7 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // make a hashblob out of the hashmap
    // TODO if possible, construct hashblob in the mapped location instead of having to memcpy
+   postingListOffsetMap.Optimize();
    scb::HashBlob *postingListOffsetHashblob = scb::HashBlob::Create( &postingListOffsetMap ) ;
 
    // We got everything, calculate the final size and offset
@@ -176,7 +177,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
       }
 
    // record document metadata
-   Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );
+   Documents.pushBack( Document{ .Url = ingest.Url /*, .LastPost = nextPost */ } );
 
    // update estimated size
    EstSize += ingest.Url.length();

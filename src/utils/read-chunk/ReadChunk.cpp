@@ -67,10 +67,10 @@ int main( int argc, char **argv )
    const DocumentTableEntry *currentEntry = reinterpret_cast<DocumentTableEntry*>(header + 1);
 
    cout << "Document Table:" << endl;
-   cout << "\tIndex\tUrlOffs\tLastPost" << endl; 
+   cout << "\tIndex\tUrlOffs" << endl; 
    // For each Document Table Entry
    for ( size_t i = 0 ; i < header->DocumentCount; ++i, ++currentEntry ) {
-      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << "\t" << currentEntry->LastPost << endl;
+      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << endl;
    }
 
    // * ===== Read URL List =====
@@ -96,56 +96,6 @@ int main( int argc, char **argv )
    
 
    // * ===== Read Posting Lists =====
-
-   /*
-   const char *cursor = reinterpret_cast<const char*>(header) + header->PostingListsOffset;
-   int plCounter = 0;
-   VLQStreamDecoder decoder( cursor );
-   uint64_t decoded;
-
-   while ( cursor < reinterpret_cast<const char*>(header) + fileSize(f) )
-      {
-
-      cout << "Posting List " << plCounter++ << ":" << endl;
-
-      // Read and print Posting List Header
-      const PostingListHeader *plHeader =
-         reinterpret_cast<const PostingListHeader *>( cursor );
-
-      cout << "\tHeader:" << std::endl;
-      cout << "\t\tNumber of posts: " << plHeader->NumPosts 
-      << "\n\t\tNumber of Sync Table Entries: " << plHeader->NumSyncTableEntries << endl;
-
-      // Read and print Sync Table
-      cout << "\tSync Table:\tOffs:\tPost:" << std::endl;
-      const SyncTableEntry *syncEntry = reinterpret_cast<const SyncTableEntry*>(plHeader+1);
-      for ( size_t i = 0; i < plHeader->NumSyncTableEntries; ++i) {
-         cout << "\t\t[" << i << "]\t" << syncEntry->Offset << "\t" << syncEntry->Post << std::endl;
-      }
-
-      size_t postsOffset = static_cast<uint32_t>( sizeof( PostingListHeader ) + plHeader->NumSyncTableEntries * sizeof( SyncTableEntry ) );
-
-      cursor += postsOffset;
-
-      decoder.setCursor( cursor );
-
-      cout << "\tPosts:" << std::endl;
-      
-      // for(size_t i = 0; i < plHeader->NumPosts ; ++i) {
-      //    cout << "\t\t" << decoder.Next() << "\n";
-      // }
-      
-      while ( ( decoded = decoder.Next() ) != 0 )
-         {
-         cout << "\t\t" << decoded << endl;
-         }
-
-      cursor = decoder.getCursor();
-
-      }
-   }
-   */
-   
    auto PlIt = blob->begin();
    ++PlIt;
    size_t ctr = 0;
@@ -154,8 +104,10 @@ int main( int argc, char **argv )
    for ( auto PlIt = blob->begin(); PlIt != blob->end() ; ++PlIt) {
       const char *cursor = reinterpret_cast<const char*>(header) + header->PostingListsOffset + PlIt->Value;
       
-      cout << "Posting List [" << ctr++ << "] for '" << PlIt->Key << "':" << endl;
+      // cout << "Posting List [" << ctr++ << "] for '" << PlIt->Key << "':" << endl;
+      cout << "Posting List [" << ctr++ << "] for '" << PlIt->GetKey() << "':" << endl;
 
+      // Read and print posting list header
       const PostingListHeader *plHeader =
          reinterpret_cast<const PostingListHeader *>( cursor );
 
@@ -174,6 +126,7 @@ int main( int argc, char **argv )
 
       cursor += postsOffset;
 
+      // Read and print posts
       cout << "\tPosts:\tDelta:\tAbsolute" << std::endl;
 
       uint64_t decoded;
