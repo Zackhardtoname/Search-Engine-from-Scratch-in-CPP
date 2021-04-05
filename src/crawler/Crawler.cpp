@@ -13,9 +13,17 @@
 String FetchUrl( const String &url )
    {
    int contentFd[ 2 ];
-   assert( pipe( contentFd ) == 0 && "pipe() failed" );
+   if ( pipe( contentFd ) != 0 )
+      {
+      std::cerr << "pipe() failed: " << strerror( errno ) << std::endl;
+      exit( 1 );
+      }
    int infoFd[ 2 ];
-   assert( pipe( infoFd ) == 0 && "pipe() failed" );
+   if ( pipe( infoFd ) != 0 )
+      {
+      std::cerr << "pipe() failed: " << strerror( errno ) << std::endl;
+      exit( 1 );
+      }
 
    Defer closePipe(
       [ & ]()

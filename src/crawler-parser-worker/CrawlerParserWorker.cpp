@@ -13,31 +13,15 @@
 #include "CrawlerParserWorker.h"
 #include "EnglishDictChecker.h"
 
-bool die = false;
+EnglishDictChecker *englishDictChecker;
+mqd_t frontier, newLinks, parsedDocs;
+std::atomic<bool> die = false;
+std::atomic<int> numSentToIndexer = 0;
 
-void WorkerSIGTERMHandler( int signum )
+void *ThreadCrawlerParserWorker( void * )
    {
-   die = true;
-   std::cout << "dying....." << std::endl;
-   }
-
-int CrawlerParserWorkerMain( mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
-                             EnglishDictChecker &englishDictChecker )
-   {
-
-   // Set signal signal so that when killed, crawler-parser-worker
-   // finishes the last URL it receives before exiting.
-
-   struct sigaction sigactionTERM
-      {
-      };
-   sigactionTERM.sa_handler = WorkerSIGTERMHandler;
-   sigactionTERM.sa_flags =
-      0; // no SA_RESTART so that wait() can be interrupted
-   sigaction( SIGTERM, &sigactionTERM, nullptr );
-
    char buf[ MAX_URL_LEN + 1 ];
-   for ( int numIndexedPages = 0;  !die;  )
+   while ( !die.load() )
       {
 
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
@@ -72,7 +56,7 @@ int CrawlerParserWorkerMain( mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
             word = PorterStem( word );
 
          // check dictionary for language
-         if ( !englishDictChecker.Check( parsedHtml ) )
+         if ( !englishDictChecker->Check( parsedHtml ) )
             {
             std::cout << "not english by dict: " << url << std::endl;
             continue;
@@ -89,7 +73,7 @@ int CrawlerParserWorkerMain( mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
             if ( mq_send( parsedDocs, blob.data(), blob.size(), 0 ) != 0 )
                std::cout << "mq_send() error: " << strerror( errno ) << " : "
                          << url << std::endl;
-            std::cout << "posted to indexer queue, total " << ++numIndexedPages
+            std::cout << "posted to indexer queue, total " << ++numSentToIndexer
                       << ": " << url << std::endl;
             }
          else
@@ -113,5 +97,5 @@ int CrawlerParserWorkerMain( mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
          }
       }
 
-   return 0;
+   return nullptr;
    }
