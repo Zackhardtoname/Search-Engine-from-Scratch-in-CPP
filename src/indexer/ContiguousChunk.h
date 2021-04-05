@@ -21,7 +21,7 @@ using scb::Vector;
 struct DocumentTableEntry
    {
       uint32_t UrlOffset; // from the start of URL list
-      uint32_t LastPost;  // absolute last post of this document
+      uint64_t LastPost;  // absolute last post of this document
    };
 
 struct SyncTableEntry

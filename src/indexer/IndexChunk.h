@@ -21,7 +21,7 @@ using scb::Vector;
 struct Document
    {
       String Url;
-      uint64_t LastPost;
+      uint32_t LastPost;
    };
 
 class IndexChunk

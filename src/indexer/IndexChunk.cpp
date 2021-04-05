@@ -57,6 +57,7 @@ void IndexChunk::writeToDisk( const char *filename )
    for ( int i = 0;  i < Documents.size();  i++ )
       {
       docTable[ i ].UrlOffset = urlList.size();
+      docTable[ i ].LastPost = Documents[ i ].LastPost;
 
       urlList += Documents[ i ].Url;
       urlList.pushBack( '\0' );
@@ -162,8 +163,17 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
       lst.pushBack( post );
       }
    
-   // Record document end
-   PostingLists[ DocEnd ];
+   // record document end
+      {
+
+      auto &lst = PostingLists[ DocEnd ];
+      uint64_t post = ++nextPost;
+      if ( lst.empty() )
+         EstSize += VLQ::Length( post );
+      else
+         EstSize += VLQ::Length( post - lst.back() );
+      lst.pushBack( post );
+      }
 
    // record document metadata
    Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );

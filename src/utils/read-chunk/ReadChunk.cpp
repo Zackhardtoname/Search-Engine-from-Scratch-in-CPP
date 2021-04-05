@@ -82,7 +82,7 @@ int main( int argc, char **argv )
 
    // Print each URL
    for(size_t i = 0; i < header->DocumentCount ; ++i ) {
-      cout << "\t" << currentURL << endl;
+      cout << "\t[" << i << "]\t" << currentURL << endl;
       currentURL += strlen( currentURL ) + 1;
    }
 
@@ -154,8 +154,6 @@ int main( int argc, char **argv )
    for ( auto PlIt = blob->begin(); PlIt != blob->end() ; ++PlIt) {
       const char *cursor = reinterpret_cast<const char*>(header) + header->PostingListsOffset + PlIt->Value;
       
-      VLQStreamDecoder decoder( cursor );
-      uint64_t decoded;
       cout << "Posting List [" << ctr++ << "] for '" << PlIt->Key << "':" << endl;
 
       const PostingListHeader *plHeader =
@@ -176,17 +174,17 @@ int main( int argc, char **argv )
 
       cursor += postsOffset;
 
-      decoder.setCursor( cursor );
+      cout << "\tPosts:\tDelta:\tAbsolute" << std::endl;
 
-      cout << "\tPosts:" << std::endl;
-      
-      // for(size_t i = 0; i < plHeader->NumPosts ; ++i) {
-      //    cout << "\t\t" << decoder.Next() << "\n";
-      // }
+      uint64_t decoded;
+      uint64_t prevAbsolute = 0;
+      VLQStreamDecoder decoder( cursor );
+      // decoder.setCursor( cursor );
       
       while ( ( decoded = decoder.Next() ) != 0 )
          {
-         cout << "\t\t" << decoded << endl;
+         cout << "\t\t" << decoded << "\t" << prevAbsolute + decoded << endl;
+         prevAbsolute += decoded;
          }
 
       cursor = decoder.getCursor();
