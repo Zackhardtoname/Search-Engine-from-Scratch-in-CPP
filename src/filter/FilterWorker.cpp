@@ -31,17 +31,15 @@ void FilterWorker::Run()
    pthread_sigmask( SIG_BLOCK, &sigset, nullptr );
 
    // spawn the threads
-   pthread_create( &pthNewLinksMqueue, nullptr, threadNewLinksMqueue, this );
+   for ( pthread_t &pth : pthNewLinksMqueue )
+      pthread_create( &pth, nullptr, threadNewLinksMqueue, this );
    pthread_create( &pthRemoteWorkers, nullptr, threadRemoteWorkers, this );
-
-   for ( pthread_t &pth : pthUnfilteredUrls )
-      pthread_create( &pth, nullptr, threadUnfilteredUrls, this );
 
    pthread_create( &pthRemoteUrls, nullptr, threadRemoteUrls, this );
    pthread_create( &pthFilteredUrls, nullptr, threadFilteredUrls, this );
 
    // wait on any one of the threads
-   pthread_join( pthNewLinksMqueue, nullptr );
+   pthread_join( pthNewLinksMqueue[ 0 ], nullptr );
    }
 
 bool FilterWorker::markIfNotSeen( const String &url )
@@ -137,6 +135,37 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
    return allowed;
    }
 
+void FilterWorker::handleUnfilteredLink( const String &link )
+   {
+   ParsedUrl url( link );
+
+   // filter by domain hash
+   int rightfulHandler = url.Host.hash() % worldSize;
+   if ( rightfulHandler != rank )
+      {
+      std::cout << "not our host: " << url.Host << std::endl;
+      queueRemoteUrl( rightfulHandler, url.CompleteUrl );
+      return;
+      }
+
+   // filter by robots.txt
+   if ( !allowedByRobotstxt( url ) )
+      {
+      std::cout << "not allowed by robots.txt: " << url.CompleteUrl
+                << std::endl;
+      return;
+      }
+
+   // filter by bloom filter
+   if ( markIfNotSeen( url.CompleteUrl ) )
+      std::cout << "seen: " << url.CompleteUrl << std::endl;
+
+   // all good! we can put that into filteredUrls
+   pthread_mutex_lock( &lockFilteredUrls );
+   filteredUrls.pushBack( std::move( url ) );
+   pthread_mutex_unlock( &lockFilteredUrls );
+   }
+
 FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
                             const char *bloomFile )
     : bloomfilter( bloomFile )
@@ -158,17 +187,12 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
       exit( 1 );
       }
 
-   // initialize sync structures
-   assert( sem_init( &semUnfilteredUrls, 0, 0 ) != -1 && "sem_init() failed" );
    assert( pthread_mutex_init( &lockRemoteWorkersSendBuffer, nullptr ) == 0 &&
            "mutex_init() failed" );
    assert( pthread_mutex_init( &lockFilteredUrls, nullptr ) == 0 &&
            "mutex_init() failed" );
-   assert( pthread_mutex_init( &lockUnfilteredUrls, nullptr ) == 0 &&
-           "mutex_init() failed" );
    assert( pthread_mutex_init( &lockRobotstxtMap, nullptr ) == 0 &&
            "mutex_init() failed" );
-
    assert( pthread_cond_init( &pendingRobotstxtCond, nullptr ) == 0 &&
            "cond_init() failed" );
 
@@ -202,7 +226,6 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
 
 void FilterWorker::block()
    {
-   pthread_mutex_lock( &lockUnfilteredUrls );
    pthread_mutex_lock( &lockRemoteWorkersSendBuffer );
    pthread_mutex_lock( &lockFilteredUrls );
    pthread_mutex_lock( &lockRobotstxtMap );
@@ -210,7 +233,6 @@ void FilterWorker::block()
 
 void FilterWorker::unblock()
    {
-   pthread_mutex_unlock( &lockUnfilteredUrls );
    pthread_mutex_unlock( &lockRemoteWorkersSendBuffer );
    pthread_mutex_unlock( &lockFilteredUrls );
    pthread_mutex_unlock( &lockRobotstxtMap );

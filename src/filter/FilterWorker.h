@@ -26,23 +26,24 @@ using scb::Vector;
 
 /// Dataflow inside this worker:
 ///
-/// newLinks mqueue --v                      -----> remoteUrls -----> other wk
-///                   ---> unfilteredUrls ---^v
-/// remote workers ---^                       ----> filteredUrls ---> frontier
+/// newLinks mqueue --\ /-----> remoteUrls -----> other wk
+///                    x
+/// remote workers ---/ \----> filteredUrls ---> frontier
 ///
 class FilterWorker
    {
       /// These threads are named by the data source they handle, declaration
       /// preceded by the resources they use.
 
-      /// Thread that handles: newLinks mqueue -> unfilteredUrls
+      /// Thread that handles: newLinks mqueue -> ?
       mqd_t qNewLinks = -1;
-      pthread_t pthNewLinksMqueue = -1;
+      static constexpr int NUM_NEW_LINKS_THREADS = 50;
+      pthread_t pthNewLinksMqueue[ NUM_NEW_LINKS_THREADS ] = {};
 
       // param: FilterWorker::this
       [[noreturn]] static void *threadNewLinksMqueue( void * );
 
-      /// Thread that handles: remote workers -> unfilteredUrls
+      /// Thread that handles: remote workers -> ?
       // Host and port for other workers to post URLs.
       String hostname, port;
       pthread_t pthRemoteWorkers = -1;
@@ -60,15 +61,6 @@ class FilterWorker
       // Thread for waiting for connections from other remote workers
       // param: FilterWorker::this
       [[noreturn]] static void *threadRemoteWorkers( void * );
-
-      /// Thread that handles: unfilteredUrls -> ( remoteUrls | filteredUrls )
-      static constexpr int NUM_FILTER_THREADS = 20;
-      Queue<String> unfilteredUrls; // URLs waiting to be filtered.
-      pthread_mutex_t lockUnfilteredUrls{};
-      sem_t semUnfilteredUrls{};
-      pthread_t pthUnfilteredUrls[ NUM_FILTER_THREADS ] = {};
-
-      [[noreturn]] static void *threadUnfilteredUrls( void * );
 
       /// Thread that handles: remoteUrls -> other workers
       int worldSize = -1, rank = -1;
@@ -104,6 +96,10 @@ class FilterWorker
       // file on disk.
       // param [this thread takes ownership]: Vector<ParsedUrl>* urls to offload
       static void *threadOffloadUrls( void * );
+
+      /// /threads
+
+      void handleUnfilteredLink( const String &link );
 
       // If the URL is not seen before, mark it seen.
       // Return true if it has already been seen before this operation.

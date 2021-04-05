@@ -32,6 +32,7 @@ class String
 
       String( const char *begin, const char *end )
          {
+         str.reserve( end - begin + 1 );
          while ( begin != end )
             str.pushBack( *( begin++ ) );
          str.pushBack( '\0' );

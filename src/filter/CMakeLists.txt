@@ -21,7 +21,6 @@ add_executable(filter-worker
         ThreadNewLinksMqueue.cpp
         ThreadRemoteWorkers.cpp
         ThreadRemoteUrls.cpp
-        ThreadUnfilteredUrls.cpp
         ThreadFilteredUrls.cpp)
 target_link_libraries(filter-worker rt Threads::Threads ssl crypto)
 

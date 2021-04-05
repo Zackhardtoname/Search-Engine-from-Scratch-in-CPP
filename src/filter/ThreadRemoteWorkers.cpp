@@ -72,13 +72,8 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
             {
             // found a null-terminated string at buf[start...i], where buf[i] is
             // NULL
-            pthread_mutex_lock( &args->self->lockUnfilteredUrls );
             std::cout << "from remote: " << buf + start << std::endl;
-            args->self->unfilteredUrls.pushBack( buf + start );
-            pthread_mutex_unlock( &args->self->lockUnfilteredUrls );
-
-            // notify the downstream
-            sem_post( &args->self->semUnfilteredUrls );
+            args->self->handleUnfilteredLink( String( buf + start, buf + i ) );
 
             // resume searching from buf[i+1]
             start = i + 1;
