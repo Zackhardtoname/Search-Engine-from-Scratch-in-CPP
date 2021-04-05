@@ -33,6 +33,9 @@ Robotstxt::Robotstxt( const String &content )
       else
          line.pushBack( c );
       }
+
+   Sitemap.shrinkToFit();
+   rules.shrinkToFit();
    }
 
 void Robotstxt::handleLine( const String &line )
@@ -93,6 +96,9 @@ CrawlingRule::CrawlingRule( const String &path, bool allowed )
 
    // End-of-string
    HasEOS = it < path.length() && path[ it ] == '$';
+
+   Prefix.shrinkToFit();
+   Suffix.shrinkToFit();
    }
 
 int CrawlingRule::Match( const String &path ) const

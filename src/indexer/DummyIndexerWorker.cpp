@@ -56,7 +56,7 @@ int main( int argc, char **argv )
          // write to dump file
          size_t written = fwrite( buffer, sizeof( int32_t ) + msgSize, 1, f );
          assert( written == 1 && "fwrite() failed" );
-         curSize += written;
+         curSize += sizeof( int32_t ) + msgSize;
 
          if ( numDocs % 10000 == 0 )
             std::cout << "doc count: " << numDocs << std::endl;

@@ -269,6 +269,11 @@ class String
          str.pushBack( '\0' );
          }
 
+      void shrinkToFit()
+         {
+         str.shrinkToFit();
+         }
+
       [[nodiscard]] String substr( uint start, int len = String::npos ) const
          {
          if ( start >= size() )

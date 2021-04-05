@@ -70,7 +70,6 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
       robotstxtMap[ url.Host ] = ROBOTS_TXT_PENDING;
       auto *cond = new pthread_cond_t;
       pthread_cond_init( cond, nullptr );
-      pendingRobotstxtCond[ url.Host ] = cond;
 
       // unlock to allow other threads to proceed
       pthread_mutex_unlock( &lockRobotstxtMap );
@@ -94,8 +93,7 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
          }
 
       // signal other threads
-      pthread_cond_broadcast( pendingRobotstxtCond[ url.Host ] );
-      pendingRobotstxtCond.erase( url.Host );
+      pthread_cond_broadcast( &pendingRobotstxtCond );
       }
 
    // now that we can be sure that we have a robots.txt,
@@ -106,8 +104,7 @@ bool FilterWorker::allowedByRobotstxt( const ParsedUrl &url )
    while ( ( robotstxt = robotstxtMap[ url.Host ] ) == ROBOTS_TXT_PENDING )
       {
       std::cout << "waiting for robots.txt of " << url.Host << std::endl;
-      auto *cond = pendingRobotstxtCond[ url.Host ];
-      pthread_cond_wait( cond, &lockRobotstxtMap );
+      pthread_cond_wait( &pendingRobotstxtCond, &lockRobotstxtMap );
       }
 
    // check if allowed
@@ -147,6 +144,9 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
            "mutex_init() failed" );
    assert( pthread_mutex_init( &lockRobotstxtMap, nullptr ) == 0 &&
            "mutex_init() failed" );
+
+   assert( pthread_cond_init( &pendingRobotstxtCond, nullptr ) == 0 &&
+           "cond_init() failed" );
 
    // setup remote
    this->rank = rk;
