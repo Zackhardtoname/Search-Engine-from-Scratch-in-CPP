@@ -5,10 +5,14 @@
 #ifndef SCOOBLE_SEARCH_CRAWLERPARSERWORKER_H
 #define SCOOBLE_SEARCH_CRAWLERPARSERWORKER_H
 
-#include <mqueue.h>
 #include "EnglishDictChecker.h"
+#include <atomic>
+#include <mqueue.h>
 
-int CrawlerParserWorkerMain(mqd_t frontier, mqd_t newLinks, mqd_t parsedDocs,
-                            EnglishDictChecker &englishDictChecker );
+extern EnglishDictChecker *englishDictChecker;
+extern mqd_t frontier, newLinks, parsedDocs;
+extern std::atomic<bool> die;
+
+void *ThreadCrawlerParserWorker( void * );
 
 #endif // SCOOBLE_SEARCH_CRAWLERPARSERWORKER_H

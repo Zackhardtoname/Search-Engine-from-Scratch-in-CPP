@@ -14,6 +14,7 @@
 #include "Robotstxt.h"
 
 #include <atomic>
+#include <list>
 #include <mqueue.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -25,23 +26,33 @@ using scb::Vector;
 
 /// Dataflow inside this worker:
 ///
-/// newLinks mqueue --v                      -----> remoteUrls -----> other wk
-///                   ---> unfilteredUrls ---^v
-/// remote workers ---^                       ----> filteredUrls ---> frontier
+/// newLinks mqueue --\ /-----> remoteUrls -----> other wk
+///                    x
+/// remote workers ---/ \----> filteredUrls ---> frontier
 ///
 class FilterWorker
    {
       /// These threads are named by the data source they handle, declaration
       /// preceded by the resources they use.
 
-      /// Thread that handles: newLinks mqueue -> unfilteredUrls
+      /// Thread that handles: newLinks mqueue -> ?
       mqd_t qNewLinks = -1;
-      pthread_t pthNewLinksMqueue = -1;
+      pthread_t pthNewLinksMqueue;
+
+      struct FetchRobotstxtArgs
+         {
+            FilterWorker *self;
+            ParsedUrl Url;
+         };
+
+      // Thread to fetch robots.txt and handle URLs pending on it
+      // param [this thread takes ownership]: FetchRobotstxtArgs*
+      static void *threadFetchRobotstxt( void * );
 
       // param: FilterWorker::this
       [[noreturn]] static void *threadNewLinksMqueue( void * );
 
-      /// Thread that handles: remote workers -> unfilteredUrls
+      /// Thread that handles: remote workers -> ?
       // Host and port for other workers to post URLs.
       String hostname, port;
       pthread_t pthRemoteWorkers = -1;
@@ -49,7 +60,7 @@ class FilterWorker
       struct RemoteWorkerConnectionArgs
          {
             FilterWorker *self;
-            int connFd;
+            int ConnFd;
          };
 
       // Handler thread for each remote worker connection
@@ -59,15 +70,6 @@ class FilterWorker
       // Thread for waiting for connections from other remote workers
       // param: FilterWorker::this
       [[noreturn]] static void *threadRemoteWorkers( void * );
-
-      /// Thread that handles: unfilteredUrls -> ( remoteUrls | filteredUrls )
-      static constexpr int NUM_FILTER_THREADS = 10;
-      Queue<String> unfilteredUrls; // URLs waiting to be filtered.
-      pthread_mutex_t lockUnfilteredUrls{};
-      sem_t semUnfilteredUrls{};
-      pthread_t pthUnfilteredUrls[ NUM_FILTER_THREADS ] = {};
-
-      [[noreturn]] static void *threadUnfilteredUrls( void * );
 
       /// Thread that handles: remoteUrls -> other workers
       int worldSize = -1, rank = -1;
@@ -104,6 +106,10 @@ class FilterWorker
       // param [this thread takes ownership]: Vector<ParsedUrl>* urls to offload
       static void *threadOffloadUrls( void * );
 
+      /// /threads
+
+      void handleUnfilteredLink( const String &link );
+
       // If the URL is not seen before, mark it seen.
       // Return true if it has already been seen before this operation.
       bool markIfNotSeen( const scb::String &url );
@@ -115,14 +121,29 @@ class FilterWorker
       // Sentinels for a pending robots.txt (when many threads want to
       // download the same one at the same time), and a dummy robots.txt,
       // for when we cannot download/parse the robots.txt for a website.
-      static Robotstxt *const ROBOTS_TXT_PENDING, *const DummyRobotstxt;
-      // TODO: use our own hashmap
-      std::unordered_map<scb::String, Robotstxt *, StringHash> robotstxtMap;
+      static const Robotstxt DummyRobotstxt;
+      // TODO: use our own containers
+      static const int MAX_NUM_ROBOTSTXT = 50000;
+      struct LRUEntry
+         {
+            String Host;
+            Robotstxt robotstxt;
 
-      // Query robots.txt to check if a URL is allowed
-      // This will try to download robots.txt if not already in cache.
-      // Blocking!
-      bool allowedByRobotstxt( const ParsedUrl &url );
+            LRUEntry( String host, Robotstxt rb )
+                : Host( std::move( host ) ), robotstxt( ( std::move( rb ) ) )
+               {
+               }
+         };
+      std::list<LRUEntry> robotstxtLRU;
+
+      struct CacheInfo
+         {
+            bool Pending;
+            // a list of urls waiting for this pending robots.txt
+            Vector<ParsedUrl> WaitingURLs;
+            decltype( robotstxtLRU )::iterator Pointer;
+         };
+      std::unordered_map<String, CacheInfo, StringHash> robotstxtMap;
 
       Bloomfilter bloomfilter;
 

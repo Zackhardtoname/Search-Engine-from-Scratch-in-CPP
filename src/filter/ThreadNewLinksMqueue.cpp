@@ -18,14 +18,11 @@ void *FilterWorker::threadNewLinksMqueue( void *inst )
          exit( 1 );
          }
 
-      buf[ sz ] = '\0';
-      std::cout << "from local mq: " << buf << std::endl;
+      String url( buf, sz );
+#ifdef VERY_VERBOSE
+      std::cout << "from local mq: " << url << std::endl;
+#endif
 
-      pthread_mutex_lock( &self.lockUnfilteredUrls );
-      self.unfilteredUrls.pushBack( String( buf ) );
-      pthread_mutex_unlock( &self.lockUnfilteredUrls );
-
-      // notify the downstream
-      sem_post( &self.semUnfilteredUrls );
+      self.handleUnfilteredLink( url );
       }
    }
