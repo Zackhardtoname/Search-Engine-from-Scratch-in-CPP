@@ -5,7 +5,7 @@
 
 namespace scb {
 struct StringHash {
-   size_t operator()(const scb::String& s) {
+   size_t operator()(const scb::String& s) const {
       const char* data = s.cstr();
       size_t length = strlen(data);
       static const size_t OffsetBasis = 146959810393466560;
