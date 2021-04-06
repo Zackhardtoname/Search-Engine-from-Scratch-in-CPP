@@ -40,50 +40,8 @@ scb::String RandAlphaString( int len )
 
 int main()
    {
-   mqd_t mq = 0;// mq_open( PARSED_DOCS_QUEUE, O_RDONLY );
-   srand(time(0));
-
+   mqd_t mq = mq_open( PARSED_DOCS_QUEUE, O_RDONLY );
    auto *curChunk = new IndexChunk();
-
-   // ===== Test =====
-
-   IndexerIngest testIngest;
-
-   testIngest.Words.pushBack("You");
-   testIngest.Words.pushBack("say");
-   testIngest.Words.pushBack("goodbye");
-   testIngest.Words.pushBack("and");
-   testIngest.Words.pushBack("I");
-   testIngest.Words.pushBack("say");
-   testIngest.Words.pushBack("hello");
-
-   testIngest.TitleWords.pushBack("The");
-   testIngest.TitleWords.pushBack("Title");
-
-   testIngest.Url = "https://mi.chaelwolf.com";
-   /*
-   for (int i = 0; i < 10; i++)
-      testIngest.Words.pushBack(RandAlphaString(10));
-   for (int i = 0; i < 3; i++)
-      testIngest.TitleWords.pushBack(RandAlphaString(10));
-   testIngest.Url = RandAlphaString(50);
-   */
-
-   auto msg = Serialize(testIngest);
-   size_t consumed;
-
-   std::ofstream ingestfile;
-   ingestfile.open ("most_recent.ingest", std::ios::trunc);
-   ingestfile << msg.data();
-   ingestfile.close();
-
-   auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
-    assert( consumed == msg.size() );
-   curChunk->Ingest( ingest );
-   threadPersistChunk(curChunk);
-   return 0;
-
-   // ===== End Test =====
 
    while ( true )
       {
