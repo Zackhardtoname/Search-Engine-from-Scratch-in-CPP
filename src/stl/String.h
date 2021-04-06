@@ -38,6 +38,7 @@ class String
 
       String( const char *begin, const char *end )
          {
+         str.reserve( end - begin + 1 );
          while ( begin != end )
             str.pushBack( *( begin++ ) );
          str.pushBack( '\0' );
@@ -274,6 +275,11 @@ class String
          {
          str.clear();
          str.pushBack( '\0' );
+         }
+
+      void shrinkToFit()
+         {
+         str.shrinkToFit();
          }
 
       [[nodiscard]] String substr( uint start, int len = String::npos ) const

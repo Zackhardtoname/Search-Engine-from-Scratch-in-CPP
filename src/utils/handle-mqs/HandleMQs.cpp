@@ -62,8 +62,12 @@ void handleMqueue( int argc, char **argv, scb::String operation )
          // but newLinks to only have a size of 500
          attr.mq_flags = 0;
          attr.mq_maxmsg = MAX_QUEUE_SIZE;
-         if ( scb::String( PARSED_DOCS_QUEUE ) == argv[ i ] )
+         if ( scb::String( PARSED_DOCS_QUEUE ) == mqueueName )
+            {
+            std::cout << "using " << PARSED_DOCS_QUEUE_MAX_MSGSIZE
+                      << " as mq_msgsize" << std::endl;
             attr.mq_msgsize = PARSED_DOCS_QUEUE_MAX_MSGSIZE;
+            }
          else
             attr.mq_msgsize = MAX_URL_LEN;
          attr.mq_curmsgs = 0;

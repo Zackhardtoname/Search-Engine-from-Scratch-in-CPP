@@ -13,9 +13,17 @@
 String FetchUrl( const String &url )
    {
    int contentFd[ 2 ];
-   assert( pipe( contentFd ) == 0 && "pipe() failed" );
+   if ( pipe( contentFd ) != 0 )
+      {
+      std::cerr << "pipe() failed: " << strerror( errno ) << std::endl;
+      exit( 1 );
+      }
    int infoFd[ 2 ];
-   assert( pipe( infoFd ) == 0 && "pipe() failed" );
+   if ( pipe( infoFd ) != 0 )
+      {
+      std::cerr << "pipe() failed: " << strerror( errno ) << std::endl;
+      exit( 1 );
+      }
 
    Defer closePipe(
       [ & ]()
@@ -24,9 +32,8 @@ String FetchUrl( const String &url )
          close( infoFd[ 0 ] );
       } );
 
-   pid_t pid = fork();
-   assert( pid != -1 && "fork() failed" );
-   if ( pid == 0 )
+   ForkedChild curlProc;
+   if ( curlProc.IsChild() )
       {
       // child
       dup2( contentFd[ 1 ], STDOUT_FILENO ); // redirect stdout to content
@@ -38,21 +45,22 @@ String FetchUrl( const String &url )
       close( infoFd[ 1 ] );
 
       execl(
-         "/usr/bin/curl",
+         "/usr/bin/curl", "curl",
          "--disable",               // don't read .curlrc
          "--fail",                  // error whenever not HTTP 200 OK
          "--silent",                // no progress bar to mess up stderr
          "--max-filesize", "5m",    // abort on files larger than this
          "--location",              // follow redirections
          "--max-redirs", "10",      // at most 10 times
-         "--connect-timeout", "5", // 10 sec connect timeout
-         "--max-time", "15",        // 30 sec total timeout
+         "--connect-timeout", "10", // 10 sec connect timeout
+         "--max-time", "30",        // 30 sec total timeout
+         "--insecure",              // allow downgrade
          "--user-agent",
          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
          "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu",
          "--retry", "1", // retry once if transient failure
          "--write-out",
-         "%{stderr}%{content_type}\n%{http_code}", // put these to stderr
+         "%{stderr}%{content_type} code: %{http_code}", // put these to stderr
          url.cstr(), nullptr );
       assert( !"execl() failed" );
       }
@@ -63,6 +71,7 @@ String FetchUrl( const String &url )
    close( contentFd[ 1 ] );
    close( infoFd[ 1 ] );
 
+   // read stdout output
    scb::String content;
    char buf[ 2000 ];
    while ( true )
@@ -75,7 +84,8 @@ String FetchUrl( const String &url )
       content += String( buf, got );
       }
 
-   scb::String mime;
+   // read stderr output
+   scb::String meta;
    while ( true )
       {
       int got = read( infoFd[ 0 ], buf, sizeof( buf ) );
@@ -83,21 +93,25 @@ String FetchUrl( const String &url )
          break;
       if ( got == -1 )
          throw std::runtime_error( strerror( errno ) );
-      mime += String( buf, got );
+      meta += String( buf, got );
       }
 
-   if ( !mime.empty() && !mime.hasPrefixCaseInsensitive( "text" ) )
-      throw std::runtime_error( "not a text/* file" );
-
-   int stat;
-   while ( waitpid( pid, &stat, 0 ) == -1 )
+   if ( !meta.empty() && !meta.hasPrefixCaseInsensitive( "text" ) )
       {
-      if ( errno != EINTR )
-         assert( !"waitpid() failed" );
+      scb::String errMsg = "not a text/* file, actually ";
+      errMsg += meta;
+      throw std::runtime_error( errMsg.cstr() );
       }
 
-   if ( WEXITSTATUS( stat ) != 0 )
-      throw std::runtime_error( "curl error" );
+   int retCode = curlProc.Wait();
+   if ( retCode != 0 )
+      {
+      scb::String errMsg = "curl error: ";
+      errMsg += std::to_string( retCode ).c_str();
+      errMsg += " extra: ";
+      errMsg += meta;
+      throw std::runtime_error( errMsg.cstr() );
+      }
 
    return content;
    }
