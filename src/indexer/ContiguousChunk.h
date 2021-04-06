@@ -27,6 +27,7 @@ struct DocumentTableEntry
 struct SyncTableEntry
    {
       // How many posts does one SyncTableEntry cover
+      // Note: Currently set low for testing
       static constexpr int NUM_POSTS_COVERED = 500;
 
       // In this posting list, Post is recorded at Offset

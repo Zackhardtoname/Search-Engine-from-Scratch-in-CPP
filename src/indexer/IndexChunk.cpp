@@ -127,6 +127,7 @@ void IndexChunk::writeToDisk( const char *filename )
            serializedPostingLists.size() );
 
    // cleanup
+   // scb::HashBlob::Discard(postingListOffsetHashblob);
    munmap( chunk, chunkSize );
    close( fd );
    }
@@ -232,6 +233,9 @@ String SerializePostingList( const Vector<uint64_t> &lst )
       // .PostsOffset = static_cast<uint32_t>(
       //    sizeof( PostingListHeader ) + nEntries * sizeof( SyncTableEntry ) ),
    };
+
+   String serialized( reinterpret_cast<char *>( syncTable.get() ),
+                  nEntries * sizeof( SyncTableEntry ) );
 
    // combine the three
    return String( reinterpret_cast<char *>( &header ),

@@ -120,6 +120,7 @@ int main( int argc, char **argv )
       const SyncTableEntry *syncEntry = reinterpret_cast<const SyncTableEntry*>(plHeader+1);
       for ( size_t i = 0; i < plHeader->NumSyncTableEntries; ++i) {
          cout << "\t\t[" << i << "]\t" << syncEntry->Offset << "\t" << syncEntry->Post << std::endl;
+         ++syncEntry;
       }
 
       size_t postsOffset = static_cast<uint32_t>( sizeof( PostingListHeader ) + plHeader->NumSyncTableEntries * sizeof( SyncTableEntry ) );

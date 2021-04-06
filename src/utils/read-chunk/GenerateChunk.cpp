@@ -138,21 +138,21 @@ int main(int argc, char **argv)
 
       // Generate URL
       scb::String url = randURL();
-      std::cout << url.cstr() << std::endl;
+      // std::cout << url.cstr() << std::endl;
       testIngest.Url = url.cstr();
 
       // Create Ingest, Print ingestfile
       auto msg = Serialize(testIngest);
       size_t consumed;
-      std::ofstream ingestfile;
-      std::string filename = "most_recent_" + std::to_string(i) + ".ingest";
-      ingestfile.open (filename, std::ios::trunc);
-      ingestfile << msg.data();
-      ingestfile.close();
       auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
       assert( consumed == msg.size() );
       curChunk->Ingest( ingest );
 
+      // std::ofstream ingestfile;
+      // std::string filename = "most_recent_" + std::to_string(i) + ".ingest";
+      // ingestfile.open (filename, std::ios::trunc);
+      // ingestfile << msg.data();
+      // ingestfile.close();
    }
 
    threadPersistChunk(curChunk);
