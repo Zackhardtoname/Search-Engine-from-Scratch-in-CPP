@@ -4,7 +4,7 @@ project(crawler-parser-worker)
 set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
 
-add_executable(crawler-group ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp
+add_executable(crawler-group ../parser/ParsedHtml.cpp
         ../crawler/ParsedHttpResponse.cpp
         ../crawler/ParsedUrl.cpp
         ../crawler/Crawler.cpp ../stl/String.cpp

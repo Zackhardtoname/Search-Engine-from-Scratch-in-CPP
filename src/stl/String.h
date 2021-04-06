@@ -373,6 +373,11 @@ struct StringRef
          {
          }
 
+      StringRef( String::Iterator begin, String::Iterator end )
+          : Begin( begin ), End( end )
+         {
+         }
+
       [[nodiscard]] scb::String Str() const
          {
          return String( Begin, End );

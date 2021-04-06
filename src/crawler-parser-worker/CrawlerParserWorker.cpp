@@ -94,9 +94,9 @@ void *ThreadCrawlerParserWorker( void * )
 
          // post URLs to the bloom filter queue
          ParsedUrl pageUrl( buf );
-         for ( Link &link : parsedHtml.Links )
+         for ( String &link : parsedHtml.Links )
             {
-            String normalizedUrl = pageUrl.Normalize( link.Href );
+            String normalizedUrl = pageUrl.Normalize( link );
             mq_send( newLinks, normalizedUrl.data(), normalizedUrl.size(), 0 );
             }
 #ifdef VERY_VERBOSE

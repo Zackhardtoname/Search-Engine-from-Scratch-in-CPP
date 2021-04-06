@@ -14,7 +14,6 @@ find_package(GTest)
 
 add_executable(crawlerCmdline
         ../parser/ParsedHtml.cpp
-        ../parser/HtmlLexer.cpp
         ParsedHttpResponse.cpp
         ParsedUrl.cpp
         Crawler.cpp
