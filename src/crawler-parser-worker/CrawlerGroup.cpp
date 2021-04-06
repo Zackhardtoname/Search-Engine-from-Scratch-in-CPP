@@ -11,17 +11,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-bool interruptReceived = false;
-
-void GroupSIGINTHandler( int )
+void SIGINTTERMHandler( int )
    {
-   interruptReceived = true;
-   }
-
-void GroupSIGTERMHandler( int )
-   {
-   // so that we do not get killed by killpg() and can die after reaping our
-   // children.
+   die.store( true );
    }
 
 int main( int argc, char **argv )
@@ -49,7 +41,7 @@ int main( int argc, char **argv )
    // group, and inherited by the children workers.
    // If we want to go with multiple queues with different priorities,
    //    add flag O_NONBLOCK and poll from them.
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
+   frontier = mq_open( FRONTIER_MQ, O_RDONLY );
    if ( frontier == -1 )
       {
       std::cerr << "mq_open() failed for frontier: " << strerror( errno )
@@ -57,7 +49,7 @@ int main( int argc, char **argv )
       return 1;
       }
 
-   mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
+   newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
    if ( newLinks == -1 )
       {
       std::cerr << "mq_open() failed for newLinks: " << strerror( errno )
@@ -65,7 +57,7 @@ int main( int argc, char **argv )
       return 1;
       }
 
-   mqd_t parsedDocs = mq_open( PARSED_DOCS_QUEUE, O_WRONLY );
+   parsedDocs = mq_open( PARSED_DOCS_QUEUE, O_WRONLY );
    if ( parsedDocs == -1 )
       {
       std::cerr << "mq_open() failed for parsedDocs: " << strerror( errno )
@@ -74,70 +66,26 @@ int main( int argc, char **argv )
       }
 
    // get resources for the children
-   EnglishDictChecker englishDictChecker( argv[ 2 ] );
+   englishDictChecker = new EnglishDictChecker( argv[ 2 ] );
 
    // Register signals and signal handlers
-   // our children would register their own handler
-   struct sigaction sigactionTERM
+   struct sigaction SIGINTTERMAction
       {
       };
-   sigactionTERM.sa_handler = GroupSIGTERMHandler;
-   sigactionTERM.sa_flags =
+   SIGINTTERMAction.sa_handler = SIGINTTERMHandler;
+   SIGINTTERMAction.sa_flags =
       0; // no SA_RESTART so that wait() can be interrupted
-   sigaction( SIGTERM, &sigactionTERM, nullptr );
-
-   struct sigaction sigactionINT
-      {
-      };
-   sigactionINT.sa_handler = GroupSIGINTHandler;
-   sigactionINT.sa_flags = 0; // no SA_RESTART so that wait() can be interrupted
-   sigaction( SIGINT, &sigactionINT, nullptr );
+   sigaction( SIGTERM, &SIGINTTERMAction, nullptr );
+   sigaction( SIGINT, &SIGINTTERMAction, nullptr );
 
    std::cout << "crawler controller starting" << std::endl;
    // spin-up NUM_CRAWLERS crawlers
    for ( int i = 0;  i < numChildren;  ++i )
-      if ( pid_t child = fork() )
-         {
-         std::cout << "started child " << child << std::endl;
-         }
-      else
-         // Q. why not exec?
-         // A. fork and continue running so that children can inherit resources
-         return CrawlerParserWorkerMain( frontier, newLinks, parsedDocs,
-                                         englishDictChecker );
-
-   // watch for death of children and restart them
-   int childStatus;
-   while ( pid_t deadChild = wait( &childStatus ) )
       {
-      if ( deadChild == -1 && errno != EINTR )
-         {
-         std::cout << "wait(): " << strerror( errno ) << std::endl;
-         return 255;
-         }
-
-      if ( interruptReceived )
-         {
-         std::cout << "interrupt received... killing all children" << std::endl;
-         killpg( 0, SIGTERM );
-         while ( wait( nullptr ) != -1 )
-            ;
-         return 0;
-         }
-
-      std::cout << "child pid = " << deadChild
-                << " exited status = " << WEXITSTATUS( childStatus )
-                << std::endl;
-      if ( pid_t child = fork() )
-         {
-         sleep(
-            1 ); // this gives us chance to abort if children exit immediately
-         std::cout << "started child " << child << std::endl;
-         }
-      else
-         return CrawlerParserWorkerMain( frontier, newLinks, parsedDocs,
-                                         englishDictChecker );
+      pthread_t child;
+      pthread_create( &child, nullptr, ThreadCrawlerParserWorker, nullptr );
+      pthread_detach( child );
       }
 
-   return 0;
+   pthread_exit( nullptr );
    }

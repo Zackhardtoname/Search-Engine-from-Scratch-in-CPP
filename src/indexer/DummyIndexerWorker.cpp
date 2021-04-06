@@ -29,6 +29,7 @@ int main( int argc, char **argv )
    assert( parsedDocsQueue != -1 && "mq_open() failed" );
 
    long numDocs = 0;
+   unsigned lastTime = time( NULL );
    while ( true )
       {
       // get current time
@@ -56,10 +57,16 @@ int main( int argc, char **argv )
          // write to dump file
          size_t written = fwrite( buffer, sizeof( int32_t ) + msgSize, 1, f );
          assert( written == 1 && "fwrite() failed" );
-         curSize += written;
+         curSize += sizeof( int32_t ) + msgSize;
 
-         if ( numDocs % 10000 == 0 )
-            std::cout << "doc count: " << numDocs << std::endl;
+         if ( numDocs % 2000 == 0 )
+            {
+            int elapsed = time( NULL ) - lastTime;
+            std::cout << "doc count: " << numDocs
+                      << ", rate (doc/s) = " << ( 2000.0 / elapsed )
+                      << std::endl;
+            lastTime = time( NULL );
+            }
          }
 
       // close file and open the next one
