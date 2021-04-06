@@ -127,7 +127,7 @@ struct SerialTuple
                }
             
             // Key null terminator
-            *buffer++ = '\0';
+            // *buffer++ = '\0';
 
             // Next bucket
             b = b->next;
