@@ -22,7 +22,7 @@ add_executable(filter-worker
         ThreadNewLinksMqueue.cpp
         ThreadRemoteWorkers.cpp
         ThreadRemoteUrls.cpp
-        ThreadFilteredUrls.cpp)
+        ThreadFilteredUrls.cpp ThreadMonitor.cpp)
 target_link_libraries(filter-worker rt Threads::Threads ssl crypto ${CURL_LIBRARIES})
 
 # testing

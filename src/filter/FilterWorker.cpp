@@ -40,6 +40,9 @@ void FilterWorker::Run()
    pthread_create( &pthRemoteUrls, nullptr, threadRemoteUrls, this );
    pthread_create( &pthFilteredUrls, nullptr, threadFilteredUrls, this );
 
+   pthread_t pthMonitor;
+   pthread_create( &pthMonitor, nullptr, threadMonitor, this );
+
    // wait on any one of the threads
    pthread_join( pthNewLinksMqueue, nullptr );
    }
@@ -134,6 +137,8 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
 
 void FilterWorker::handleUnfilteredLink( const String &link )
    {
+   ++count;
+
    ParsedUrl url( link );
 
    // filter by domain hash

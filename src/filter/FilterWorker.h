@@ -106,6 +106,11 @@ class FilterWorker
       // param [this thread takes ownership]: Vector<ParsedUrl>* urls to offload
       static void *threadOffloadUrls( void * );
 
+      /// A monitoring thread
+      std::atomic<long> count = 0;
+
+      [[noreturn]] static void *threadMonitor( void * );
+
       /// /threads
 
       void handleUnfilteredLink( const String &link );
