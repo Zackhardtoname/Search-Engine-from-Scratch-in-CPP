@@ -66,11 +66,11 @@ int main( int argc, char **argv )
       reinterpret_cast<DocumentTableEntry *>( header + 1 );
 
    cout << "Document Table:" << endl;
-   cout << "\tIndex\tUrlOffs" << endl;
+   cout << "\tIndex\tUrlOffs\tLasPost" << endl;
    // For each Document Table Entry
    for ( size_t i = 0;  i < header->DocumentCount;  ++i, ++currentEntry )
       {
-      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << endl;
+      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << "\t" << currentEntry->LastPost << endl;
       }
 
    // * ===== Read URL List =====
