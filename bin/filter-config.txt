@@ -1,2 +1,10 @@
-1
-scb://localhost:9000
+9
+scb://0.scooble.hanyou.dev:35.209.127.129
+scb://1.scooble.hanyou.dev:35.209.3.15
+scb://2.scooble.hanyou.dev:35.208.23.23
+scb://3.scooble.hanyou.dev:35.208.158.237
+scb://4.scooble.hanyou.dev:35.209.91.203
+scb://5.scooble.hanyou.dev:35.208.237.204
+scb://6.scooble.hanyou.dev:35.209.94.95
+scb://7.scooble.hanyou.dev:35.209.146.144
+scb://8.scooble.hanyou.dev:35.209.233.83

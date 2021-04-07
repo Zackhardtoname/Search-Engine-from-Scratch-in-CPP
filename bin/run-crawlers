@@ -33,10 +33,9 @@ echo " --- Step 3) Setup indexer --- "
 ./dummy-indexer 2000000 &
 
 echo " --- Step 4) Start filter worker --- "
-# Start up the filter worker with thte remote config, bloom file, and worker count.
-# TODO: Determine number of machines we are using and ip addresses of them. Also
-# update the filter-config.txt file appropriately.
-./filter-worker filter-config.txt bloom 0 &
+# Start up the filter worker with the remote config, bloom file, and worker count.
+# We are using 9 machines and their ip addresses are specified in filter-config.txt
+./filter-worker filter-config.txt bloom 9 &
 
 echo " --- Step 5) Start running the crawlers --- "
 # Start up all the crawler workers to begin crawling.
