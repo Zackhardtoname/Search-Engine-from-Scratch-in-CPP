@@ -57,7 +57,7 @@ void IndexChunk::writeToDisk( const char *filename )
    for ( int i = 0;  i < Documents.size();  i++ )
       {
       docTable[ i ].UrlOffset = urlList.size();
-      // docTable[ i ].LastPost = Documents[ i ].LastPost;
+      docTable[ i ].LastPost = Documents[ i ].LastPost;
 
       urlList += Documents[ i ].Url;
       urlList.pushBack( '\0' );
