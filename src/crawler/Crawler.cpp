@@ -46,6 +46,9 @@ CURL *GetCurlHandle( String *content )
    curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT,
                      10 ); // abort if 10 seconds not connect
 
+   curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0 );
+   curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0 );
+
    return curl;
    }
 
