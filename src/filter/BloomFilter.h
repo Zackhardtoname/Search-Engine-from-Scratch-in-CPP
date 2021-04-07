@@ -13,6 +13,7 @@
 #include <openssl/md5.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 class Bloomfilter
    {
@@ -21,9 +22,21 @@ class Bloomfilter
             uint64_t result[ 2 ];
          };
 
+      struct SyncArgs
+         {
+            void *filebacked;
+            void *memcache;
+            off_t size;
+         };
+
       uint8_t *bits;
       int numHashes;
       uint64_t size;
+
+      void *filebacked;
+      void *memcache;
+
+      pthread_t pthSync;
 
       static HashResult hash( const scb::String &s )
          {
@@ -39,6 +52,17 @@ class Bloomfilter
          return ( val.result[ 0 ] + k * val.result[ 1 ] ) % size;
          }
 
+      [[noreturn]] static void *threadSync( void *p )
+         {
+         auto *arg = static_cast<SyncArgs *>( p );
+         while ( true )
+            {
+            sleep( 60 * 5 );
+            memcpy( arg->filebacked, arg->memcache, arg->size );
+            std::cout << "synced bloom file" << std::endl;
+            }
+         }
+
    public:
       Bloomfilter( const char *bloomFile )
          {
@@ -52,7 +76,7 @@ class Bloomfilter
          assert( fstat( fd, &fileStat ) != -1 &&
                  "failed to stat() bloom file" );
 
-         void *blob =
+         filebacked =
             mmap( nullptr,                // system choose address for us
                   fileStat.st_size,       // length of mapping
                   PROT_READ | PROT_WRITE, // we want both read and write
@@ -60,24 +84,23 @@ class Bloomfilter
                   fd,                     // underlying file to use
                   0                       // the whole file from the beginning
             );
-         if ( blob == MAP_FAILED )
+         if ( filebacked == MAP_FAILED )
             {
             std::cerr << strerror( errno ) << std::endl;
             exit( 1 );
             }
-         if ( mlock( blob, fileStat.st_size ) != 0 )
-            {
-            std::cerr
-               << "mlock() failed: " << strerror( errno ) << '\n'
-               << "The success of this is critical to performance.\n"
-               << "Try run `ulimit -l unlimited` first, or run this as root.\n";
-            exit( 1 );
-            }
+
+         memcache = malloc( fileStat.st_size );
+         memcpy( memcache, filebacked, fileStat.st_size );
+
          // Number of hashes is contained within the first value in mmapped
          // files as seen below.
-         numHashes = *static_cast<uint32_t *>( blob );
-         bits = static_cast<uint8_t *>( blob ) + sizeof( uint32_t );
+         numHashes = *static_cast<uint32_t *>( memcache );
+         bits = static_cast<uint8_t *>( memcache ) + sizeof( uint32_t );
          size = ( fileStat.st_size - sizeof( uint32_t ) ) * 8;
+
+         auto *arg = new SyncArgs{ filebacked, memcache, fileStat.st_size };
+         pthread_create( &pthSync, nullptr, threadSync, arg );
          }
 
       bool Insert( const scb::String &s )
