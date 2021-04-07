@@ -12,4 +12,6 @@ using scb::String;
 
 CURL *GetCurlHandle( String *content );
 
+void HandleCurlCode( CURL *curl, CURLcode code );
+
 #endif // CRAWLER_REQUESTER_H

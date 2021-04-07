@@ -43,8 +43,7 @@ void *ThreadCrawlerParserWorker( void * )
          curl_easy_setopt( curl, CURLOPT_URL, url.cstr() );
          content.clear();
          CURLcode code = curl_easy_perform( curl );
-         if ( code != CURLE_OK )
-            throw std::runtime_error( curl_easy_strerror( code ) );
+         HandleCurlCode( curl, code );
 
          ParsedHtml parsedHtml( content );
          // filter out non-english page by HTML

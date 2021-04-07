@@ -66,8 +66,7 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
       auto robotstxtUrl = args->Url.Normalize( "robots.txt" );
       curl_easy_setopt( curl, CURLOPT_URL, robotstxtUrl.cstr() );
       CURLcode code = curl_easy_perform( curl );
-      if ( code != CURLE_OK )
-         throw std::runtime_error( curl_easy_strerror( code ) );
+      HandleCurlCode( curl, code );
 
       Robotstxt robotstxt( content ); // warning: this may throw
       curl_easy_cleanup( curl );

@@ -48,3 +48,20 @@ CURL *GetCurlHandle( String *content )
 
    return curl;
    }
+
+void HandleCurlCode( CURL *curl, CURLcode code )
+   {
+   switch ( code )
+      {
+      case CURLE_OK:
+         break;
+      case CURLE_HTTP_RETURNED_ERROR:
+         {
+         long respCode = -1;
+         curl_easy_getinfo( curl, CURLINFO_HTTP_CODE, &respCode );
+         throw std::runtime_error( "HTTP " + std::to_string( respCode ) );
+         }
+      default:
+         throw std::runtime_error( curl_easy_strerror( code ) );
+      }
+   }
