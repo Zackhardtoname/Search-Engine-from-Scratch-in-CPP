@@ -15,5 +15,6 @@
       sleep( 10 );
       long cur = self.count.load();
       std::cout << "rate (link/s): " << ( cur - prev ) / 10.0 << std::endl;
+      prev = cur;
       }
    }
