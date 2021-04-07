@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HASH_BLOB_H
+#define HASH_BLOB_H
 
 // HashBlob, a serialization of a HashTable into one contiguous
 // block of memory, possibly memory-mapped to a HashFile.
@@ -18,16 +19,18 @@
 #include <unistd.h>
 
 #include "HashTable.h"
+#include "StringHash.h"
 
 #define NullTerminatorSize 8
 
-namespace scb {
+namespace scb
+   {
 
 constexpr size_t SerialTupleBaseSize = 3 * sizeof( size_t );
 
-using Hash = scb::HashTable<const char *, size_t>;
-using Pair = Tuple<const char *, size_t>;
-using HashBucket = Bucket<const char *, size_t>;
+using Hash = scb::HashTable<String, size_t, StringHash>;
+using Pair = Tuple<String, size_t>;
+using HashBucket = Bucket<String, size_t>;
 
 static const size_t Unknown = 0;
 
@@ -60,10 +63,21 @@ struct SerialTuple
       // The Key will be a C-string of whatever length.
       char Key[ Unknown ];
 
+      String GetKey() const
+         {
+         /* If no null terminator, need this to print properly */
+         size_t keyLength = Length - sizeof( SerialTuple );
+         char keyBuffer[ keyLength + 1 ];
+         strncpy( keyBuffer, Key, keyLength );
+         keyBuffer[ keyLength ] = '\0';
+
+         return String( keyBuffer );
+         }
+
       static size_t BytesForBucket( const HashBucket *b )
          {
          // TODO: add roundup maybe
-         return SerialTupleBaseSize + strlen( b->tuple.key );
+         return SerialTupleBaseSize + b->tuple.key.length();
          }
 
       // Calculate the bytes required to encode a HashBucket as a
@@ -105,12 +119,15 @@ struct SerialTuple
             buffer = reinterpret_cast<char *>( size_t_buf );
 
             size_t i = 0;
+
+            // For each character in the key
             while ( b->tuple.key[ i ] )
                {
                *buffer++ = b->tuple.key[ i ];
                ++i;
                }
 
+            // Next bucket
             b = b->next;
             }
 
@@ -142,12 +159,66 @@ class HashBlob
       size_t MagicNumber;
       size_t Version;
       size_t BlobSize;
-      size_t NumberOfBuckets;
+      size_t numBuckets;
       size_t Buckets[ Unknown ];
 
       // The SerialTuples will follow immediately after.
 
-      const SerialTuple *Find( const char *key ) const
+      const size_t Size() const
+         {
+         return BlobSize;
+         }
+
+      // Print the header and contents of the hasblob
+      void Print( std::ostream &os ) const
+         {
+
+         // Print header
+         std::cout << "\tMagic Number: " << MagicNumber
+                   << "\n\tVersion: " << Version << "\n\tBlobSize: " << BlobSize
+                   << "\n\tNumber of Buckets: " << numBuckets << "\n";
+
+         // Print contents
+         const char *start = reinterpret_cast<const char *>( this );
+         // For all buckets
+         for ( size_t i = 0;  i < numBuckets;  ++i )
+            {
+
+            // If there is a chain in this bucket
+            if ( Buckets[ i ] != 0 )
+               {
+               const char *currentPos = start + Buckets[ i ];
+               const scb::SerialTuple *currentTuple =
+                  reinterpret_cast<const scb::SerialTuple *>( currentPos );
+
+               os << "\tBucket: " << i
+                  << "\tHash Value: " << currentTuple->HashValue << "\n";
+
+               // Print the whole chain
+               while ( currentTuple->Length != 0 )
+                  {
+
+                  os << "\t\tKey: " << currentTuple->GetKey()
+                     << "\tVal: " << currentTuple->Value
+                     << "\tSerialTuple Length: " << currentTuple->Length
+                     << "\n";
+                  currentPos += currentTuple->Length;
+                  currentTuple =
+                     reinterpret_cast<const scb::SerialTuple *>( currentPos );
+                  }
+               }
+            }
+         }
+
+      // Stream insertion override for HashBlob
+      friend std::ostream &operator<<( std::ostream &output,
+                                       const HashBlob &blob )
+         {
+         blob.Print( output );
+         return output;
+         }
+
+      const SerialTuple *Find( scb::String key ) const
          {
          // if (!strcmp(key, "would")) std::cout << "testing: blob find on " <<
          // key << std::endl;
@@ -157,9 +228,13 @@ class HashBlob
 
          // 1. calculate hashValue -> TODO: need to add fnvHash code into this
          // file
-         size_t hashVal = Hash::fnvHash( key, strlen( key ) );
+         // Old: size_t hashVal = Hash::fnvHash( key, strlen( key ) );
+
+         StringHash hash;
+
+         size_t hashVal = hash( key );
          // 2. calculate index
-         size_t index = hashVal % NumberOfBuckets;
+         size_t index = hashVal % numBuckets;
          // 3. check Buckets to see if the key even exists
          size_t chainStart = Buckets[ index ];
          // if (!strcmp(key, "would")) std::cout << "testing: blob find on
@@ -216,7 +291,7 @@ class HashBlob
             auto k = reinterpret_cast<const SerialTuple *>( chainAddress );
 
             // If we found the key we were looking for
-            if ( !strcmp( tupleKey, key ) )
+            if ( !strcmp( tupleKey, key.cstr() ) )
                return reinterpret_cast<const SerialTuple *>( chainAddress );
 
             chainAddress += tupleLength;
@@ -235,12 +310,12 @@ class HashBlob
 
          size_t header_size = 4 * sizeof( size_t );
          size_t buckets_section_size =
-            sizeof( size_t ) * ( hashTable->numberOfBuckets );
+            sizeof( size_t ) * ( hashTable->numBuckets );
          size_t tuples_section_size = 0;
 
          // Sum up the space required for all serialtuples (including null
          // terminators)
-         for ( int i = 0;  i < hashTable->numberOfBuckets;  ++i )
+         for ( int i = 0;  i < hashTable->numBuckets;  ++i )
             {
             // Assume that BytesRequired accounts for separate chaining and
             // null terminator size
@@ -261,17 +336,17 @@ class HashBlob
          hb->MagicNumber = 0;
          hb->Version = 1;
          hb->BlobSize = bytes;
-         hb->NumberOfBuckets = hashTable->numberOfBuckets;
+         hb->numBuckets = hashTable->numBuckets;
 
-         for ( size_t i = 0;  i < hb->NumberOfBuckets;  ++i )
+         for ( size_t i = 0;  i < hb->numBuckets;  ++i )
             {
             *( hb->Buckets + i ) = 0;
             }
 
          char *startOfEmptyTupleMemory =
-            reinterpret_cast<char *>( hb->Buckets + hb->NumberOfBuckets );
+            reinterpret_cast<char *>( hb->Buckets + hb->numBuckets );
 
-         for ( size_t i = 0;  i < hashTable->numberOfBuckets;  ++i )
+         for ( size_t i = 0;  i < hashTable->numBuckets;  ++i )
             {
             if ( hashTable->buckets[ i ] )
                {
@@ -299,8 +374,6 @@ class HashBlob
 
       static HashBlob *Create( const Hash *hashTable )
          {
-         // TODO: use malloc() here based on BytesRequired
-         // TODO: maybe avoid duplicate call to BytesRequired?
          size_t numBytes = BytesRequired( hashTable );
          return Write( reinterpret_cast<HashBlob *>( malloc( numBytes ) ),
                        numBytes, hashTable );
@@ -310,9 +383,130 @@ class HashBlob
 
       static void Discard( HashBlob *blob )
          {
-         // TODO: this is effectively a destructor!
          // need to call free on the blob!
          free( reinterpret_cast<void *>( blob ) );
+         }
+
+      class Iterator
+         {
+         private:
+            friend class HashBlob;
+
+            const HashBlob *hashBlob;
+            size_t currentBucket;
+            const SerialTuple *currentTuple;
+
+            Iterator( const HashBlob *blob, size_t bucketIdxIn,
+                      SerialTuple *tuplePtrIn )
+                : hashBlob{ blob }, currentBucket{ bucketIdxIn }, currentTuple{
+                     tuplePtrIn
+                  }
+               {
+               }
+
+         public:
+            Iterator( const HashBlob *blob ) : Iterator( blob, 0, nullptr )
+               {
+               // Increment to first bucket with something
+               for ( ;  currentBucket < hashBlob->numBuckets &&
+                        hashBlob->Buckets[ currentBucket ] == 0;
+                     ++currentBucket )
+                  ;
+               // If end of table
+               if ( currentBucket >= hashBlob->numBuckets )
+                  {
+                  currentTuple == nullptr;
+                  }
+               else
+                  {
+                  currentTuple = reinterpret_cast<const SerialTuple *>(
+                     reinterpret_cast<const char *>( hashBlob ) +
+                     hashBlob->Buckets[ currentBucket ] );
+                  }
+               }
+
+            Iterator() : Iterator( nullptr, 0, nullptr )
+               {
+               }
+
+            ~Iterator()
+               {
+               }
+
+            const SerialTuple &operator*()
+               {
+               return *currentTuple;
+               }
+
+            const SerialTuple *operator->() const
+               {
+               return currentTuple;
+               }
+
+            // Prefix ++
+            Iterator &operator++()
+               {
+               // Move to next entry in chain
+               currentTuple = reinterpret_cast<const scb::SerialTuple *>(
+                  reinterpret_cast<const char *>( currentTuple ) +
+                  currentTuple->Length );
+
+               // If the length is 0, it's actually the end of the chain.
+               // Find the next chain with a filled bucket
+               if ( currentTuple->Length == 0 )
+                  {
+
+                  // Start with the next bucket
+                  ++currentBucket;
+
+                  // Iterate to next bucket with contents (may be current one)
+                  for ( ;  currentBucket < hashBlob->numBuckets &&
+                           hashBlob->Buckets[ currentBucket ] == 0;
+                        ++currentBucket )
+                     ;
+                  // If end of table
+                  if ( currentBucket >= hashBlob->numBuckets )
+                     {
+                     currentTuple = nullptr;
+                     }
+                  else
+                     {
+                     currentTuple = reinterpret_cast<const SerialTuple *>(
+                        reinterpret_cast<const char *>( hashBlob ) +
+                        hashBlob->Buckets[ currentBucket ] );
+                     }
+                  }
+               return *this;
+               }
+
+            // Postfix ++
+            Iterator operator++( int )
+               {
+               Iterator ret = *this;
+               ++( *this );
+               return ret;
+               }
+
+            bool operator==( const Iterator &rhs ) const
+               {
+               return currentTuple == rhs.currentTuple;
+               }
+
+            bool operator!=( const Iterator &rhs ) const
+               {
+               return currentTuple != rhs.currentTuple;
+               }
+         };
+
+      Iterator begin() const
+         {
+         return Iterator( this );
+         }
+
+      Iterator end() const
+         {
+         // one past the end
+         return Iterator();
          }
    };
 
@@ -400,4 +594,6 @@ class HashFile
          close( fd );
          }
    };
-}
+   } // namespace scb
+
+#endif // HASH_BLOB_H

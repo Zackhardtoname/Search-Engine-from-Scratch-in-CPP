@@ -19,6 +19,7 @@ class VLQ
    public:
       static String Encode( uint64_t );
       static uint64_t Decode( StringRef s, size_t *consumed );
+      static int Length( uint64_t );
    };
 
 class VLQStreamDecoder

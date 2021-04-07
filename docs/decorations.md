@@ -1,3 +1,4 @@
-| Default Header | Center Align |
+| Target         | Decorator    |
 | :------------: | :----------: |
 | title          | @            |
+| document end   | /            |

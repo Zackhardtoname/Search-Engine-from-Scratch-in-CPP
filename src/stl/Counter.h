@@ -7,11 +7,12 @@
 
 #include "../indexer/IndexChunk.h"
 #include "String.h"
+#include "StringHash.h"
 #include <unordered_map>
 
 class Counter
    {
-      std::unordered_map<scb::String, int, StringHash> data;
+      std::unordered_map<scb::String, int, scb::StringHash> data;
 
    public:
       int Get( const scb::String &x )

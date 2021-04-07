@@ -22,6 +22,9 @@ src/stl/hashTable/HashBlob
 src/stl/hashTable/HashFile*
 src/stl/hashTable/HashTable
 src/stl/hashTable/Top10*
+src/indexer/dummy-indexer
+src/indexer/indexer-worker
+
 
 # Hashblob files
 src/stl/hashTable/HashBlob.bin
@@ -34,4 +37,3 @@ src/stl/hashTable/HashBlob.bin
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
->>>>>>> master

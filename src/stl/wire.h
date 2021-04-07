@@ -53,6 +53,7 @@ template <typename T> struct WireType<scb::Vector<T>>
          buf = buf.Substr( *consumed );
 
          scb::Vector<T> rst;
+         rst.reserve(numElements);
          for ( int i = 0;  i < numElements;  i++ )
             {
             size_t sizeEle;
