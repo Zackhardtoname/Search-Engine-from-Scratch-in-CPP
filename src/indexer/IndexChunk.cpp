@@ -125,7 +125,7 @@ void IndexChunk::writeToDisk( const char *filename )
            serializedPostingLists.size() );
 
    // cleanup
-   // scb::HashBlob::Discard(postingListOffsetHashblob);
+   scb::HashBlob::Discard(postingListOffsetHashblob);
    munmap( chunk, chunkSize );
    close( fd );
    }
