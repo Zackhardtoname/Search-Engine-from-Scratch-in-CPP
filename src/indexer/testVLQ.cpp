@@ -57,6 +57,7 @@ TEST( VQLEncoderTest, CheckEncodingDecodingSmall )
       String s = VLQ::Encode( i );
       size_t consumed;
       EXPECT_EQ( VLQ::Decode( s, &consumed ), i );
+      EXPECT_EQ( consumed, s.size() );
       }
    }
 
@@ -72,6 +73,7 @@ TEST( VQLEncoderTest, CheckEncodingDecodingRandom )
       String s = VLQ::Encode( num );
       size_t consumed;
       EXPECT_EQ( num, VLQ::Decode( s, &consumed ) );
+      EXPECT_EQ( consumed, s.size() );
       }
    }
 

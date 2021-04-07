@@ -22,6 +22,8 @@ src/stl/hashTable/HashBlob
 src/stl/hashTable/HashFile*
 src/stl/hashTable/HashTable
 src/stl/hashTable/Top10*
+src/indexer/dummy-indexer
+src/indexer/indexer-worker
 bin/crawler-group
 bin/crawlerCmdline
 bin/create_test_chunk

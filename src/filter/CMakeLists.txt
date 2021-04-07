@@ -4,6 +4,12 @@ project(filter)
 set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
 
+add_executable(constant-filter
+        ConstantFilterWorker.cpp
+        ../stl/String.cpp
+        )
+target_link_libraries(constant-filter rt)
+
 add_executable(dummy-filter
         DummyFilterWorker.cpp
         ../stl/String.cpp
