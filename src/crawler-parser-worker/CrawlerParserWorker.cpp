@@ -40,6 +40,8 @@ void *ThreadCrawlerParserWorker( void * )
 
       try
          {
+         curl_easy_cleanup( curl );
+         curl = GetCurlHandle( &content );
          curl_easy_setopt( curl, CURLOPT_URL, url.cstr() );
          content.clear();
          CURLcode code = curl_easy_perform( curl );
