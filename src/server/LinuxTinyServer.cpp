@@ -326,6 +326,7 @@ int main( int argc, char **argv )
    // socket.
 
    struct sockaddr_in listenAddress,  talkAddress;
+   socklen_t listenAddressLength = sizeof( listenAddress );
    socklen_t talkAddressLength = sizeof( talkAddress );
    memset( &listenAddress, 0, sizeof( listenAddress ) );
    memset( &talkAddress, 0, sizeof( talkAddress ) );
@@ -346,15 +347,15 @@ int main( int argc, char **argv )
 
    // TO DO:  Create the listenSocket, specifying that we'll r/w
    // it as a stream of bytes using TCP/IP.
-   int listenSocketFD = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
    // TO DO:  Bind the listen socket to the IP address and protocol
    // where we'd like to listen for connections.
-   if (bind(listenSocketFD, (struct sockaddr *)&listenAddress, sizeof(listenAddress)) < 0)
+   if (bind(listenSocket, (struct sockaddr *)&listenAddress, sizeof(listenAddress)) < 0)
       cout << "bind failed";
 
    // TO DO:  Begin listening for clients to connect to us.
-   if (listen(listenSocketFD, backlog) < 0)
+   if (listen(listenSocket, backlog) < 0)
       cout << "listen failed";
 
    // The second argument to listen( ) specifies the maximum
@@ -370,28 +371,29 @@ int main( int argc, char **argv )
    // the client over the new talk socket that's created by Linux
    // when we accept the connection.
 
-   while (accept(listenSocketFD, (struct sockaddr *)(&listenAddress), (socklen_t*)&listenAddress))
-      {
-      // TO DO:  Create and detach a child thread to talk to the
-      // client using pthread_create and pthread_detach.
+   if ((talkSocket = accept(listenSocket, (struct sockaddr *)(&listenAddress), (socklen_t*)&listenAddressLength)) < 0)
+      cout << "accept error" << talkSocket << "\n";
 
-      // When creating a child thread, you get to pass a void *,
-      // usually used as a pointer to an object with whatever
-      // information the child needs.
-      
-      // The talk socket is passed on the heap rather than with a
-      // pointer to the local variable because we're going to quickly
-      // overwrite that local variable with the next accept( ).  Since
-      // this is multithreaded, we can't predict whether the child will
-      // run before we do that.  The child will be responsible for
-      // freeing the resource.  We do not wait for the child thread
-      // to complete.
-      //
-      // (A simpler alternative in this particular case would be to
-      // caste the int talksocket to a void *, knowing that a void *
-      // must be at least as large as the int.  But that would not
-      // demonstrate what to do in the general case.)
-      }
+   // TO DO:  Create and detach a child thread to talk to the
+   // client using pthread_create and pthread_detach.
+
+   // When creating a child thread, you get to pass a void *,
+   // usually used as a pointer to an object with whatever
+   // information the child needs.
+
+   // The talk socket is passed on the heap rather than with a
+   // pointer to the local variable because we're going to quickly
+   // overwrite that local variable with the next accept( ).  Since
+   // this is multithreaded, we can't predict whether the child will
+   // run before we do that.  The child will be responsible for
+   // freeing the resource.  We do not wait for the child thread
+   // to complete.
+   //
+   // (A simpler alternative in this particular case would be to
+   // caste the int talksocket to a void *, knowing that a void *
+   // must be at least as large as the int.  But that would not
+   // demonstrate what to do in the general case.)
+   cout << "here";
 
    close( listenSocket );
    }
