@@ -270,9 +270,16 @@ void *Talk( void *talkSocket )
 
    // Cast from void * to int * to recover the talk socket id
    // then delete the copy passed on the heap.
+   int talkSocketFD = * (int *) talkSocket;
+   free(talkSocket);
 
    // Read the request from the socket and parse it to extract
    // the action and the path, unencoding any %xx encodings.
+   char buffer[10240];
+   int bytes;
+   while ((bytes = recv(talkSocketFD, buffer, sizeof(buffer), 0)) > 0)
+      write(1, buffer, bytes);
+
 
    // Check to see if there's a plugin and, if there is,
    // whether this is a magic path intercepted by the plugin.
@@ -287,6 +294,9 @@ void *Talk( void *talkSocket )
    // If the path refers to a file, write it to the socket.
 
    // Close the socket and return nullptr.
+
+   close( talkSocketFD );
+   return nullptr;
    }
 
 
@@ -371,8 +381,11 @@ int main( int argc, char **argv )
    // the client over the new talk socket that's created by Linux
    // when we accept the connection.
 
-   if ((talkSocket = accept(listenSocket, (struct sockaddr *)(&listenAddress), (socklen_t*)&listenAddressLength)) < 0)
-      cout << "accept error" << talkSocket << "\n";
+   while ((talkSocket = accept(listenSocket, (struct sockaddr *)(&listenAddress), (socklen_t*)&listenAddressLength)) && talkSocket != -1) {
+      pthread_t child;
+      pthread_create(&child, nullptr, Talk, new int(talkSocket));
+      pthread_detach(child);
+   }
 
    // TO DO:  Create and detach a child thread to talk to the
    // client using pthread_create and pthread_detach.
@@ -393,7 +406,6 @@ int main( int argc, char **argv )
    // caste the int talksocket to a void *, knowing that a void *
    // must be at least as large as the int.  But that would not
    // demonstrate what to do in the general case.)
-   cout << "here";
 
    close( listenSocket );
    }
