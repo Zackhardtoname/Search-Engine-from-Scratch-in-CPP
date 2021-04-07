@@ -1,117 +1,50 @@
+#include "Crawler.h"
+#include "../defs.h"
 #include "../stl/RAII.h"
+#include "../stl/UniquePointer.h"
 #include "../stl/utils.h"
+#include "ParsedHttpResponse.h"
+#include "ParsedUrl.h"
 #include <cassert>
+#include <curl/curl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "../stl/UniquePointer.h"
-#include "Crawler.h"
-#include "ParsedHttpResponse.h"
-#include "ParsedUrl.h"
-
-String FetchUrl( const String &url )
+size_t curlWriteCallback( char *ptr, size_t size, size_t nmemb, void *pString )
    {
-   int contentFd[ 2 ];
-   if ( pipe( contentFd ) != 0 )
-      {
-      std::cerr << "pipe() failed: " << strerror( errno ) << std::endl;
-      exit( 1 );
-      }
-   int infoFd[ 2 ];
-   if ( pipe( infoFd ) != 0 )
-      {
-      std::cerr << "pipe() failed: " << strerror( errno ) << std::endl;
-      exit( 1 );
-      }
+   auto *content = static_cast<String *>( pString );
+   for ( int i = 0;  i < size * nmemb;  i++ )
+      content->pushBack( ptr[ i ] );
+   return size * nmemb;
+   }
 
-   Defer closePipe(
-      [ & ]()
-      {
-         close( contentFd[ 0 ] );
-         close( infoFd[ 0 ] );
-      } );
+CURL *GetCurlHandle( String *content )
+   {
+   CURL *curl = curl_easy_init();
 
-   ForkedChild curlProc;
-   if ( curlProc.IsChild() )
-      {
-      // child
-      dup2( contentFd[ 1 ], STDOUT_FILENO ); // redirect stdout to content
-      close( contentFd[ 0 ] ); // now that STDOUT_FILENO points to the pipe,
-      close(
-         contentFd[ 1 ] ); // we can close the two original file descriptors.
-      dup2( infoFd[ 1 ], STDERR_FILENO ); // redirect stderr to info
-      close( infoFd[ 0 ] );
-      close( infoFd[ 1 ] );
+   // setup writing to `content`
+   curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 1 ); // no progress bar
+   curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, curlWriteCallback );
+   curl_easy_setopt( curl, CURLOPT_WRITEDATA, content );
 
-      execl(
-         "/usr/bin/curl", "curl",
-         "--disable",               // don't read .curlrc
-         "--fail",                  // error whenever not HTTP 200 OK
-         "--silent",                // no progress bar to mess up stderr
-         "--max-filesize", "5m",    // abort on files larger than this
-         "--location",              // follow redirections
-         "--max-redirs", "10",      // at most 10 times
-         "--connect-timeout", "10", // 10 sec connect timeout
-         "--max-time", "30",        // 30 sec total timeout
-         "--insecure",              // allow downgrade
-         "--user-agent",
-         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
-         "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu",
-         "--retry", "1", // retry once if transient failure
-         "--write-out",
-         "%{stderr}%{content_type} code: %{http_code}", // put these to stderr
-         url.cstr(), nullptr );
-      assert( !"execl() failed" );
-      }
+   // setup options
+   curl_easy_setopt( curl, CURLOPT_FAILONERROR, 1 );    // error on >400
+   curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, 1 ); // redirection
+   curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 ); // 10 redirections at most
+   curl_easy_setopt(
+      curl, CURLOPT_USERAGENT,
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
+      "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu" );
+   curl_easy_setopt( curl, CURLOPT_HTTPGET, 1 );          // use GET
+   curl_easy_setopt( curl, CURLOPT_MAXFILESIZE, 5 * MB ); // maximum size 5 MB
+   curl_easy_setopt( curl, CURLOPT_TIMEOUT, 30 );         // 30 second maximum
+   curl_easy_setopt( curl, CURLOPT_LOW_SPEED_LIMIT,
+                     10 * 1024 ); // 10 KB/s is slow
+   curl_easy_setopt( curl, CURLOPT_LOW_SPEED_TIME,
+                     10 ); // abort if 10 seconds too slow
+   curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT,
+                     10 ); // abort if 10 seconds not connect
 
-   // parent
-   // close the write sides of the pipe, so that we are not blocked
-   // by living pipe when the child exits
-   close( contentFd[ 1 ] );
-   close( infoFd[ 1 ] );
-
-   // read stdout output
-   scb::String content;
-   char buf[ 2000 ];
-   while ( true )
-      {
-      int got = read( contentFd[ 0 ], buf, sizeof( buf ) );
-      if ( got == 0 )
-         break;
-      if ( got == -1 )
-         throw std::runtime_error( strerror( errno ) );
-      content += String( buf, got );
-      }
-
-   // read stderr output
-   scb::String meta;
-   while ( true )
-      {
-      int got = read( infoFd[ 0 ], buf, sizeof( buf ) );
-      if ( got == 0 )
-         break;
-      if ( got == -1 )
-         throw std::runtime_error( strerror( errno ) );
-      meta += String( buf, got );
-      }
-
-   if ( !meta.empty() && !meta.hasPrefixCaseInsensitive( "text" ) )
-      {
-      scb::String errMsg = "not a text/* file, actually ";
-      errMsg += meta;
-      throw std::runtime_error( errMsg.cstr() );
-      }
-
-   int retCode = curlProc.Wait();
-   if ( retCode != 0 )
-      {
-      scb::String errMsg = "curl error: ";
-      errMsg += std::to_string( retCode ).c_str();
-      errMsg += " extra: ";
-      errMsg += meta;
-      throw std::runtime_error( errMsg.cstr() );
-      }
-
-   return content;
+   return curl;
    }

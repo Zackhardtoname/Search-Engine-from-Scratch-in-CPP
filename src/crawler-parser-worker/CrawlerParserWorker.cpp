@@ -1,4 +1,5 @@
 #include <csignal>
+#include <curl/curl.h>
 #include <mqueue.h>
 
 #include "../stl/RAII.h"
@@ -20,6 +21,9 @@ std::atomic<int> numSentToIndexer = 0;
 
 void *ThreadCrawlerParserWorker( void * )
    {
+   String content;
+   CURL *curl = GetCurlHandle( &content );
+
    char buf[ MAX_URL_LEN + 1 ];
    while ( !die.load() )
       {
@@ -36,9 +40,13 @@ void *ThreadCrawlerParserWorker( void * )
 
       try
          {
-         auto httpResp = FetchUrl( url );
+         curl_easy_setopt( curl, CURLOPT_URL, url.cstr() );
+         content.clear();
+         CURLcode code = curl_easy_perform( curl );
+         if ( code != CURLE_OK )
+            throw std::runtime_error( curl_easy_strerror( code ) );
 
-         ParsedHtml parsedHtml( httpResp );
+         ParsedHtml parsedHtml( content );
          // filter out non-english page by HTML
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )

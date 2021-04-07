@@ -6,10 +6,10 @@
 #define CRAWLER_REQUESTER_H
 
 #include "../stl/String.h"
+#include <curl/curl.h>
 
 using scb::String;
 
-/// Fetch the given url with HTTP GET, and manages redirection.
-String FetchUrl( const String &url );
+CURL *GetCurlHandle( String *content );
 
 #endif // CRAWLER_REQUESTER_H

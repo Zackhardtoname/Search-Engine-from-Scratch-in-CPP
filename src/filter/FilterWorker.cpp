@@ -7,6 +7,7 @@
 #include "../stl/Counter.h"
 #include "../stl/RAII.h"
 #include <cassert>
+#include <curl/curl.h>
 #include <fstream>
 #include <iostream>
 #include <mqueue.h>
@@ -29,6 +30,8 @@ void FilterWorker::Run()
    sigemptyset( &sigset );
    sigaddset( &sigset, SIGINT );
    pthread_sigmask( SIG_BLOCK, &sigset, nullptr );
+
+   assert( curl_global_init( CURL_GLOBAL_DEFAULT ) == 0 );
 
    // spawn the threads
    pthread_create( &pthNewLinksMqueue, nullptr, threadNewLinksMqueue, this );
@@ -56,10 +59,18 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
    scb::UniquePointer args( static_cast<FetchRobotstxtArgs *>( p ) );
 
    // if either downloading failed, or parsing failed, use dummy robots.txt
+   String content;
+   CURL *curl = GetCurlHandle( &content );
    try
       {
-      auto result = FetchUrl( args->Url.Normalize( "robots.txt" ) );
-      Robotstxt robotstxt( result ); // warning: this may throw
+      auto robotstxtUrl = args->Url.Normalize( "robots.txt" );
+      curl_easy_setopt( curl, CURLOPT_URL, robotstxtUrl.cstr() );
+      CURLcode code = curl_easy_perform( curl );
+      if ( code != CURLE_OK )
+         throw std::runtime_error( curl_easy_strerror( code ) );
+
+      Robotstxt robotstxt( content ); // warning: this may throw
+      curl_easy_cleanup( curl );
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host,
                                               std::move( robotstxt ) );
@@ -70,6 +81,7 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
       }
    catch ( std::exception &ex )
       {
+      curl_easy_cleanup( curl );
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host, DummyRobotstxt );
       std::cerr << "robots.txt " << args->Url.Normalize( "robots.txt" )
