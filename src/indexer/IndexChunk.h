@@ -7,10 +7,10 @@
 
 #include <cstddef>
 
-#include "../stl/String.h"
-#include "../stl/Vector.h"
 #include "../stl/HashTable.h"
+#include "../stl/String.h"
 #include "../stl/StringHash.h"
+#include "../stl/Vector.h"
 #include "ContiguousChunk.h"
 #include "IndexerIngest.h"
 

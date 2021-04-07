@@ -2,15 +2,14 @@
 // Created by youh on 3/14/21.
 //
 
-#include "IndexChunk.h"
 #include "../stl/utils.h"
+#include "IndexChunk.h"
 #include <cassert>
 #include <ctime>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <mqueue.h>
 #include <pthread.h>
-
 
 void *threadPersistChunk( void *p )
    {
@@ -18,12 +17,12 @@ void *threadPersistChunk( void *p )
    time_t timestamp = std::time( nullptr );
    tm *timeRepr = std::gmtime( &timestamp );
    char timeStr[ 1000 ];
-   strftime(timeStr, 1000, "%Y_%m_%d_%H_%M_%S_", timeRepr );
-   String filename(timeStr);
-   filename += RandAlphaString(6) + ".chunk";
+   strftime( timeStr, 1000, "%Y_%m_%d_%H_%M_%S_", timeRepr );
+   String filename( timeStr );
+   filename += RandAlphaString( 6 ) + ".chunk";
 
    auto *chunk = static_cast<IndexChunk *>( p );
-   chunk->writeToDisk(filename.data() );
+   chunk->writeToDisk( filename.data() );
 
    std::cout << "written chunk to " << filename.cstr() << std::endl;
    delete chunk;
@@ -31,12 +30,12 @@ void *threadPersistChunk( void *p )
    }
 
 scb::String RandAlphaString( int len )
-{
+   {
    scb::String str;
    for ( int i = 0;  i < len;  i++ )
       str.pushBack( 'a' + rand() % 26 );
    return str;
-}
+   }
 
 int main()
    {
@@ -49,15 +48,13 @@ int main()
       ssize_t sz =
          mq_receive( mq, buf, PARSED_DOCS_QUEUE_MAX_MSGSIZE, nullptr );
 
-      // ? can messages be split into multiple buffers?
-
-      if( sz > 0 ) {
+      if ( sz > 0 )
+         {
          String msg( buf, sz );
          size_t consumed;
-         auto ingest = Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
-
-         // Pretty sure consumed doesn't necessarily equal size due to variable-length encoding
-         // assert( consumed == sz );
+         auto ingest =
+            Deserialize<IndexerIngest>( StringRef( msg ), &consumed );
+         assert( consumed == sz );
 
          curChunk->Ingest( ingest );
          if ( curChunk->EstSize >= INDEX_CHUNK_TARGET_SIZE )

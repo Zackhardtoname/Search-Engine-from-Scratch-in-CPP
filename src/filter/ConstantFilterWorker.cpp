@@ -4,7 +4,6 @@
 // Writes one constant url to the frontier
 //
 
-
 #include "../stl/RAII.h"
 #include "../stl/utils.h"
 #include <cassert>
@@ -43,14 +42,14 @@ int main()
                              &frontierMQAttr );
    assert( frontier != -1 && "mq_open() failed" );
 
-   String url("https://news.ycombinator.com/");
+   String url( "https://news.ycombinator.com/" );
 
-    if ( mq_send( frontier, url.data(), url.size(), 0 ) == -1 )
-        {
-            assert( false && "mq_send() failed" );
-        }
-    else
-        {
-        std::cout << "posted: " << url << std::endl;
-        }
-    }
+   if ( mq_send( frontier, url.data(), url.size(), 0 ) == -1 )
+      {
+      assert( false && "mq_send() failed" );
+      }
+   else
+      {
+      std::cout << "posted: " << url << std::endl;
+      }
+   }

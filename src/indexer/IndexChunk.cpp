@@ -9,18 +9,18 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "../stl/String.h"
-#include "../stl/UniquePointer.h"
-#include "../stl/HashTable.h"
 #include "../stl/HashBlob.h"
+#include "../stl/HashTable.h"
+#include "../stl/String.h"
 #include "../stl/StringHash.h"
+#include "../stl/UniquePointer.h"
 #include "../stl/utils.h"
 #include "ContiguousChunk.h"
 #include "IndexChunk.h"
 #include "VLQ.h"
 
-const scb::String DocEnd = scb::String(DocEndDecorator);
-const scb::String TitleDec = scb::String(TitleDecorator);
+const scb::String DocEnd = scb::String( DocEndDecorator );
+const scb::String TitleDec = scb::String( TitleDecorator );
 
 void IndexChunk::writeToDisk( const char *filename )
    {
@@ -68,24 +68,22 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // make posting lists, and fill in the offset mapping
    String serializedPostingLists;
-   for ( scb::Tuple<scb::String, scb::Vector<uint64_t>> &tuple: PostingLists )
+   for ( scb::Tuple<scb::String, scb::Vector<uint64_t>> &tuple : PostingLists )
       {
-      // tuple.key is the word
-      if(tuple.key.length() == 0) {
-         int c = 3;
-         ++c;
-      }
       postingListOffsetMap[ tuple.key ] = serializedPostingLists.size();
-      serializedPostingLists += SerializePostingList( PostingLists[ tuple.key ] );
+      serializedPostingLists +=
+         SerializePostingList( PostingLists[ tuple.key ] );
       }
 
    // Debug
-   //postingListOffsetMap.print();
+   // postingListOffsetMap.print();
 
    // make a hashblob out of the hashmap
-   // TODO if possible, construct hashblob in the mapped location instead of having to memcpy
+   // TODO if possible, construct hashblob in the mapped location instead of
+   // having to memcpy
    postingListOffsetMap.Optimize();
-   scb::HashBlob *postingListOffsetHashblob = scb::HashBlob::Create( &postingListOffsetMap ) ;
+   scb::HashBlob *postingListOffsetHashblob =
+      scb::HashBlob::Create( &postingListOffsetMap );
 
    // We got everything, calculate the final size and offset
    header.DocumentTableOffset = sizeof( ChunkHeader );
@@ -140,7 +138,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
 
    // record document words
    for ( const String &word : ingest.Words )
-   {
+      {
       auto &lst = PostingLists[ word ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
@@ -164,7 +162,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
          EstSize += VLQ::Length( post - lst.back() );
       lst.pushBack( post );
       }
-   
+
    // record document end
       {
 
@@ -178,12 +176,9 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
       }
 
    // record document metadata
-   Documents.pushBack( Document{ .Url = ingest.Url /*, .LastPost = nextPost */ } );
-
-   // update estimated size
-   EstSize += ingest.Url.length();
-   EstSize += ingest.TitleWords.size() * 2;
-   EstSize += ingest.Words.size() * 2;
+   Documents.pushBack(
+      Document{ .Url = ingest.Url /*, .LastPost = nextPost */ } );
+   EstSize += ingest.Url.length() + 1;
    }
 
 String SerializePostingList( const Vector<uint64_t> &lst )
@@ -221,21 +216,17 @@ String SerializePostingList( const Vector<uint64_t> &lst )
       encodedPosts += VLQ::Encode( post - prevPost );
       prevPost = post;
       }
-   
+
    // Add null terminator to posting list
-   encodedPosts.pushBack(0);
+   encodedPosts.pushBack( 0 );
 
    // make header
-   PostingListHeader header{
-      .NumSyncTableEntries = static_cast<uint32_t>( nEntries ),
-      .NumPosts = lst.size()
-      // We only need the sync table size or the PostsOffset
-      // .PostsOffset = static_cast<uint32_t>(
-      //    sizeof( PostingListHeader ) + nEntries * sizeof( SyncTableEntry ) ),
-   };
+   PostingListHeader header{ .NumSyncTableEntries =
+                                static_cast<uint32_t>( nEntries ),
+                             .NumPosts = lst.size() };
 
    String serialized( reinterpret_cast<char *>( syncTable.get() ),
-                  nEntries * sizeof( SyncTableEntry ) );
+                      nEntries * sizeof( SyncTableEntry ) );
 
    // combine the three
    return String( reinterpret_cast<char *>( &header ),

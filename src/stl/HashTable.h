@@ -39,16 +39,16 @@ template <typename Key, typename Value> class Bucket
       size_t hashValue = 0;
       Tuple<Key, Value> tuple;
 
-      Bucket( const Key k, const Value& v, const size_t h )
+      Bucket( const Key k, const Value &v, const size_t h )
           : tuple( k, v ), next( nullptr ), hashValue( h )
          {
          }
-      
+
       // inserts into chain at this bucket
       // if key=k not found, add to end of chain
       // if key=k found, do not add value
-      bool insert( const Key k, const Value& v,
-                   const size_t hashVal, size_t& numUniqueWords )
+      bool insert( const Key k, const Value &v, const size_t hashVal,
+                   size_t &numUniqueWords )
          {
          Bucket *b = this;
          while ( b )
@@ -72,8 +72,8 @@ template <typename Key, typename Value> class Bucket
                }
             }
 
-            assert (false && "should never run");
-            return false;
+         assert( false && "should never run" );
+         return false;
          }
 
       void print()
@@ -90,8 +90,7 @@ template <typename Key, typename Value> class Bucket
 
 template <typename Key, typename Value, typename Hash> class HashTable
    {
-   private:   
-
+   private:
       Bucket<Key, Value> **buckets;
       size_t numBuckets;
       size_t numUniqueWords = 0;
@@ -101,14 +100,13 @@ template <typename Key, typename Value, typename Hash> class HashTable
       friend class HashBlob;
 
    public:
-
       // insert new bucket of key=k value=v
       // returns true if inserted, false if not inserted (already exists)
-      bool insert( const Key k, const Value& v)
+      bool insert( const Key k, const Value &v )
          {
          size_t keyHash = hash( k );
          size_t index = keyHash % numBuckets;
-         
+
          Bucket<Key, Value> *bucket = buckets[ index ];
          // if nothing at this bucket, insert new bucket here
          if ( !bucket )
@@ -117,7 +115,7 @@ template <typename Key, typename Value, typename Hash> class HashTable
             ++numUniqueWords;
             return true;
             }
-         
+
          // otherwise insert into chain if not already there
          if ( find( k, index ) == end() )
             {
@@ -128,14 +126,14 @@ template <typename Key, typename Value, typename Hash> class HashTable
          // otherwise already in table
          return false;
          }
-      
+
       // get value for bucket associated with key=k
       // if not in table, create new bucket with default value
-      Value& operator[]( const Key k )
+      Value &operator[]( const Key k )
          {
          size_t keyHash = hash( k );
          size_t index = keyHash % numBuckets;
-         
+
          Bucket<Key, Value> *bucket = buckets[ index ];
          // if nothing at this bucket, insert new bucket here
          if ( !bucket )
@@ -146,9 +144,9 @@ template <typename Key, typename Value, typename Hash> class HashTable
 
          // otherwise insert into chain if not already there
          if ( find( k, index ) == end() )
-         {
+            {
             buckets[ index ]->insert( k, Value(), keyHash, numUniqueWords );
-         }
+            }
          // otherwise already in table
          return buckets[ index ]->tuple.value;
          }
@@ -213,13 +211,14 @@ template <typename Key, typename Value, typename Hash> class HashTable
 
       void print()
          {
-         for (size_t i = 0; i < numBuckets; ++i) {
+         for ( size_t i = 0;  i < numBuckets;  ++i )
+            {
             std::cout << "INDEX " << i << std::endl;
-            if (buckets[i])
-               buckets[i]->print();
+            if ( buckets[ i ] )
+               buckets[ i ]->print();
             std::cout << std::endl;
- //           sleep(1);
-         }
+            //           sleep(1);
+            }
          std::cout << numUniqueWords << std::endl;
          }
 
@@ -241,7 +240,7 @@ template <typename Key, typename Value, typename Hash> class HashTable
             }
          delete[] buckets;
          }
-      
+
       class Iterator
          {
          private:
@@ -257,37 +256,36 @@ template <typename Key, typename Value, typename Hash> class HashTable
                {
                }
 
-            Iterator( ) : Iterator( nullptr, nullptr, 0 )
+            Iterator() : Iterator( nullptr, nullptr, 0 )
                {
                }
 
             Iterator( HashTable *table ) : Iterator( table, nullptr, 0 )
                {
-                  for ( ;
-                        bucketIndex < hashTable->numBuckets && !bucket;  )
-                     ++bucketIndex, bucket = hashTable->buckets[ bucketIndex ];
+               for ( ;  bucketIndex < hashTable->numBuckets && !bucket;  )
+                  ++bucketIndex, bucket = hashTable->buckets[ bucketIndex ];
 
-                  // If end of table
-                  if ( bucketIndex >= hashTable->numBuckets )
-                     bucket = nullptr;
+               // If end of table
+               if ( bucketIndex >= hashTable->numBuckets )
+                  bucket = nullptr;
                }
 
-            ~Iterator( )
+            ~Iterator()
                {
                }
 
-            Tuple<Key, Value> &operator*( )
+            Tuple<Key, Value> &operator*()
                {
                return bucket->tuple;
                }
 
-            Tuple<Key, Value> *operator->( ) const
+            Tuple<Key, Value> *operator->() const
                {
                return &bucket->tuple;
                }
 
             // Prefix ++
-            Iterator &operator++( )
+            Iterator &operator++()
                {
                // If this chain has another bucket
                if ( bucket->next )
@@ -300,8 +298,7 @@ template <typename Key, typename Value, typename Hash> class HashTable
 
                   // Iterate to next bucket with contents (may be the current
                   // one)
-                  for ( ;
-                        bucketIndex < hashTable->numBuckets && !bucket;  )
+                  for ( ;  bucketIndex < hashTable->numBuckets && !bucket;  )
                      ++bucketIndex, bucket = hashTable->buckets[ bucketIndex ];
                   // If end of table
                   if ( bucketIndex >= hashTable->numBuckets )
@@ -329,12 +326,12 @@ template <typename Key, typename Value, typename Hash> class HashTable
                }
          };
 
-      Iterator begin( )
+      Iterator begin()
          {
          return Iterator( this );
          }
 
-      Iterator end( )
+      Iterator end()
          {
          // one past the end
          return Iterator();
@@ -345,7 +342,7 @@ template <typename Key, typename Value, typename Hash> class HashTable
       Iterator find( const Key k, size_t index = SIZE_MAX )
          {
          if ( index == SIZE_MAX )
-            index = hash( k ) % numBuckets;   
+            index = hash( k ) % numBuckets;
 
          // search bucket chain for string
          Bucket<Key, Value> *bucket = buckets[ index ];
@@ -367,7 +364,6 @@ template <typename Key, typename Value, typename Hash> class HashTable
          // not found if bucket nullptr || not found in chain
          return end();
          }
-
    };
 
    } // namespace scb

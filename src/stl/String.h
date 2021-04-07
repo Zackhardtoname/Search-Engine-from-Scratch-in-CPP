@@ -23,7 +23,7 @@ class String
          str.pushBack( '\0' );
          }
 
-      String(const char c)
+      String( const char c )
          {
          str.pushBack( c );
          str.pushBack( '\0' );
@@ -225,7 +225,8 @@ class String
          str.popBack();
          for ( int i = 0;  i < other.str.size();  i++ )
             str.pushBack( other.str[ i ] );
-         // do not push another null termination, because str (a vector) already has that at the end
+         // do not push another null termination, because str (a vector) already
+         // has that at the end
 
          return *this;
          }

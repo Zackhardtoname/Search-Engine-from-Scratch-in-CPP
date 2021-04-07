@@ -171,19 +171,14 @@ int main( int argc, char **argv )
    char newLinks[] = "newLinks";
    char docs[] = "docs";
 
-   char *allPossibleArgs[5] = {
-      argv[0],
-      argv[1],
-      frontier,
-      newLinks,
-      docs
-   };
+   char *allPossibleArgs[ 5 ] = { argv[ 0 ], argv[ 1 ], frontier, newLinks,
+                                  docs };
 
-   if (argc == 2) {
+   if ( argc == 2 )
+      {
       argc = 5;
       argv = allPossibleArgs;
-   }
-   
-   handleMqueue( argc, argv, operation );
+      }
 
-}
+   handleMqueue( argc, argv, operation );
+   }
