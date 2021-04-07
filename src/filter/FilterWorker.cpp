@@ -34,17 +34,17 @@ void FilterWorker::Run()
    assert( curl_global_init( CURL_GLOBAL_DEFAULT ) == 0 );
 
    // spawn the threads
-   pthread_create( &pthNewLinksMqueue, nullptr, threadNewLinksMqueue, this );
+   for ( pthread_t &pth : pthNewLinksMqueue )
+      pthread_create( &pth, nullptr, threadNewLinksMqueue, this );
    pthread_create( &pthRemoteWorkers, nullptr, threadRemoteWorkers, this );
 
    pthread_create( &pthRemoteUrls, nullptr, threadRemoteUrls, this );
    pthread_create( &pthFilteredUrls, nullptr, threadFilteredUrls, this );
 
-   pthread_t pthMonitor;
    pthread_create( &pthMonitor, nullptr, threadMonitor, this );
 
    // wait on any one of the threads
-   pthread_join( pthNewLinksMqueue, nullptr );
+   pthread_join( pthNewLinksMqueue[ 0 ], nullptr );
    }
 
 bool FilterWorker::markIfNotSeen( const String &url )
