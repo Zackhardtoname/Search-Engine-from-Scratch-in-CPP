@@ -7,10 +7,10 @@
 
 #include <cstddef>
 
-#include "../stl/String.h"
-#include "../stl/Vector.h"
 #include "../stl/HashTable.h"
+#include "../stl/String.h"
 #include "../stl/StringHash.h"
+#include "../stl/Vector.h"
 #include "ContiguousChunk.h"
 #include "IndexerIngest.h"
 
@@ -21,7 +21,7 @@ using scb::Vector;
 struct Document
    {
       String Url;
-      // uint32_t LastPost; // Redundant with document end posting list
+      uint32_t LastPost; // Redundant with document end posting list
    };
 
 class IndexChunk

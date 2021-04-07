@@ -9,18 +9,18 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "../stl/String.h"
-#include "../stl/UniquePointer.h"
-#include "../stl/HashTable.h"
 #include "../stl/HashBlob.h"
+#include "../stl/HashTable.h"
+#include "../stl/String.h"
 #include "../stl/StringHash.h"
+#include "../stl/UniquePointer.h"
 #include "../stl/utils.h"
 #include "ContiguousChunk.h"
 #include "IndexChunk.h"
 #include "VLQ.h"
 
-const scb::String DocEnd = scb::String(DocEndDecorator);
-const scb::String TitleDec = scb::String(TitleDecorator);
+const scb::String DocEnd = scb::String( DocEndDecorator );
+const scb::String TitleDec = scb::String( TitleDecorator );
 
 void IndexChunk::writeToDisk( const char *filename )
    {
@@ -57,7 +57,7 @@ void IndexChunk::writeToDisk( const char *filename )
    for ( int i = 0;  i < Documents.size();  i++ )
       {
       docTable[ i ].UrlOffset = urlList.size();
-      // docTable[ i ].LastPost = Documents[ i ].LastPost;
+      docTable[ i ].LastPost = Documents[ i ].LastPost;
 
       urlList += Documents[ i ].Url;
       urlList.pushBack( '\0' );
@@ -68,24 +68,28 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // make posting lists, and fill in the offset mapping
    String serializedPostingLists;
-   for ( scb::Tuple<scb::String, scb::Vector<uint64_t>> &tuple: PostingLists )
+   for ( scb::Tuple<scb::String, scb::Vector<uint64_t>> &tuple : PostingLists )
       {
       // tuple.key is the word
-      if(tuple.key.length() == 0) {
+      if ( tuple.key.length() == 0 )
+         {
          int c = 3;
          ++c;
-      }
+         }
       postingListOffsetMap[ tuple.key ] = serializedPostingLists.size();
-      serializedPostingLists += SerializePostingList( PostingLists[ tuple.key ] );
+      serializedPostingLists +=
+         SerializePostingList( PostingLists[ tuple.key ] );
       }
 
    // Debug
-   //postingListOffsetMap.print();
+   // postingListOffsetMap.print();
 
    // make a hashblob out of the hashmap
-   // TODO if possible, construct hashblob in the mapped location instead of having to memcpy
+   // TODO if possible, construct hashblob in the mapped location instead of
+   // having to memcpy
    postingListOffsetMap.Optimize();
-   scb::HashBlob *postingListOffsetHashblob = scb::HashBlob::Create( &postingListOffsetMap ) ;
+   scb::HashBlob *postingListOffsetHashblob =
+      scb::HashBlob::Create( &postingListOffsetMap );
 
    // We got everything, calculate the final size and offset
    header.DocumentTableOffset = sizeof( ChunkHeader );
@@ -140,7 +144,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
 
    // record document words
    for ( const String &word : ingest.Words )
-   {
+      {
       auto &lst = PostingLists[ word ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
@@ -164,7 +168,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
          EstSize += VLQ::Length( post - lst.back() );
       lst.pushBack( post );
       }
-   
+
    // record document end
       {
 
@@ -178,7 +182,7 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
       }
 
    // record document metadata
-   Documents.pushBack( Document{ .Url = ingest.Url /*, .LastPost = nextPost */ } );
+   Documents.pushBack( Document{ .Url = ingest.Url, .LastPost = nextPost } );
 
    // update estimated size
    EstSize += ingest.Url.length();
@@ -221,9 +225,9 @@ String SerializePostingList( const Vector<uint64_t> &lst )
       encodedPosts += VLQ::Encode( post - prevPost );
       prevPost = post;
       }
-   
+
    // Add null terminator to posting list
-   encodedPosts.pushBack(0);
+   encodedPosts.pushBack( 0 );
 
    // make header
    PostingListHeader header{
@@ -235,7 +239,7 @@ String SerializePostingList( const Vector<uint64_t> &lst )
    };
 
    String serialized( reinterpret_cast<char *>( syncTable.get() ),
-                  nEntries * sizeof( SyncTableEntry ) );
+                      nEntries * sizeof( SyncTableEntry ) );
 
    // combine the three
    return String( reinterpret_cast<char *>( &header ),
