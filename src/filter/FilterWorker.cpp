@@ -95,9 +95,23 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
    cacheInfo.Pointer = args->self->robotstxtLRU.begin();
    cacheInfo.Pending = false;
 
-   // process all pending URLs
+   // take over all pending URLs
+   Vector<ParsedUrl> unfiltered = std::move( cacheInfo.WaitingURLs );
+   cacheInfo.WaitingURLs.clear();
+   // take a copy of robotstxt so we can release lock ASAP
+   Robotstxt robotstxt = args->self->robotstxtLRU.front().robotstxt;
+
+   // LRU evict
+   if ( args->self->robotstxtLRU.size() > MAX_NUM_ROBOTSTXT )
+      {
+      args->self->robotstxtMap.erase( args->self->robotstxtLRU.back().Host );
+      args->self->robotstxtLRU.pop_back();
+      }
+
+   pthread_mutex_unlock( &args->self->lockRobotstxtMap );
+
+   // filter all links that we took over
    Vector<ParsedUrl> filtered;
-   Robotstxt &robotstxt = args->self->robotstxtLRU.front().robotstxt;
    for ( ParsedUrl &pendingUrl : cacheInfo.WaitingURLs )
       if ( robotstxt.Allow( pendingUrl.CompleteUrl ) )
          {
@@ -113,18 +127,6 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
          // collect all filtered URLs and later push them all to filtered mq
          filtered.pushBack( std::move( pendingUrl ) );
          }
-
-   // clear pending
-   cacheInfo.WaitingURLs.clear();
-
-   // LRU evict
-   if ( args->self->robotstxtLRU.size() > MAX_NUM_ROBOTSTXT )
-      {
-      args->self->robotstxtMap.erase( args->self->robotstxtLRU.back().Host );
-      args->self->robotstxtLRU.pop_back();
-      }
-
-   pthread_mutex_unlock( &args->self->lockRobotstxtMap );
 
    // all good! we can put them into filteredUrls
    pthread_mutex_lock( &args->self->lockFilteredUrls );
