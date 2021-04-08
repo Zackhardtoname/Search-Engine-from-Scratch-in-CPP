@@ -17,15 +17,17 @@ fi
 echo " --- Step 1) Setup indexer --- "
 # Setup the indexer.
 # TODO: Replace the dummy indexer with the real indexer.
+# 2G per dump
+ulimit -n 9999 # 9999 maximum fd
 ./dummy-indexer 2000000 &
 
 echo " --- Step 2) Start filter worker --- "
-# Start up the filter worker with thte remote config, bloom file, and worker count.
+# Start up the filter worker with the remote config, bloom file, and worker count.
 # TODO: Determine number of machines we are using and ip addresses of them. Also
 # update the filter-config.txt file appropriately.
 ./filter-worker filter-config.txt bloom 0 &
 
 echo " --- Step 3) Start running the crawlers --- "
 # Start up all the crawler workers to begin crawling.
-# TODO: Determine the number of crawlers we will use and slowly scale up to match.
-./crawler-group 50 ../data/english.stemmed.dict &
+ulimit -v 10485760 # 10G maximum RAM
+bash -c "until ./crawler-group 200 ../data/english.stemmed.dict; do date; sleep 1; done" &

@@ -1,0 +1,19 @@
+#!/bin/bash
+sudo apt-get update
+sudo apt-get -y install g++ cmake libssl-dev libcurl4-openssl-dev
+mkdir ~/scooble
+sudo mkfs.ext4 -m 0 -T largefile /dev/sdb
+sudo mount /dev/sdb ~/scooble
+mkdir ~/scooble/filter
+mkdir ~/scooble/indexer
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SCRIPT_DIR/build
+
+cp "$SCRIPT_DIR/*" ~
+cp -r "$SCRIPT_DIR/../data" ~
+echo 'export PATH="$PATH:$HOME"' >> ~/.bashrc
+source ~/.bashrc
+
+echo y | make-bloom-file 500000000 0.0001 ~/scooble/filter/bloom
+sudo ~/handle-mq create frontier newLinks docs
