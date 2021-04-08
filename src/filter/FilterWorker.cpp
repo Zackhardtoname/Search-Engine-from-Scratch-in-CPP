@@ -88,8 +88,10 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
       curl_easy_cleanup( curl );
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host, DummyRobotstxt );
+#ifdef VERY_VERBOSE
       std::cerr << "robots.txt " << args->Url.Normalize( "robots.txt" )
                 << " failed: " << ex.what() << std::endl;
+#endif
       }
 
    // here, robotstxtLRU.front() must be a robots.txt, albeit maybe dummy
