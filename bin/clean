@@ -1,0 +1,4 @@
+#!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "$SCRIPT_DIR" || exit
+rm -rf crawler-group crawlerCmdline crawler-controller crawler-parser-worker create_test_chunk dummy-filter dummy-indexer filter-worker handle-mq make-bloom-file read-chunk read-dump-file seeder

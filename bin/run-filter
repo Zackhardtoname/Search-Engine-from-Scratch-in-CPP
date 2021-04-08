@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ $# -eq 0 ]] ; then
+    echo 'run-filter [rank]'
+    exit 1
+fi
+
+ulimit -n 99999
+cd ~/scooble/filter || exit 1
+filter-worker ~/data/filter-config.txt ~/scooble/filter/bloom "$1"
