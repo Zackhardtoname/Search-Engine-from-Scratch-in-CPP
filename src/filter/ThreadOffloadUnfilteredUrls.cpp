@@ -21,8 +21,7 @@ void *FilterWorker::threadOffloadUnfilteredUrls( void *p )
       mq_attr newLinksAttr{};
       assert( mq_getattr( self->qNewLinks, &newLinksAttr ) == 0 );
 
-      if ( frontierAttr.mq_curmsgs >= frontierAttr.mq_maxmsg * 0.2 &&
-           newLinksAttr.mq_curmsgs >= newLinksAttr.mq_maxmsg * FULL_FACTOR )
+      if ( newLinksAttr.mq_curmsgs >= newLinksAttr.mq_maxmsg * FULL_FACTOR )
          {
          for ( int i = 0;  i < NUM_OFFLOAD_UNFILTERED_PER_BURST;  i++ )
             {

@@ -114,7 +114,7 @@ class FilterWorker
       /// newLinks are full
       // the goal is to not block the crawlers no matter what, especially when
       // there are enough URLs in the frontier.
-      static constexpr float FULL_FACTOR = 0.95;
+      static constexpr float FULL_FACTOR = 0.9;
       static constexpr int NUM_OFFLOAD_UNFILTERED_PER_BURST = 20000;
       static constexpr int NUM_OFFLOAD_UNFILTERED_PER_DUMP = 1000000;
       pthread_t pthOffloadUnfilteredUrls{};
