@@ -11,6 +11,7 @@
 #include "../defs.h"
 #include "../indexer/PorterStemming.h"
 #include "../parser/ParsedHtml.h"
+#include "CrawlerGroup.h"
 #include "CrawlerParserWorker.h"
 #include "EnglishDictChecker.h"
 
@@ -29,6 +30,7 @@ void *ThreadCrawlerParserWorker( void * )
       {
 
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
+      ++flowinCount;
       if ( sz == -1 && errno == EINTR )
          {
          die = true;
@@ -76,6 +78,7 @@ void *ThreadCrawlerParserWorker( void * )
             }
 
          // post parsedHtml to the indexer queue
+         ++flowoutCount;
          IndexerIngest ingest{ .Words = parsedHtml.Words,
                                .TitleWords = parsedHtml.TitleWords,
                                .Url = url };
@@ -84,7 +87,7 @@ void *ThreadCrawlerParserWorker( void * )
          if ( blob.size() <= PARSED_DOCS_QUEUE_MAX_MSGSIZE )
             {
             if ( mq_send( parsedDocs, blob.data(), blob.size(), 0 ) != 0 )
-               std::cout << "mq_send() error: " << strerror( errno ) << " : "
+               std::cerr << "mq_send() error: " << strerror( errno ) << " : "
                          << url << std::endl;
 #ifdef VERY_VERBOSE
             std::cout << "posted to indexer queue, total " << ++numSentToIndexer
@@ -116,7 +119,9 @@ void *ThreadCrawlerParserWorker( void * )
       catch ( std::exception &s )
          {
          // we're not going to recover anyway
+#ifdef VERY_VERBOSE
          std::cout << "failed: " << s.what() << ": " << url << std::endl;
+#endif
          continue;
          }
       }
