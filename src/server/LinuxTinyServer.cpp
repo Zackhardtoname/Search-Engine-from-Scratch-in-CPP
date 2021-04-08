@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/mman.h>
 #include <netdb.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -227,8 +228,6 @@ bool SafePath( const char *path )
    }
 
 
-
-
 off_t FileSize( int f )
    {
    // Return -1 for directories.
@@ -239,6 +238,19 @@ off_t FileSize( int f )
       return -1;
    return fileInfo.st_size;
    }
+
+
+int mapfile(const char **file, char **start, char **end) {
+   int f = open(*file, O_RDONLY);
+   if (f != -1) {
+      size_t fileSize = FileSize(f);
+      *start = (char *) mmap(nullptr, fileSize, PROT_READ, MAP_PRIVATE, f, 0);
+      if (start != MAP_FAILED) {
+         *end = *start + fileSize;
+      }
+   }
+   return f;
+}
 
 
 void AccessDenied( int talkSocket )
@@ -270,35 +282,56 @@ void *Talk( void *talkSocket )
 
    // Cast from void * to int * to recover the talk socket id
    // then delete the copy passed on the heap.
+   cout << "got connection" << endl;
+
    int talkSocketFD = * (int *) talkSocket;
    free(talkSocket);
 
    // Read the request from the socket and parse it to extract
    // the action and the path, unencoding any %xx encodings.
-   char buffer[10240];
-   int bytes;
-   while ((bytes = recv(talkSocketFD, buffer, sizeof(buffer), 0)) > 0)
-      write(1, buffer, bytes);
+   char buffer[1024];
+   // int bytes;
+   // while ((bytes = recv(talkSocketFD, buffer, sizeof(buffer), 0)) > 0)
+   //    write(1, buffer, bytes);
+   if (read(talkSocketFD, buffer, sizeof(buffer)) < 0)
+      cout << "read failed" << endl;
 
-
-   // Check to see if there's a plugin and, if there is,
-   // whether this is a magic path intercepted by the plugin.
-
-   //    If it is intercepted, call the plugin's ProcessRequest( )
-   //    and send whatever's returned over the socket.
-   
-   // If it isn't intercepted, action must be "GET" and
+   std::string buf(buffer);
+   // action must be "GET" and
    // the path must be safe.
-       
-   // If the path refers to a directory, access denied.
-   // If the path refers to a file, write it to the socket.
+   int requestStartLoc = 4;
+   int protocalLoc = buf.find("HTTP");
+
+   if (buf.substr(0, 3) == "GET" && protocalLoc != std::string::npos) {
+      std::string requested = buf.substr(requestStartLoc, protocalLoc - requestStartLoc - 1); // 1 for whitespace
+      const char * processedPath = (UnencodeUrlEncoding(requested)).c_str();
+      if (!SafePath(processedPath))
+         // If the path refers to a directory,
+         AccessDenied(talkSocketFD);
+      else {
+         cout << processedPath << endl;
+         // If the path refers to a file, write it to the socket.
+         char * fileStart;
+         char * fileEnd;
+         processedPath ++;
+         int mapRes = mapfile(&processedPath, &fileStart, &fileEnd);
+         if (mapRes < 1) {
+            FileNotFound(talkSocketFD);
+         }
+         else {
+            cout << fileStart << endl;
+            // send(talkSocketFD, ss.str().c_str(), ss.str().size(), 0);
+         }
+      }
+   }
+   else {
+      AccessDenied(talkSocketFD);
+   }
 
    // Close the socket and return nullptr.
-
    close( talkSocketFD );
    return nullptr;
    }
-
 
 
 int main( int argc, char **argv )
@@ -361,12 +394,13 @@ int main( int argc, char **argv )
 
    // TO DO:  Bind the listen socket to the IP address and protocol
    // where we'd like to listen for connections.
-   if (bind(listenSocket, (struct sockaddr *)&listenAddress, sizeof(listenAddress)) < 0)
-      cout << "bind failed";
+   int bindRes = bind(listenSocket, (struct sockaddr *)&listenAddress, sizeof(listenAddress));
+   if (bindRes < 0)
+      cout << "bind failed " << bindRes << endl;
 
    // TO DO:  Begin listening for clients to connect to us.
    if (listen(listenSocket, backlog) < 0)
-      cout << "listen failed";
+      cout << "listen failed" << endl;
 
    // The second argument to listen( ) specifies the maximum
    // number of connection requests that can be allowed to
