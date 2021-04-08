@@ -59,7 +59,6 @@ void *FilterWorker::threadFilteredUrls( void *inst )
 
    // actual work
    auto &self = *static_cast<FilterWorker *>( inst );
-   bool blocked = false; // if mqueue is full and blocks us
    while ( !gotSIGINT.load() )
       {
       pthread_mutex_lock( &self.lockFilteredUrls );
@@ -120,19 +119,11 @@ void *FilterWorker::threadFilteredUrls( void *inst )
             if ( errno == EAGAIN )
                {
                self.filteredUrls.pushBack( url ); // requeue
-               // log only if not previously blocked, instead of every tick
-               if ( !blocked )
-                  std::cout
-                     << "frontier mqueue blocked: crawling isn't fast enough"
-                     << std::endl;
-               blocked = true;
-               break; // wait until the next tick
+               break;                             // wait until the next tick
                }
             else
                assert( false && "mq_send() failed" );
             }
-
-         blocked = false;
 
          // update rate count
          hostCounter.Increment( url.Host );

@@ -1,5 +1,5 @@
 #!/bin/bash
 
 ulimit -v 10485760 # 10G maximum RAM
-bash -c 'until crawler-group 200 ~/data/english.stemmed.dict > /dev/null; do date; sleep 1; done'
+bash -c 'until crawler-group 200 ~/data/english.stemmed.dict ; do date; sleep 1; done'
 

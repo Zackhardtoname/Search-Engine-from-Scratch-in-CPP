@@ -3,9 +3,10 @@
 #include "../stl/utils.h"
 #include "CrawlerParserWorker.h"
 #include "EnglishDictChecker.h"
-#include <assert.h>
+#include <cassert>
 #include <cstdint>
 #include <cstdlib>
+#include <curl/curl.h>
 #include <iostream>
 #include <mqueue.h>
 #include <sys/wait.h>
@@ -78,6 +79,7 @@ int main( int argc, char **argv )
    sigaction( SIGTERM, &SIGINTTERMAction, nullptr );
    sigaction( SIGINT, &SIGINTTERMAction, nullptr );
 
+   assert( curl_global_init( CURL_GLOBAL_DEFAULT ) == 0 );
    std::cout << "crawler controller starting" << std::endl;
    // spin-up NUM_CRAWLERS crawlers
    for ( int i = 0;  i < numChildren;  ++i )

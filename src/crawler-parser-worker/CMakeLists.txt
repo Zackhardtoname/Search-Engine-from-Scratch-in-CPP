@@ -3,8 +3,9 @@ project(crawler-parser-worker)
 
 set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
+find_package(CURL REQUIRED)
 
-add_executable(crawler-group ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp
+add_executable(crawler-group ../parser/ParsedHtml.cpp
         ../crawler/ParsedHttpResponse.cpp
         ../crawler/ParsedUrl.cpp
         ../crawler/Crawler.cpp ../stl/String.cpp
@@ -12,6 +13,6 @@ add_executable(crawler-group ../parser/ParsedHtml.cpp ../parser/HtmlLexer.cpp
         ../indexer/VLQ.cpp CrawlerParserWorker.cpp CrawlerGroup.cpp
         ../indexer/PorterStemming.cpp)
 
-target_link_libraries(crawler-group rt Threads::Threads)
+target_link_libraries(crawler-group rt Threads::Threads ${CURL_LIBRARIES})
 
 #testing
