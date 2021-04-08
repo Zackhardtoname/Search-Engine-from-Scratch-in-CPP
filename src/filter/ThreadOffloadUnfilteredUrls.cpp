@@ -28,6 +28,8 @@ void *FilterWorker::threadOffloadUnfilteredUrls( void *p )
             {
             if ( numCurrentDump++ >= NUM_OFFLOAD_UNFILTERED_PER_DUMP )
                {
+               // switch to the next dump
+
                // get current time
                time_t timestamp = std::time( nullptr );
                tm *timeRepr = std::gmtime( &timestamp );
@@ -40,12 +42,17 @@ void *FilterWorker::threadOffloadUnfilteredUrls( void *p )
                scb::String filename = scb::String( timeStr ) +
                                       RandAlphaString( 6 ) + ".unfiltered.txt";
                fs.close();
-               std::cout << "offloaded " << NUM_OFFLOAD_UNFILTERED_PER_DUMP
-                         << " unfiltered to " << filename << std::endl;
+               std::cout << "new unfiltered offload: " << filename << std::endl;
                fs = std::fstream( filename.cstr(),
                                   std::ios::out | std::ios::app );
                numCurrentDump = 0;
                }
+
+            // get one from newLinks and write to file
+            char buf[ MAX_URL_LEN + 1 ];
+            auto sz = mq_receive( self->qNewLinks, buf, sizeof( buf ), nullptr );
+            buf[ sz ] = '\0';
+            fs << buf << '\n';
             }
          continue; // check again
          }
