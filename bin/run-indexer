@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd ~/scooble/indexer || exit 1
+dummy-indexer 2000000

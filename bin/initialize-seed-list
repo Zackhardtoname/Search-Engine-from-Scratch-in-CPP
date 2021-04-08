@@ -1,0 +1,3 @@
+#!/bin/bash
+# Start the seeder to initilize the frontier with URLs to explore
+seeder < ~/data/us_top_100.txt
