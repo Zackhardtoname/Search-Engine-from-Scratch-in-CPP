@@ -1,8 +1,25 @@
 #!/bin/bash
+# Use flag '-d' to compile with debugging symbols
+
+DEBUG=0
+
+while [ "$1" != "" ]; do
+    if [ "$1" == "-d" ]; then
+        DEBUG=1
+    fi
+    shift
+done
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 BUILD_DIR="/tmp/scb_build"
 mkdir ${BUILD_DIR}
-cd ${BUILD_DIR} || exit
-cmake "${SCRIPT_DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${BUILD_DIR}"
+cd ${BUILD_DIR} || exit 1
+
+if [ "$DEBUG" -eq 1 ]; then
+    cmake -DCMAKE_BUILD_TYPE=Debug "${SCRIPT_DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${BUILD_DIR}"
+else
+    cmake "${SCRIPT_DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${BUILD_DIR}"
+fi
+
 cmake --build . -- -j "$(nproc)"
 rm -rf ${BUILD_DIR}

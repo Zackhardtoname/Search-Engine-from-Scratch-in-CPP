@@ -2,8 +2,8 @@
 // Created by youh on 3/14/21.
 //
 
-#ifndef SCOOBLE_SEARCH_INDEXERINJEST_H
-#define SCOOBLE_SEARCH_INDEXERINJEST_H
+#ifndef SCOOBLE_SEARCH_INDEXERINGEST_H
+#define SCOOBLE_SEARCH_INDEXERINGEST_H
 
 #include "../stl/String.h"
 #include "../stl/Vector.h"
@@ -48,4 +48,4 @@ template <> struct WireType<IndexerIngest>
          }
    };
 
-#endif // SCOOBLE_SEARCH_INDEXERINJEST_H
+#endif // SCOOBLE_SEARCH_INDEXERINGEST_H

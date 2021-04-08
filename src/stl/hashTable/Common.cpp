@@ -7,6 +7,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <string.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -19,18 +21,34 @@ bool optVerbose = false;
 // Common.h.
 
 // Compare C-strings, return true if they are the same.
-/*
 bool CompareEqual( const char *L, const char *R )
    {
    while ( *L == *R )
-      if ( *L++ == '\0' && *R++ == '\0' ) // checking both for extra safety
+      {
+      if ( *L == '\0' && *R == '\0' )
          return true;
+      L++, R++;
+      }
    return false;
    }
+/*
+struct cStringHash {
+   size_t operator()(const char* data) {
+      size_t length = strlen(data);
+      static const size_t OffsetBasis = 146959810393466560;
+      static const size_t prime = 1099511628211ul;
+      size_t hash = OffsetBasis;
+      for ( size_t i = 0;  i < length;  ++i )
+         {
+         hash *= prime;
+         hash ^= data[ i ];
+         }
+      return hash;
+   }
+};
 */
-
-using Hash = HashTable<const char *, size_t>;
-using Pair = Tuple<const char *, size_t>;
+using Hash = scb::HashTable<std::string, size_t, StringHash>;
+using Pair = scb::Tuple<const char *, size_t>;
 
 // Build a HashTable of strings and numbers of occurrences, given a vector
 // of strings representing the words.  You may assume the vector and the
@@ -43,9 +61,15 @@ using Pair = Tuple<const char *, size_t>;
 
 Hash *BuildHashTable( const vector<string> &words )
    {
-   Hash *hashTable = new Hash( words );
-   // hashTable->print();
-   // sleep(10);
+   Hash *hashTable = new Hash( );
+   for (auto word : words) {
+      cout << word << std::endl;
+      (*hashTable)[word]++;
+      //sleep(2);
+      std::cout << "VAL: " << (*hashTable)[word] << std::endl;
+   }
+   hashTable->print();
+   sleep(10);
    return hashTable;
    }
 
