@@ -7,6 +7,7 @@
 #include "../stl/Counter.h"
 #include "../stl/RAII.h"
 #include <cassert>
+#include <curl/curl.h>
 #include <fstream>
 #include <iostream>
 #include <mqueue.h>
@@ -30,15 +31,20 @@ void FilterWorker::Run()
    sigaddset( &sigset, SIGINT );
    pthread_sigmask( SIG_BLOCK, &sigset, nullptr );
 
+   assert( curl_global_init( CURL_GLOBAL_DEFAULT ) == 0 );
+
    // spawn the threads
-   pthread_create( &pthNewLinksMqueue, nullptr, threadNewLinksMqueue, this );
+   for ( pthread_t &pth : pthNewLinksMqueue )
+      pthread_create( &pth, nullptr, threadNewLinksMqueue, this );
    pthread_create( &pthRemoteWorkers, nullptr, threadRemoteWorkers, this );
 
    pthread_create( &pthRemoteUrls, nullptr, threadRemoteUrls, this );
    pthread_create( &pthFilteredUrls, nullptr, threadFilteredUrls, this );
 
+   pthread_create( &pthMonitor, nullptr, threadMonitor, this );
+
    // wait on any one of the threads
-   pthread_join( pthNewLinksMqueue, nullptr );
+   pthread_join( pthNewLinksMqueue[ 0 ], nullptr );
    }
 
 bool FilterWorker::markIfNotSeen( const String &url )
@@ -56,10 +62,17 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
    scb::UniquePointer args( static_cast<FetchRobotstxtArgs *>( p ) );
 
    // if either downloading failed, or parsing failed, use dummy robots.txt
+   String content;
+   CURL *curl = GetCurlHandle( &content );
    try
       {
-      auto result = FetchUrl( args->Url.Normalize( "robots.txt" ) );
-      Robotstxt robotstxt( result ); // warning: this may throw
+      auto robotstxtUrl = args->Url.Normalize( "robots.txt" );
+      curl_easy_setopt( curl, CURLOPT_URL, robotstxtUrl.cstr() );
+      CURLcode code = curl_easy_perform( curl );
+      HandleCurlCode( curl, code );
+
+      Robotstxt robotstxt( content ); // warning: this may throw
+      curl_easy_cleanup( curl );
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host,
                                               std::move( robotstxt ) );
@@ -70,6 +83,7 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
       }
    catch ( std::exception &ex )
       {
+      curl_easy_cleanup( curl );
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host, DummyRobotstxt );
       std::cerr << "robots.txt " << args->Url.Normalize( "robots.txt" )
@@ -81,8 +95,23 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
    cacheInfo.Pointer = args->self->robotstxtLRU.begin();
    cacheInfo.Pending = false;
 
-   // process all pending URLs
-   Robotstxt &robotstxt = args->self->robotstxtLRU.front().robotstxt;
+   // take over all pending URLs
+   Vector<ParsedUrl> unfiltered = std::move( cacheInfo.WaitingURLs );
+   cacheInfo.WaitingURLs.clear();
+   // take a copy of robotstxt so we can release lock ASAP
+   Robotstxt robotstxt = args->self->robotstxtLRU.front().robotstxt;
+
+   // LRU evict
+   if ( args->self->robotstxtLRU.size() > MAX_NUM_ROBOTSTXT )
+      {
+      args->self->robotstxtMap.erase( args->self->robotstxtLRU.back().Host );
+      args->self->robotstxtLRU.pop_back();
+      }
+
+   pthread_mutex_unlock( &args->self->lockRobotstxtMap );
+
+   // filter all links that we took over
+   Vector<ParsedUrl> filtered;
    for ( ParsedUrl &pendingUrl : cacheInfo.WaitingURLs )
       if ( robotstxt.Allow( pendingUrl.CompleteUrl ) )
          {
@@ -95,29 +124,23 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
             continue;
             }
 
-         // all good! we can put that into filteredUrls
-         pthread_mutex_lock( &args->self->lockFilteredUrls );
-         args->self->filteredUrls.pushBack( std::move( pendingUrl ) );
-         pthread_mutex_unlock( &args->self->lockFilteredUrls );
+         // collect all filtered URLs and later push them all to filtered mq
+         filtered.pushBack( std::move( pendingUrl ) );
          }
 
-   // clear pending
-   cacheInfo.WaitingURLs = Vector<ParsedUrl>();
-
-   // LRU evict
-   if ( args->self->robotstxtLRU.size() > MAX_NUM_ROBOTSTXT )
-      {
-      args->self->robotstxtMap.erase( args->self->robotstxtLRU.back().Host );
-      args->self->robotstxtLRU.pop_back();
-      }
-
-   pthread_mutex_unlock( &args->self->lockRobotstxtMap );
+   // all good! we can put them into filteredUrls
+   pthread_mutex_lock( &args->self->lockFilteredUrls );
+   for ( ParsedUrl &url : filtered )
+      args->self->filteredUrls.pushBack( std::move( url ) );
+   pthread_mutex_unlock( &args->self->lockFilteredUrls );
 
    return nullptr;
    }
 
 void FilterWorker::handleUnfilteredLink( const String &link )
    {
+   ++count;
+
    ParsedUrl url( link );
 
    // filter by domain hash

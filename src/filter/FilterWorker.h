@@ -40,7 +40,8 @@ class FilterWorker
 
       /// Thread that handles: newLinks mqueue -> ?
       mqd_t qNewLinks = -1;
-      pthread_t pthNewLinksMqueue;
+      static const int NUM_NEWLINKS_THREAD = 5;
+      pthread_t pthNewLinksMqueue[ NUM_NEWLINKS_THREAD ];
 
       struct FetchRobotstxtArgs
          {
@@ -108,6 +109,12 @@ class FilterWorker
       // file on disk.
       // param [this thread takes ownership]: Vector<ParsedUrl>* urls to offload
       static void *threadOffloadUrls( void * );
+
+      /// A monitoring/stats thread
+      std::atomic<long> count = 0;
+      pthread_t pthMonitor;
+
+      [[noreturn]] static void *threadMonitor( void * );
 
       /// /threads
 
