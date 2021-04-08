@@ -123,9 +123,10 @@ class FilterWorker
       [[noreturn]] static void *threadOffloadUnfilteredUrls( void * );
 
       /// A monitoring/stats thread
-      std::atomic<long> count = 0;
+      std::atomic<long> flowinCount = 0, flowoutCount = 0;
       pthread_t pthMonitor;
 
+      static constexpr float MONITOR_INTERVAL_SEC = 5.0;
       [[noreturn]] static void *threadMonitor( void * );
 
       /// /threads

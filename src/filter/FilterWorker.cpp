@@ -133,7 +133,10 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
    // all good! we can put them into filteredUrls
    pthread_mutex_lock( &args->self->lockFilteredUrls );
    for ( ParsedUrl &url : filtered )
+      {
       args->self->filteredUrls.pushBack( std::move( url ) );
+      ++args->self->flowoutCount;
+      }
    pthread_mutex_unlock( &args->self->lockFilteredUrls );
 
    return nullptr;
@@ -141,7 +144,7 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
 
 void FilterWorker::handleUnfilteredLink( const String &link )
    {
-   ++count;
+   ++flowinCount;
 
    ParsedUrl url( link );
 
@@ -214,6 +217,7 @@ void FilterWorker::handleUnfilteredLink( const String &link )
       // all good! we can put that into filteredUrls
       pthread_mutex_lock( &lockFilteredUrls );
       filteredUrls.pushBack( std::move( url ) );
+      ++flowoutCount;
       pthread_mutex_unlock( &lockFilteredUrls );
       }
    else
