@@ -16,9 +16,9 @@ mkdir ${BUILD_DIR}
 cd ${BUILD_DIR} || exit 1
 
 if [ "$DEBUG" -eq 1 ]; then
-    cmake -DCMAKE_BUILD_TYPE=Debug "${SCRIPT_DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${BUILD_DIR}"
+    cmake -DCMAKE_BUILD_TYPE=Debug "${SCRIPT_DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${SCRIPT_DIR}"
 else
-    cmake "${SCRIPT_DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${BUILD_DIR}"
+    cmake "${SCRIPT_DIR}/../src" "-DEXECUTABLE_OUTPUT_PATH=${SCRIPT_DIR}"
 fi
 
 cmake --build . -- -j "$(nproc)"
