@@ -94,7 +94,7 @@ void *ThreadCrawlerParserWorker( void * )
                       << ": " << url << std::endl;
 #else
             if ( ( ++numSentToIndexer ) % 2000 == 0 )
-               std::cout << "posted to indexer queue, total " << std::endl;
+               std::cout << "posted to indexer queue, total " << numSentToIndexer << std::endl;
 #endif
             }
          else
