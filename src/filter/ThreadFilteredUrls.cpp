@@ -11,7 +11,7 @@
 #include "../stl/utils.h"
 #include "FilterWorker.h"
 
-void *FilterWorker::threadOffloadUrls( void *p )
+void *FilterWorker::threadOffloadFilteredUrls( void *p )
    {
    // cast and relegate the argument pointer to a smart pointer
    scb::UniquePointer urls( static_cast<Vector<ParsedUrl> *>( p ) );
@@ -78,10 +78,11 @@ void *FilterWorker::threadFilteredUrls( void *inst )
 
          // spawn a new thread to offload the URLs to not block this thread
          pthread_t th;
-         if ( pthread_create( &th, nullptr, threadOffloadUrls, offload ) != 0 )
+         if ( pthread_create( &th, nullptr, threadOffloadFilteredUrls,
+                              offload ) != 0 )
             {
             // if new thread failed, just do the offloading here
-            threadOffloadUrls( offload );
+            threadOffloadFilteredUrls( offload );
             delete offload;
             }
          else
@@ -162,7 +163,7 @@ void *FilterWorker::threadFilteredUrls( void *inst )
          self.filteredUrls.popFront();
          }
 
-      threadOffloadUrls( save );
+      threadOffloadFilteredUrls( save );
       }
 
    // kill my other brothers as well

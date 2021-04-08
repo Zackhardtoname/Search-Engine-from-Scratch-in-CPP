@@ -25,6 +25,7 @@ add_executable(filter-worker
         ../stl/String.cpp
         ../stl/utils.cpp
         ThreadNewLinksMqueue.cpp
+        ThreadOffloadUnfilteredUrls.cpp
         ThreadRemoteWorkers.cpp
         ThreadRemoteUrls.cpp
         ThreadFilteredUrls.cpp)

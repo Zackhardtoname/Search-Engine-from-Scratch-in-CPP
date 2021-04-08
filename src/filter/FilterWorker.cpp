@@ -37,6 +37,9 @@ void FilterWorker::Run()
    pthread_create( &pthRemoteUrls, nullptr, threadRemoteUrls, this );
    pthread_create( &pthFilteredUrls, nullptr, threadFilteredUrls, this );
 
+   pthread_create( &pthOffloadUnfilteredUrls, nullptr,
+                   threadOffloadUnfilteredUrls, this );
+
    // wait on any one of the threads
    pthread_join( pthNewLinksMqueue, nullptr );
    }
