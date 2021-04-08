@@ -235,7 +235,7 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
     : bloomfilter( bloomFile )
    {
    // open the queues
-   qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDONLY );
+   qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDWR );
    if ( qNewLinks == -1 )
       {
       std::cerr << "mq_open(NEW_LINKS_QUEUE) failed: " << strerror( errno )
