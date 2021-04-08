@@ -15,12 +15,17 @@
 #include "../parser/ParsedHtml.h"
 #include "../stl/String.h"
 
+// TODO remove
+#include "../stl/StringHash.h"
+
 using scb::String;
+using scb::StringHash;
 
 /// Check if a given HTML is in English by comparing the words
 /// with those in a given dictionary. The dictionary should
 /// be stemmed, and the HTML passed in is assumed to have been
 /// stemmed.
+
 class EnglishDictChecker
    {
       constexpr static float ENGLISH_THRESHOLD = 0.35;

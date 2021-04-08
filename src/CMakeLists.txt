@@ -14,5 +14,6 @@ add_subdirectory(crawler-parser-worker)
 add_subdirectory(filter)
 add_subdirectory(indexer)
 add_subdirectory(utils)
+add_subdirectory(stl)
 
 

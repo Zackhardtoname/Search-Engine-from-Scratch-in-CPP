@@ -38,6 +38,14 @@ uint64_t VLQ::Decode( StringRef s, size_t *consumed )
    return result;
    }
 
+int VLQ::Length( uint64_t x )
+   {
+   int result = 1;
+   while ( x >>= 7 )
+      result++;
+   return result;
+   }
+
 // VLQ Stream Decoder
 
 VLQStreamDecoder::VLQStreamDecoder( const char *s )

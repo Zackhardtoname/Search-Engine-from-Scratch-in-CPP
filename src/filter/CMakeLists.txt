@@ -11,6 +11,12 @@ find_package(CURL REQUIRED)
 #        )
 #target_link_libraries(dummy-filter rt)
 
+add_executable(constant-filter
+        ConstantFilterWorker.cpp
+        ../stl/String.cpp
+        )
+target_link_libraries(constant-filter rt)
+
 add_executable(filter-worker
         FilterWorker.cpp
         Robotstxt.cpp

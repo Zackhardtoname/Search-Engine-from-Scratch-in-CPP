@@ -19,6 +19,9 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+// TODO remove
+#include "../stl/StringHash.h"
+
 using scb::Pair;
 using scb::Queue;
 using scb::String;
