@@ -1,4 +1,5 @@
 #include <csignal>
+#include <curl/curl.h>
 #include <mqueue.h>
 
 #include "../stl/RAII.h"
@@ -10,6 +11,7 @@
 #include "../defs.h"
 #include "../indexer/PorterStemming.h"
 #include "../parser/ParsedHtml.h"
+#include "CrawlerGroup.h"
 #include "CrawlerParserWorker.h"
 #include "EnglishDictChecker.h"
 
@@ -20,11 +22,15 @@ std::atomic<int> numSentToIndexer = 0;
 
 void *ThreadCrawlerParserWorker( void * )
    {
+   String content;
+   CURL *curl = GetCurlHandle( &content );
+
    char buf[ MAX_URL_LEN + 1 ];
    while ( !die.load() )
       {
 
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
+      ++flowinCount;
       if ( sz == -1 && errno == EINTR )
          {
          die = true;
@@ -36,9 +42,14 @@ void *ThreadCrawlerParserWorker( void * )
 
       try
          {
-         auto httpResp = FetchUrl( url );
+         curl_easy_cleanup( curl );
+         curl = GetCurlHandle( &content );
+         curl_easy_setopt( curl, CURLOPT_URL, url.cstr() );
+         content.clear();
+         CURLcode code = curl_easy_perform( curl );
+         HandleCurlCode( curl, code );
 
-         ParsedHtml parsedHtml( httpResp );
+         ParsedHtml parsedHtml( content );
          // filter out non-english page by HTML
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )
@@ -67,6 +78,7 @@ void *ThreadCrawlerParserWorker( void * )
             }
 
          // post parsedHtml to the indexer queue
+         ++flowoutCount;
          IndexerIngest ingest{ .Words = parsedHtml.Words,
                                .TitleWords = parsedHtml.TitleWords,
                                .Url = url };
@@ -75,14 +87,14 @@ void *ThreadCrawlerParserWorker( void * )
          if ( blob.size() <= PARSED_DOCS_QUEUE_MAX_MSGSIZE )
             {
             if ( mq_send( parsedDocs, blob.data(), blob.size(), 0 ) != 0 )
-               std::cout << "mq_send() error: " << strerror( errno ) << " : "
+               std::cerr << "mq_send() error: " << strerror( errno ) << " : "
                          << url << std::endl;
 #ifdef VERY_VERBOSE
             std::cout << "posted to indexer queue, total " << ++numSentToIndexer
                       << ": " << url << std::endl;
 #else
             if ( ( ++numSentToIndexer ) % 2000 == 0 )
-               std::cout << "posted to indexer queue, total " << std::endl;
+               std::cout << "posted to indexer queue, total " << numSentToIndexer << std::endl;
 #endif
             }
          else
@@ -94,9 +106,9 @@ void *ThreadCrawlerParserWorker( void * )
 
          // post URLs to the bloom filter queue
          ParsedUrl pageUrl( buf );
-         for ( Link &link : parsedHtml.Links )
+         for ( String &link : parsedHtml.Links )
             {
-            String normalizedUrl = pageUrl.Normalize( link.Href );
+            String normalizedUrl = pageUrl.Normalize( link );
             mq_send( newLinks, normalizedUrl.data(), normalizedUrl.size(), 0 );
             }
 #ifdef VERY_VERBOSE
@@ -107,7 +119,9 @@ void *ThreadCrawlerParserWorker( void * )
       catch ( std::exception &s )
          {
          // we're not going to recover anyway
+#ifdef VERY_VERBOSE
          std::cout << "failed: " << s.what() << ": " << url << std::endl;
+#endif
          continue;
          }
       }

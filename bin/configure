@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-#Set the mqueue maximum size to 65536 messages
-sudo bash -c "echo 65536 > /proc/sys/fs/mqueue/msg_max"
-#Set the mqueue maximum size to ~10 MB
-sudo bash -c "echo 10000000 > /proc/sys/fs/mqueue/msgsize_max"

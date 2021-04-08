@@ -34,7 +34,9 @@ ParsedUrl::ParsedUrl( const String &input )
    if ( i < CompleteUrl.size() && CompleteUrl[ i ] == ':' )
       {
       int portStart = i + 1;
-      for ( ;  i < CompleteUrl.size() && CompleteUrl[ i ] != '/';  i++ )
+      for ( ;  i < CompleteUrl.size() && CompleteUrl[ i ] != '/' &&
+               CompleteUrl[ i ] != '?';
+            i++ )
          ;
       Port = CompleteUrl.substr( portStart, i - portStart );
       }
@@ -76,7 +78,7 @@ String ParsedUrl::Normalize( const String &path ) const
    else
       {
       // absolute path
-      if ( path.front() == '/' )
+      if ( path.front() == '/' && path.front() != '?' )
          return ParsedUrl( Service + "://" + HostPort + path ).CompleteUrl;
       else
          return ParsedUrl( Service + "://" + HostPort + "/" + path )

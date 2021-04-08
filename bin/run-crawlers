@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# no way to get around openssl/libcurl's memory leak issue, but
+# this seems to mitigate it at least
+ulimit -v 20000000
+bash -c 'until crawler-group 400 ~/data/english.stemmed.dict ; do date; sleep 1; done'
+
