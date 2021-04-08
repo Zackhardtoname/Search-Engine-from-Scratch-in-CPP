@@ -22,6 +22,7 @@
 
 
 #include <unistd.h>
+#include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -136,7 +137,15 @@ const char *Mimetype( const string filename )
    {
    // TO DO: if a matching a extentsion is found return the corresponding
    // MIME type.
+   std::string fn(filename);
+   int extensionStart = fn.find('.');
+   const char * ext = fn.substr(extensionStart).c_str();
 
+   for (int i = 0; i < sizeof(MimeTable); i ++) {
+      if (!strcmp(MimeTable[i].Extension, ext)) {
+         return MimeTable[i].Mimetype;
+      }
+   }
    // Anything not matched is an "octet-stream", treated
    // as an unknown binary, which can be downloaded.
    return "application/octet-stream";
@@ -304,23 +313,44 @@ void *Talk( void *talkSocket )
 
    if (buf.substr(0, 3) == "GET" && protocalLoc != std::string::npos) {
       std::string requested = buf.substr(requestStartLoc, protocalLoc - requestStartLoc - 1); // 1 for whitespace
-      const char * processedPath = (UnencodeUrlEncoding(requested)).c_str();
-      if (!SafePath(processedPath))
+      std::string processedPath = (UnencodeUrlEncoding(requested));
+      if (!SafePath(processedPath.c_str()))
          // If the path refers to a directory,
          AccessDenied(talkSocketFD);
       else {
-         cout << processedPath << endl;
          // If the path refers to a file, write it to the socket.
          char * fileStart;
          char * fileEnd;
-         processedPath ++;
-         int mapRes = mapfile(&processedPath, &fileStart, &fileEnd);
+         processedPath = processedPath.substr(1);
+         const char * processedPathCStr = processedPath.c_str();
+         // char * fileName =
+         int mapRes = mapfile(&processedPathCStr, &fileStart, &fileEnd);
          if (mapRes < 1) {
             FileNotFound(talkSocketFD);
          }
          else {
-            cout << fileStart << endl;
-            // send(talkSocketFD, ss.str().c_str(), ss.str().size(), 0);
+            std::stringstream ss;
+            std::string end_char = "\r\n";
+
+            // TODO extract filename from path
+            // char * ptr = ;
+            // while (ptr != ) {
+            //    if (*ptr == '/') {
+            //       break;
+            //    }
+            //    ptr++;
+            // }
+
+            // header
+            ss << "200 OK" << end_char
+               << "Content-Length: " << fileEnd - fileStart << end_char
+               << "Content-Type: " << Mimetype(processedPathCStr) << end_char
+               << end_char;
+
+            // body
+            ss << fileStart;
+
+            send(talkSocketFD, ss.str().c_str(), ss.str().size(), 0);
          }
       }
    }
