@@ -3,6 +3,7 @@ project(server)
 
 add_executable(server
         server.cpp
+        mime.h
         )
 
 add_executable(client client.cpp)
