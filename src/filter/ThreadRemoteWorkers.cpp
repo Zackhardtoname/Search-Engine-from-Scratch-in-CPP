@@ -75,7 +75,7 @@ void *FilterWorker::threadRemoteWorkerConnection( void *p )
 #ifdef VERY_VERBOSE
             std::cout << "from remote: " << buf + start << std::endl;
 #endif
-            args->self->handleUnfilteredLink( String( buf + start, buf + i ) );
+            mq_send( args->self->qNewLinks, buf + start, i - start, 0 );
 
             // resume searching from buf[i+1]
             start = i + 1;

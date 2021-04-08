@@ -1,3 +1,4 @@
+#include "CrawlerGroup.h"
 #include "../defs.h"
 #include "../stl/RAII.h"
 #include "../stl/utils.h"
@@ -11,6 +12,25 @@
 #include <mqueue.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+static constexpr float MONITOR_INTERVAL_SEC = 5.0;
+std::atomic<long> flowinCount = 0, flowoutCount = 0;
+
+[[noreturn]] void *threadMonitor( void * )
+   {
+   long prevFlowin = 0, prevFlowout = 0;
+   while ( true )
+      {
+      sleep( MONITOR_INTERVAL_SEC );
+      long curFlowin = flowinCount.load(), curFlowout = flowoutCount.load();
+      std::cout << "rate (link/s) in: "
+                << ( curFlowin - prevFlowin ) / MONITOR_INTERVAL_SEC << " out: "
+                << ( curFlowout - prevFlowout ) / MONITOR_INTERVAL_SEC
+                << std::endl;
+      prevFlowin = curFlowin;
+      prevFlowout = curFlowout;
+      }
+   }
 
 void SIGINTTERMHandler( int )
    {
@@ -89,5 +109,8 @@ int main( int argc, char **argv )
       pthread_detach( child );
       }
 
-   pthread_exit( nullptr );
+   pthread_t pthMonitor;
+   pthread_create( &pthMonitor, nullptr, threadMonitor, nullptr );
+
+   pthread_join( pthMonitor, nullptr );
    }

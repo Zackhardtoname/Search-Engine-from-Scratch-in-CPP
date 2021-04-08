@@ -9,12 +9,17 @@
 [[noreturn]] void *FilterWorker::threadMonitor( void *inst )
    {
    auto &self = *static_cast<FilterWorker *>( inst );
-   long prev = 0;
+   long prevFlowin = 0, prevFlowout = 0;
    while ( true )
       {
-      sleep( 10 );
-      long cur = self.count.load();
-      std::cout << "rate (link/s): " << ( cur - prev ) / 10.0 << std::endl;
-      prev = cur;
+      sleep( MONITOR_INTERVAL_SEC );
+      long curFlowin = self.flowinCount.load(),
+           curFlowout = self.flowoutCount.load();
+      std::cout << "rate (link/s) in: "
+                << ( curFlowin - prevFlowin ) / MONITOR_INTERVAL_SEC << " out: "
+                << ( curFlowout - prevFlowout ) / MONITOR_INTERVAL_SEC
+                << std::endl;
+      prevFlowin = curFlowin;
+      prevFlowout = curFlowout;
       }
    }
