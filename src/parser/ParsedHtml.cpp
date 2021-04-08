@@ -4,116 +4,174 @@
 #include "../stl/String.h"
 #include "../stl/utils.h"
 #include <cassert>
+#include <csignal>
 #include <iostream>
 #include <unordered_map>
 
-#include "HtmlLexer.h"
 #include "ParsedHtml.h"
+
+enum State
+{
+   Text,
+   ExpectTagName,
+   WaitTagClose
+};
+
+void ParsedHtml::addWord( String &word )
+   {
+   if ( !word.empty() )
+      Words.pushBack( std::move( word ) );
+   word.clear();
+   }
 
 ParsedHtml::ParsedHtml( const String &buffer )
    {
-   HtmlLexer lexer( buffer );
+   String word, tagName;
+   State state = Text;
 
-   // pendingLinks: Index to Link objects that have not been finalized.
-   // This is a stack because even though <a> are not supposed to nest,
-   // inexperienced developers may still do that and we want to tolerate that.
-   // Since this refers to things in a vector, we have to use indices.
-   Vector<unsigned> pendingLinks;
-
-   while ( lexer.HasNextEntity() )
+   // find words
+   for ( auto cur = buffer.begin(), to = buffer.end();  cur != to;  cur++ )
       {
-      HtmlEntity &entity = lexer.NextEntity();
+      char c = *cur;
 
-      // Handle <base>
-      // I've seen people write base as both <base> and <base/>
-      // So handle both here.
-      if ( entity.TagName.EqualsCaseInsensitive( "base" ) && Base.empty() )
+      switch ( state )
          {
-         if ( auto *attr = entity.FindAttr( "href" ) )
-            Base = attr->second.Str().stripped();
-         continue;
-         }
-
-      // Handle <embed>
-      // I imagine people do the same for <embed>
-      if ( entity.TagName.EqualsCaseInsensitive( "embed" ) )
-         {
-         if ( auto *attr = entity.FindAttr( "src" ) )
-            Links.emplaceBack( attr->second.Str() );
-         continue;
-         }
-
-      // Handle <meta>
-      if ( entity.TagName.EqualsCaseInsensitive( "meta" ) )
-         {
-         if ( auto *attr = entity.FindAttr( "name" ) )
-            {
-            if ( attr->second.EqualsCaseInsensitive( "description" ) )
+         case Text:
+            if ( isspace( c ) || c == '<' )
                {
-               if ( auto *attr = entity.FindAttr( "content" ) )
-                  splitText( attr->second, Words );
+               addWord( word );
+               if ( c == '<' )
+                  state = ExpectTagName;
                }
-            else if ( attr->second.EqualsCaseInsensitive( "author" ) )
-               {
-               if ( auto *attr = entity.FindAttr( "content" ) )
-                  splitText( attr->second, Words );
-               }
-            else if ( attr->second.EqualsCaseInsensitive( "keywords" ) )
-               {
-               if ( auto *attr = entity.FindAttr( "content" ) )
-                  splitText( attr->second, Words );
-               }
-            }
+            else
+               word.pushBack( c );
 
-         continue;
-         }
+            break;
 
-      // Handle <html>
-      if ( entity.TagName.EqualsCaseInsensitive( "html" ) )
-         {
-         if ( auto *attr = entity.FindAttr( "lang" ) )
-            Language = attr->second.Str();
-         continue;
-         }
-
-      // Handle other tags.
-      switch ( entity.Type )
-         {
-         case HtmlEntity::StartTag:
-            if ( entity.TagName.EqualsCaseInsensitive( "a" ) )
+         case ExpectTagName:
+            if ( isalnum( c ) )
                {
-               String href;
-               if ( auto *attr = entity.FindAttr( "href" ) )
-                  href = attr->second.Str().stripped();
-               pendingLinks.pushBack( (unsigned)Links.size() );
-               Links.emplaceBack( href );
+               tagName.pushBack( c );
+               break;
+               }
+            else
+               {
+               // complete tag name found, see if it's something we want to
+               // ignore that is, <script>, <style>, <svg>
+               bool ignore = false;
+               if ( tagName.length() > 2 )
+                  {
+                  switch ( tagName[ 1 ] )
+                     {
+                     case 'c':
+                        if ( tagName == "script" )
+                           ignore = true;
+                        break;
+                     case 't':
+                        if ( tagName == "style" )
+                           ignore = true;
+                        break;
+                     case 'v':
+                        if ( tagName == "svg" )
+                           ignore = true;
+                        break;
+                     }
+                  }
+
+               if ( ignore )
+                  {
+                  // jump ahead to closing tag </ tagName
+                  auto target = String( "</" ) + tagName;
+                  tagName.clear();
+                  int pos = buffer.find( target, cur - buffer.begin() );
+                  if ( pos == String::npos )
+                     {
+                     // if not found, try to recover by switching into text mode
+                     state = Text;
+                     break;
+                     }
+
+                  cur =
+                     buffer.begin() + pos + target.size() - 1; // -1 because ++
+                  state = WaitTagClose;
+                  break;
+                  }
+
+               tagName.clear();
+
+               if ( c == '>' )
+                  state = Text;
+               else
+                  state = WaitTagClose;
                }
             break;
-         case HtmlEntity::RawTextElement:
-            // only care about textarea and title.
-            // this may be inside an <a> but that's rare, don't bother.
-            if ( entity.TagName.EqualsCaseInsensitive( "title" ) )
-               splitText( entity.InnerText, TitleWords );
-            if ( entity.TagName.EqualsCaseInsensitive( "textarea" ) )
-               splitText( entity.InnerText, Words );
-            break;
-         case HtmlEntity::EndTag:
-            if ( entity.TagName.EqualsCaseInsensitive( "a" ) &&
-                 !pendingLinks.empty() )
-               pendingLinks.popBack();
-            break;
-         case HtmlEntity::SelfEndingTag:
-            break;
-         case HtmlEntity::Text:
-            splitText( entity.Content, Words );
-            if ( !pendingLinks.empty() )
-               splitText( entity.Content,
-                          Links[ pendingLinks.back() ].AnchorText );
-            break;
-         case HtmlEntity::Comment:
+
+         case WaitTagClose:
+            if ( c == '>' )
+               state = Text;
+
             break;
          }
       }
+
+   // find title words
+   do
+      {
+      int titlePos = buffer.find( "<title" );
+      if ( titlePos == String::npos )
+         break;
+
+      int titleOpenEnd = buffer.find( ">", titlePos );
+      if ( titleOpenEnd == String::npos )
+         break;
+
+      int titleEnd = buffer.find( "</title", titleOpenEnd );
+      if ( titleEnd == String::npos )
+         break;
+
+      StringRef title( buffer.begin() + titleOpenEnd + 1,
+                       buffer.begin() + titleEnd );
+      splitText( title, TitleWords );
+      }
+   while ( 0 );
+
+   // find links
+   int remaining = 0;
+   String anchor = "<a";
+   String href = "href=\"";
+   while ( true )
+      {
+      int anchorStart = buffer.find( anchor, remaining );
+      if ( anchorStart == String::npos )
+         break;
+
+      int anchorEnd = buffer.find( ">", anchorStart );
+      if ( anchorEnd == String::npos )
+         break;
+
+      int hrefPos = buffer.find( href, anchorStart );
+      if ( hrefPos == String::npos )
+         break;
+      if ( hrefPos > anchorEnd )
+         {
+         remaining = anchorEnd;
+         continue;
+         }
+
+      int linkStart = hrefPos + href.size();
+
+      int linkEnd = buffer.find( "\"", linkStart );
+      if ( linkEnd == String::npos )
+         break;
+
+      Links.emplaceBack( buffer.substr( linkStart, linkEnd - linkStart ) );
+      remaining = linkEnd;
+      }
+
+   // find language
+   String lang = "lang=\"";
+   int langPos = buffer.find( lang );
+   Language = buffer.substr( langPos + lang.size(), 2 );
    }
 
 void ParsedHtml::splitText( StringRef s, Vector<String> &sink )

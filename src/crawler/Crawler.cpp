@@ -1,114 +1,70 @@
+#include "Crawler.h"
+#include "../defs.h"
 #include "../stl/RAII.h"
+#include "../stl/UniquePointer.h"
 #include "../stl/utils.h"
+#include "ParsedHttpResponse.h"
+#include "ParsedUrl.h"
 #include <cassert>
+#include <curl/curl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "../stl/UniquePointer.h"
-#include "Crawler.h"
-#include "ParsedHttpResponse.h"
-#include "ParsedUrl.h"
-
-String FetchUrl( const String &url )
+size_t curlWriteCallback( char *ptr, size_t size, size_t nmemb, void *pString )
    {
-   int contentFd[ 2 ];
-   assert( pipe( contentFd ) == 0 && "pipe() failed" );
-   int infoFd[ 2 ];
-   assert( pipe( infoFd ) == 0 && "pipe() failed" );
+   auto *content = static_cast<String *>( pString );
+   for ( int i = 0;  i < size * nmemb;  i++ )
+      content->pushBack( ptr[ i ] );
+   return size * nmemb;
+   }
 
-   Defer closePipe(
-      [ & ]()
+CURL *GetCurlHandle( String *content )
+   {
+   CURL *curl = curl_easy_init();
+
+   // setup writing to `content`
+   curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 1 ); // no progress bar
+   curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, curlWriteCallback );
+   curl_easy_setopt( curl, CURLOPT_WRITEDATA, content );
+
+   // setup options
+   curl_easy_setopt( curl, CURLOPT_FAILONERROR, 1 );    // error on >400
+   curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, 1 ); // redirection
+   curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 ); // 10 redirections at most
+   curl_easy_setopt(
+      curl, CURLOPT_USERAGENT,
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
+      "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu" );
+   curl_easy_setopt( curl, CURLOPT_HTTPGET, 1 );          // use GET
+   curl_easy_setopt( curl, CURLOPT_MAXFILESIZE, 5 * MB ); // maximum size 5 MB
+   curl_easy_setopt( curl, CURLOPT_TIMEOUT, 30 );         // 30 second maximum
+   curl_easy_setopt( curl, CURLOPT_LOW_SPEED_LIMIT,
+                     10 * 1024 ); // 10 KB/s is slow
+   curl_easy_setopt( curl, CURLOPT_LOW_SPEED_TIME,
+                     10 ); // abort if 10 seconds too slow
+   curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT,
+                     10 ); // abort if 10 seconds not connect
+
+   curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0 );
+   curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0 );
+
+   return curl;
+   }
+
+void HandleCurlCode( CURL *curl, CURLcode code )
+   {
+   switch ( code )
       {
-         close( contentFd[ 0 ] );
-         close( infoFd[ 0 ] );
-      } );
-
-   pid_t pid = fork();
-   assert( pid != -1 && "fork() failed" );
-   if ( pid == 0 )
-      {
-      // child
-      dup2( contentFd[ 1 ], STDOUT_FILENO ); // redirect stdout to content
-      close( contentFd[ 0 ] ); // now that STDOUT_FILENO points to the pipe,
-      close(
-         contentFd[ 1 ] ); // we can close the two original file descriptors.
-      dup2( infoFd[ 1 ], STDERR_FILENO ); // redirect stderr to info
-      close( infoFd[ 0 ] );
-      close( infoFd[ 1 ] );
-
-      execl(
-         "/usr/bin/curl",
-         "--disable",               // don't read .curlrc
-         "--fail",                  // error whenever not HTTP 200 OK
-         "--silent",                // no progress bar to mess up stderr
-         "--max-filesize", "5m",    // abort on files larger than this
-         "--location",              // follow redirections
-         "--max-redirs", "10",      // at most 10 times
-         "--connect-timeout", "10", // 10 sec connect timeout
-         "--max-time", "30",        // 30 sec total timeout
-         "--user-agent",
-         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
-         "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu",
-         "--retry", "1", // retry once if transient failure
-         "--write-out",
-         "%{stderr}%{content_type} code: %{http_code}", // put these to stderr
-         url.cstr(), nullptr );
-      assert( !"execl() failed" );
-      }
-
-   // parent
-   // close the write sides of the pipe, so that we are not blocked
-   // by living pipe when the child exits
-   close( contentFd[ 1 ] );
-   close( infoFd[ 1 ] );
-
-   scb::String content;
-   char buf[ 2000 ];
-   while ( true )
-      {
-      int got = read( contentFd[ 0 ], buf, sizeof( buf ) );
-      if ( got == 0 )
+      case CURLE_OK:
          break;
-      if ( got == -1 )
-         throw std::runtime_error( strerror( errno ) );
-      content += String( buf, got );
+      case CURLE_HTTP_RETURNED_ERROR:
+         {
+         long respCode = -1;
+         curl_easy_getinfo( curl, CURLINFO_HTTP_CODE, &respCode );
+         throw std::runtime_error( "HTTP " + std::to_string( respCode ) );
+         }
+      default:
+         throw std::runtime_error( curl_easy_strerror( code ) );
       }
-
-   scb::String mime;
-   while ( true )
-      {
-      int got = read( infoFd[ 0 ], buf, sizeof( buf ) );
-      if ( got == 0 )
-         break;
-      if ( got == -1 )
-         throw std::runtime_error( strerror( errno ) );
-      mime += String( buf, got );
-      }
-
-   if ( !mime.empty() && !mime.hasPrefixCaseInsensitive( "text" ) )
-      {
-      scb::String errMsg = "not a text/* file, actually ";
-      errMsg += mime;
-      throw std::runtime_error( errMsg.cstr() );
-      }
-
-   int stat;
-   while ( waitpid( pid, &stat, 0 ) == -1 )
-      {
-      if ( errno != EINTR )
-         assert( !"waitpid() failed" );
-      }
-
-   int retCode = WEXITSTATUS( stat );
-   if ( retCode != 0 )
-      {
-      scb::String errMsg = "curl error: ";
-      errMsg += std::to_string( retCode ).c_str();
-      errMsg += " extra: ";
-      errMsg += mime;
-      throw std::runtime_error( errMsg.cstr() );
-      }
-
-   return content;
    }

@@ -23,6 +23,12 @@ class String
          str.pushBack( '\0' );
          }
 
+      String( const char c )
+         {
+         str.pushBack( c );
+         str.pushBack( '\0' );
+         }
+
       String( const char *cstr )
          {
          while ( *cstr )
@@ -32,6 +38,7 @@ class String
 
       String( const char *begin, const char *end )
          {
+         str.reserve( end - begin + 1 );
          while ( begin != end )
             str.pushBack( *( begin++ ) );
          str.pushBack( '\0' );
@@ -218,7 +225,8 @@ class String
          str.popBack();
          for ( int i = 0;  i < other.str.size();  i++ )
             str.pushBack( other.str[ i ] );
-         str.pushBack( '\0' );
+         // do not push another null termination, because str (a vector) already
+         // has that at the end
 
          return *this;
          }
@@ -268,6 +276,11 @@ class String
          {
          str.clear();
          str.pushBack( '\0' );
+         }
+
+      void shrinkToFit()
+         {
+         str.shrinkToFit();
          }
 
       [[nodiscard]] String substr( uint start, int len = String::npos ) const
@@ -365,6 +378,11 @@ struct StringRef
       StringRef() = default;
 
       StringRef( const String &s ) : Begin( s.begin() ), End( s.end() )
+         {
+         }
+
+      StringRef( String::Iterator begin, String::Iterator end )
+          : Begin( begin ), End( end )
          {
          }
 

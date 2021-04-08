@@ -1,0 +1,4 @@
+#!/bin/bash
+
+pkill -SIGKILL -f 'until crawler-group'
+pkill -SIGKILL crawler-group

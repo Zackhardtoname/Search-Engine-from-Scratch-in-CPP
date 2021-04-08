@@ -6,6 +6,7 @@
 #define SCOOBLE_SEARCH_QUEUE_H
 
 #include "Vector.h"
+#include <cassert>
 
 namespace scb
    {
@@ -13,6 +14,30 @@ template <typename T> class Queue
    {
       T *data = nullptr;
       int start = 0, sz = 0, capacity = 0;
+
+      void extend()
+         {
+         // allocate new array
+         int newCapacity = capacity * 2 + 1;
+         auto *newData =
+            reinterpret_cast<T *>( new char[ sizeof( T ) * newCapacity ] );
+
+         // move old array to new array
+         for ( int i = 0;  i < sz;  i++ )
+            {
+            T *old = data + ( start + i ) % capacity;
+            new ( newData + i ) T( std::move( *old ) );
+            old->~T();
+            }
+
+         // deallocate and replace old array
+         delete[] reinterpret_cast<char *>( data );
+         data = newData;
+
+         // bookkeeping, size unchanged
+         start = 0;
+         capacity = newCapacity;
+         }
 
    public:
       int size()
@@ -27,6 +52,7 @@ template <typename T> class Queue
 
       T &front()
          {
+         assert( !empty() );
          return data[ start ];
          }
 
@@ -38,31 +64,20 @@ template <typename T> class Queue
          sz--;
          }
 
+      void pushBack( T &&val )
+         {
+         if ( sz == capacity )
+            extend();
+
+         int back = ( start + sz ) % capacity;
+         new ( data + back ) T( val );
+         sz++;
+         }
+
       void pushBack( const T &val )
          {
          if ( sz == capacity )
-            {
-            // allocate new array
-            int newCapacity = capacity * 2 + 1;
-            auto *newData =
-               reinterpret_cast<T *>( new char[ sizeof( T ) * newCapacity ] );
-
-            // move old array to new array
-            for ( int i = 0;  i < sz;  i++ )
-               {
-               T *old = data + ( start + i ) % capacity;
-               new ( newData + i ) T( std::move( *old ) );
-               old->~T();
-               }
-
-            // deallocate and replace old array
-            delete[] reinterpret_cast<char *>( data );
-            data = newData;
-
-            // bookkeeping, size unchanged
-            start = 0;
-            capacity = newCapacity;
-            }
+            extend();
 
          int back = ( start + sz ) % capacity;
          new ( data + back ) T( val );
