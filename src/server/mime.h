@@ -144,11 +144,11 @@ const MimetypeMap MimeTable[] = {
 };
 
 //  Multipurpose Internet Mail Extensions (MIME) types
-const char *getMimetype(const std::string filename )
+const char *getMimetype(const std::string path )
 {
-   std::string fn( filename );
-   int extensionStart = fn.find( '.' );
-   const char *ext = fn.substr( extensionStart ).c_str();
+   std::string fnPath( path );
+   int extensionStart = fnPath.find_last_of('.' );
+   const char *ext = fnPath.substr(extensionStart ).c_str();
 
    for ( int i = 0;  i < sizeof( MimeTable );  i++ )
    {

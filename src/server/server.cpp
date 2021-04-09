@@ -144,7 +144,8 @@ void *Talk( void *talkSocket )
    char buffer[ 1024 ];
    int bytes;
 
-   while ( ( bytes = recv( talkSocketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
+   // Assuming a single client won't send a ton of traffic
+   if ( ( bytes = recv( talkSocketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
       std::cout << buffer << std::endl;
 
    std::string buf( buffer );
@@ -167,7 +168,7 @@ void *Talk( void *talkSocket )
          // If the path refers to a file, write it to the socket.
          char *fileStart;
          char *fileEnd;
-         processedPath = processedPath.substr( 1 );
+         processedPath = std::string(RootDirectory) + "/" + processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.c_str();
          // char * fileName =
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
@@ -180,18 +181,8 @@ void *Talk( void *talkSocket )
             std::stringstream ss;
             std::string end_char = "\r\n";
 
-            // ./img/440.jpg
-            // TODO extract filename from path
-            // char * ptr = ;
-            // while (ptr != ) {
-            //    if (*ptr == '/') {
-            //       break;
-            //    }
-            //    ptr++;
-            // }
-
             // header
-            ss << "200 OK" << end_char
+            ss << "HTTP/1.1 200 OK" << end_char
                << "Content-Length: " << fileEnd - fileStart << end_char
                << "Content-Type: " << getMimetype(processedPathCStr) << end_char
                << end_char;
