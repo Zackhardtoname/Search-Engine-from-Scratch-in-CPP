@@ -163,6 +163,20 @@ void *Talk( void *talkSocket )
       if ( !SafePath( processedPath.c_str() ) )
          // If the path refers to a directory,
          AccessDenied( talkSocketFD );
+      
+      else if (strncmp(requested.c_str(), "/search/", 8))
+         {
+         //Get search results and return them
+
+         // TODO forward to query over the network to all machines
+
+         // TODO Wait for all responses
+
+         // TODO Merge all responses 
+
+         // Reply to user with responses
+         }
+         
       else
          {
          // If the path refers to a file, write it to the socket.
