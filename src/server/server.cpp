@@ -27,6 +27,10 @@
 
 #define backlog 1000
 
+using std::cout;
+using std::endl;
+using std::cerr;
+
 // Root directory for the website, taken from argv[ 2 ].
 // (Yes, a global variable since it never changes.)
 char *RootDirectory;
@@ -50,7 +54,7 @@ int HexLiteralCharacter( char c )
    return i;
    }
 
-std::string UnencodeUrlEncoding( std::string &path )
+scb::String UnencodeUrlEncoding( scb::String &path )
    {
    // Unencode any %xx encodings of characters that can't be
    // passed in a URL.
@@ -58,8 +62,8 @@ std::string UnencodeUrlEncoding( std::string &path )
    // (Unencoding can only shorten a string or leave it unchanged.
    // It never gets longer.)
 
-   const char *start = path.c_str(), *from = start;
-   std::string result;
+   const char *start = path.cstr(), *from = start;
+   scb::String result;
    char c, d;
 
    while ( ( c = *from++ ) != 0 )
@@ -114,7 +118,7 @@ void AccessDenied( int talkSocket )
                                "Content-Length: 0\r\n"
                                "Connection: close\r\n\r\n";
 
-   std::cout << accessDenied << std::endl;
+   cout << accessDenied << endl;
    send( talkSocket, accessDenied, sizeof( accessDenied ) - 1, 0 );
    }
 
@@ -124,7 +128,7 @@ void FileNotFound( int talkSocket )
                                "Content-Length: 0\r\n"
                                "Connection: close\r\n\r\n";
 
-   std::cout << fileNotFound << std::endl;
+   cout << fileNotFound << endl;
    send( talkSocket, fileNotFound, sizeof( fileNotFound ) - 1, 0 );
    }
 
@@ -135,7 +139,7 @@ void *Talk( void *talkSocket )
 
    // Cast from void * to int * to recover the talk socket id
    // then free the heap usage as soon as possible in case exception happens later
-   std::cout << "received connection at socket " << talkSocket << ":" << std::endl;
+   cout << "received connection at socket " << talkSocket << ":" << endl;
    int talkSocketFD = *(int *)talkSocket;
    free( talkSocket );
 
@@ -146,44 +150,64 @@ void *Talk( void *talkSocket )
 
    // Assuming a single client won't send a ton of traffic
    if ( ( bytes = recv( talkSocketFD, buffer, sizeof( buffer ), 0 ) ) > 0 )
-      std::cout << buffer << std::endl;
+      cout << buffer << endl;
 
-   std::string buf( buffer );
+   scb::String buf( buffer );
    // action must be "GET" and
    // the path must be safe.
    int requestStartLoc = 4;
    int protocalLoc = buf.find( "HTTP" );
 
-   if ( buf.substr( 0, 3 ) == "GET" && protocalLoc != std::string::npos )
+   if ( buf.substr( 0, 3 ) == "GET" && protocalLoc != scb::String::npos )
       {
-      std::string requested =
+      scb::String requested =
          buf.substr( requestStartLoc,
                      protocalLoc - requestStartLoc - 1 ); // 1 for whitespace
-      std::string processedPath = ( UnencodeUrlEncoding( requested ) );
-      if ( !SafePath( processedPath.c_str() ) )
+      scb::String processedPath = ( UnencodeUrlEncoding( requested ) );
+      if ( !SafePath( processedPath.cstr() ) )
          // If the path refers to a directory,
          AccessDenied( talkSocketFD );
-      
+      /*
       else if (strncmp(requested.c_str(), "/search/", 8))
          {
          //Get search results and return them
 
-         // TODO forward to query over the network to all machines
+         // TODO forward to query over the network toss;
+         scb::String end_char = "\r\n";
 
-         // TODO Wait for all responses
+         // header
+         ss << "HTTP/1.1 200 OK" << end_char
+            << "Content-Length: " << fileEnd - fileStart << end_char
+            << "Content-Type: " << getMimetype(processedPathCStr) << end_char
+            << end_char;
 
-         // TODO Merge all responses 
+         // body
+         ss << fileStart;
 
-         // Reply to user with responses
+         send( talkSocketFD, ss.str().c_str(), ss.str().size(), 0 );
+         scb::String end_char = "\r\n";
+
+         // header
+         ss << "HTTP/1.1 200 OK" << end_char
+            << "Content-Length: " << fileEnd - fileStart << end_char
+            << "Content-Type: " << getMimetype(processedPathCStr) << end_char
+            << end_char;
+
+         // body
+         ss << fileStart;
+
+         send( talkSocketFD, ss.str().c_str(), ss.str().size(), 0 );
          }
+
+         */
          
       else
          {
          // If the path refers to a file, write it to the socket.
          char *fileStart;
          char *fileEnd;
-         processedPath = std::string(RootDirectory) + "/" + processedPath.substr( 1 );
-         const char *processedPathCStr = processedPath.c_str();
+         processedPath = scb::String(RootDirectory) + "/" + processedPath.substr( 1 );
+         const char *processedPathCStr = processedPath.cstr();
          // char * fileName =
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
@@ -192,19 +216,23 @@ void *Talk( void *talkSocket )
             }
          else
             {
-            std::stringstream ss;
-            std::string end_char = "\r\n";
+            scb::String end_char = "\r\n";
 
             // header
-            ss << "HTTP/1.1 200 OK" << end_char
-               << "Content-Length: " << fileEnd - fileStart << end_char
-               << "Content-Type: " << getMimetype(processedPathCStr) << end_char
-               << end_char;
 
-            // body
-            ss << fileStart;
+            
+            scb::String msg("HTTP/1.1 200 OK");
+            msg += end_char;
+            msg += "Content-Length: ";
+            msg += fileEnd - fileStart;
+            msg += end_char;
+            msg += "Content-Type: ";
+            msg += getMimetype(processedPathCStr);
+            msg += end_char;
+            msg += end_char;
+            msg += fileStart;
 
-            send( talkSocketFD, ss.str().c_str(), ss.str().size(), 0 );
+            send( talkSocketFD, msg.cstr(), msg.size(), 0 );
             }
          }
       }
@@ -222,7 +250,7 @@ int main( int argc, char **argv )
    {
    if ( argc != 3 )
       {
-      std::cerr << "Usage:  " << argv[ 0 ] << " port rootdirectory" << std::endl;
+      cerr << "Usage:  " << argv[ 0 ] << " port rootdirectory" << endl;
       return 1;
       }
 
@@ -276,7 +304,7 @@ int main( int argc, char **argv )
    int bindRes = bind( listenSocket, (struct sockaddr *)&listenAddress,
                        sizeof( listenAddress ) );
    if ( bindRes < 0 )
-      std::cout << "bind failed " << bindRes << std::endl;
+      cout << "bind failed " << bindRes << endl;
 
    // Begin listening for clients to connect to us.
    // The second argument to listen( ) specifies the maximum
@@ -288,7 +316,7 @@ int main( int argc, char **argv )
    // queue length.  (Under WSL Ubuntu, it's defined as 128
    // in /usr/include/x86_64-linux-gnu/bits/socket.h.)
    if ( listen( listenSocket, backlog ) < 0 )
-      std::cout << "listen failed" << std::endl;
+      cout << "listen failed" << endl;
 
    // Accept each new connection and create a thread to talk with
    // the client over the new talk socket that's created by Linux
