@@ -18,7 +18,7 @@ namespace scb {
 
    template<typename A, typename B>
    Pair<A, B> MakePair(A &&first, B &&second) {
-      return Pair(first, second);
+      return Pair<A, B> (first, second);
    }
 }
 
