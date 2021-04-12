@@ -46,6 +46,7 @@ int main( int argc, char **argv )
       auto ingest = Deserialize<IndexerIngest>( msg, &consumed );
       assert( consumed == lenMsg &&
               "corrupted: deserialization did not use all bytes" );
+      std::cout << "ingest for url: " << ingest.Url << std::endl;
 
       curChunk->Ingest( ingest );
       if ( curChunk->EstSize >= INDEX_CHUNK_TARGET_SIZE )
