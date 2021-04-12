@@ -1,4 +1,4 @@
-#include "query_parser.h"
+#include "QueryParser.h"
 
 int main() {
     Parser parser;
