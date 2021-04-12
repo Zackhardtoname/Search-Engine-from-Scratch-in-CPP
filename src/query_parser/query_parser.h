@@ -15,7 +15,7 @@ inline double str_to_num(const std::string &str) {
         return ll;
     }
     catch (std::exception e) {
-        std::cout << "Syntax error\n";
+        std::cout << "Syntax error B\n";
         exit(1);
     }
 }
@@ -38,10 +38,13 @@ public:
 
     explicit Lexer(std::istream &_is) : is{&_is} {
         current_token = getTok(), curr_text = buff;
+        isBeginning=false;
     }
 
     explicit Lexer(std::istream *_is) : is{_is} {
         current_token = getTok(), curr_text = buff;
+        isBeginning=false;
+
     }
     //~lexer(){delete is;}
 
@@ -56,7 +59,7 @@ public:
             while (isspace(c))
                 c = in.get();
             if (isBeginning){
-                isBeginning=false;
+                ;
             }
             else if (!in){
                 return Token::eof;
@@ -93,7 +96,7 @@ public:
             lastTokWasOp=false;
             return Token::str;
         }
-        std::cout << "Syntax error\n";
+        std::cout << "Syntax error A\n";
         exit(1);
     }
 
