@@ -12,13 +12,40 @@
 
 using scb::String;
 
+void Persist( IndexChunk **chunk )
+   {
+   // get current time
+   time_t timestamp = std::time( nullptr );
+   tm *timeRepr = std::gmtime( &timestamp );
+   char timeStr[ 1000 ];
+   strftime( timeStr, 1000, "%Y_%m_%d_%H_%M_%S_", timeRepr );
+   String filename( timeStr );
+   filename += RandAlphaString( 6 ) + ".index";
+
+   ( *chunk )->writeToDisk( filename.data() );
+
+   std::cout << "written chunk to " << filename.cstr() << std::endl;
+   delete *chunk;
+   *chunk = new IndexChunk();
+   }
+
 int main( int argc, char **argv )
    {
-   if ( argc != 2 )
+   if ( argc <= 2 )
       {
-      std::cout << "usage: " << argv[ 0 ] << " [dump file]" << std::endl;
+      std::cout << "usage: " << argv[ 0 ] << " [dump file] [target size in MB]"
+                << std::endl;
       return 1;
       }
+
+   long targetSize = INDEX_CHUNK_TARGET_SIZE;
+   if ( argc >= 3 )
+      {
+      targetSize = atol( argv[ 2 ] );
+      std::cout << "targeting dump size " << targetSize << " MB" << std::endl;
+      targetSize *= MB;
+      }
+   assert( targetSize > 0 && "invalid target size" );
 
    auto *curChunk = new IndexChunk();
 
@@ -29,42 +56,39 @@ int main( int argc, char **argv )
       switch ( fread( sizeBuf, 4, 1, f ) )
          {
          case 0:
+            Persist( &curChunk );
             std::cout << "<eof>" << std::endl;
             return 0;
          case 1:
             break;
          default:
-            assert( false && "corrupted: cannot read 4-byte dump header" );
+            Persist( &curChunk );
+            std::cerr << "corrupted: cannot read 4-byte dump header"
+                      << std::endl;
+            return 1;
          }
       int32_t lenMsg = *reinterpret_cast<int32_t *>( sizeBuf );
       String msg( lenMsg, '\0' );
-      std::cout << "dumped msg: " << i << " len = " << lenMsg << std::endl;
-      assert( fread( msg.data(), lenMsg, 1, f ) == 1 &&
-              "corrupted: did not read in enough bytes" );
+      if ( fread( msg.data(), lenMsg, 1, f ) != 1 )
+         {
+         Persist( &curChunk );
+         std::cerr << "corrupted: did not read in enough bytes" << std::endl;
+         return 1;
+         }
 
       size_t consumed = -1;
       auto ingest = Deserialize<IndexerIngest>( msg, &consumed );
-      assert( consumed == lenMsg &&
-              "corrupted: deserialization did not use all bytes" );
-      std::cout << "ingest for url: " << ingest.Url << std::endl;
+      if ( consumed != lenMsg )
+         {
+         Persist( &curChunk );
+         std::cerr << "corrupted: deserialization did not use all bytes"
+                   << std::endl;
+         return 1;
+         }
+      std::cout << "read ingest for url: " << ingest.Url << std::endl;
 
       curChunk->Ingest( ingest );
-      if ( curChunk->EstSize >= INDEX_CHUNK_TARGET_SIZE )
-         {
-         // persist the old chunk
-         // get current time
-         time_t timestamp = std::time( nullptr );
-         tm *timeRepr = std::gmtime( &timestamp );
-         char timeStr[ 1000 ];
-         strftime( timeStr, 1000, "%Y_%m_%d_%H_%M_%S_", timeRepr );
-         String filename( timeStr );
-         filename += RandAlphaString( 6 ) + ".index";
-
-         curChunk->writeToDisk( filename.data() );
-
-         std::cout << "written chunk to " << filename.cstr() << std::endl;
-         delete curChunk;
-         curChunk = new IndexChunk();
-         }
+      if ( curChunk->EstSize >= targetSize )
+         Persist( &curChunk );
       }
    }

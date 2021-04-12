@@ -13,7 +13,7 @@
 #include "../stl/Vector.h"
 #include "IndexerIngest.h"
 
-constexpr static size_t INDEX_CHUNK_TARGET_SIZE = 1 * MB;
+constexpr static size_t INDEX_CHUNK_TARGET_SIZE = 1 * GB;
 
 using scb::String;
 using scb::Vector;
