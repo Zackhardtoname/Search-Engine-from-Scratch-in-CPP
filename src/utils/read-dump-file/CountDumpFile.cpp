@@ -29,7 +29,7 @@ int main( int argc, char **argv )
             break;
          default:
             std::cout << i << std::endl;
-            std::cout << "<corrupted>" << std::endl;
+            std::cerr << "<corrupted>" << std::endl;
             return 1;
          }
       int32_t lenMsg = *reinterpret_cast<int32_t *>( sizeBuf );
@@ -38,7 +38,7 @@ int main( int argc, char **argv )
       if ( fread( msg.data(), lenMsg, 1, f ) != 1 )
          {
          std::cout << i << std::endl;
-         std::cout << "<corrupted>" << std::endl;
+         std::cerr << "<corrupted>" << std::endl;
          return 1;
          }
       }
