@@ -1,3 +1,6 @@
+#ifndef QUERY_PARSER_H
+#define QUERY_PARSER_H
+
 #include "../stl/Pair.h"
 #include "../stl/String.h"
 #include "../stl/Vector.h"
@@ -29,7 +32,7 @@ inline double str_to_num( const String &str )
       }
    catch ( std::exception e )
       {
-      std::cout << "Syntax error B\n";
+      std::cout << "Syntax Error: Failure to convert string to double\n";
       exit( 1 );
       }
    }
@@ -59,34 +62,33 @@ class Lexer
    public:
       Token current_token;
       String curr_text;
-      std::istream *is;
+      std::istream *lexer_input_stream;
 
-      explicit Lexer( std::istream &_is ) : is{ &_is }
+      explicit Lexer( std::istream &_is ) : lexer_input_stream{ &_is }
          {
          current_token = getTok(), curr_text = buff;
-         isBeginning = false;
+         is_beginning = false;
          }
 
-      explicit Lexer( std::istream *_is ) : is{ _is }
+      explicit Lexer( std::istream *_is ) : lexer_input_stream{ _is }
          {
          current_token = getTok(), curr_text = buff;
-         isBeginning = false;
+         is_beginning = false;
          }
-      //~lexer(){delete is;}
 
-      bool lastTokWasOp = false;
-      bool isBeginning = true;
+      bool last_token_was_operator = false;
+      bool is_beginning = true;
       Token getTok()
          {
-         auto &in = *is;
+         auto &in = *lexer_input_stream;
          buff.clear();
          auto c = in.get();
-         // + head
+
          if ( isspace( c ) )
             {
             while ( isspace( c ) )
                c = in.get();
-            if ( isBeginning )
+            if ( is_beginning )
                {
                ;
                }
@@ -98,10 +100,10 @@ class Lexer
                       c == '(' || c == ')' )
                {
                buff = c;
-               lastTokWasOp = true;
+               last_token_was_operator = true;
                return Token( c );
                }
-            else if ( lastTokWasOp )
+            else if ( last_token_was_operator )
                {
                ;
                }
@@ -120,24 +122,19 @@ class Lexer
          if ( c == '|' || c == '-' || c == '&' || c == '/' || c == '(' ||
               c == ')' )
             {
-            lastTokWasOp = true;
+            last_token_was_operator = true;
             return Token( c );
             }
-         else
+         c = in.get();
+         while ( !( c == '|' || c == '-' || c == '&' || c == '/' || c == '(' ||
+                    c == ')' || c == ' ' ) &&
+                 in )
             {
-            c = in.get();
-            while ( !( c == '|' || c == '-' || c == '&' || c == '/' ||
-                       c == '(' || c == ')' || c == ' ' ) &&
-                    in )
-               {
-               buff += c, c = in.get();
-               }
-            in.putback( c );
-            lastTokWasOp = false;
-            return Token::str;
+            buff += c, c = in.get();
             }
-         std::cout << "Syntax error A\n";
-         exit( 1 );
+         in.putback( c );
+         last_token_was_operator = false;
+         return Token::str;
          }
 
       void nextTok()
@@ -159,42 +156,42 @@ class BinaryOpNode : public AST
    {
    public:
       AST *left, *right;
-      char op;
+      char operation;
 
       void print()
          {
          std::cout << "(";
          left->print();
-         std::cout << op;
+         std::cout << operation;
          right->print();
          std::cout << ")";
          }
 
-      BinaryOpNode( AST *left, AST *right, char o )
+      BinaryOpNode( AST *left, AST *right, char op )
          {
          this->left = left;
          this->right = right;
-         this->op = o;
+         this->operation = op;
          }
    };
 
 class UnaryOpNode : public AST
    {
    public:
-      char op;
+      char operation;
       AST *param;
 
       void print()
          {
          std::cout << "(";
-         std::cout << op;
+         std::cout << operation;
          param->print();
          std::cout << ")";
          }
 
-      UnaryOpNode( char o, AST *p )
+      UnaryOpNode( char op, AST *p )
          {
-         op = o;
+         operation = op;
          param = p;
          }
    };
@@ -202,17 +199,15 @@ class UnaryOpNode : public AST
 class LiteralNode : public AST
    {
    public:
-      // double num;
-      // not a num, a word.
-      String num;
+      String word;
       void print()
          {
-         std::cout << num.cstr();
+         std::cout << word.cstr();
          }
 
       LiteralNode( String n )
          {
-         num = n;
+         word = n;
          }
    };
 
@@ -255,8 +250,8 @@ class Parser
    public:
       AST *operator()( const String &s )
          {
-         std::istringstream is{ s.cstr() };
-         Lexer lex{ is };
+         std::istringstream parser_input_stream{ s.cstr() };
+         Lexer lex{ parser_input_stream };
 
          Vector<Symbol> stack;
 
@@ -288,10 +283,10 @@ class Parser
                {
                // rule 2. a*/b
                auto left = stack[ sz - 3 ];
-               char op = (char)stack[ sz - 2 ].data.terminal;
+               char operation = (char)stack[ sz - 2 ].data.terminal;
                auto right = stack[ sz - 1 ];
-               auto *node = new BinaryOpNode( left.data.nonTerminal,
-                                              right.data.nonTerminal, op );
+               auto *node = new BinaryOpNode(
+                  left.data.nonTerminal, right.data.nonTerminal, operation );
                stack.popBack();
                stack.popBack();
                stack.popBack();
@@ -307,10 +302,10 @@ class Parser
                {
                // rule 3. a+-b (lookahead != */)
                auto left = stack[ sz - 3 ];
-               char op = (char)stack[ sz - 2 ].data.terminal;
+               char operation = (char)stack[ sz - 2 ].data.terminal;
                auto right = stack[ sz - 1 ];
-               auto *node = new BinaryOpNode( left.data.nonTerminal,
-                                              right.data.nonTerminal, op );
+               auto *node = new BinaryOpNode(
+                  left.data.nonTerminal, right.data.nonTerminal, operation );
                stack.popBack();
                stack.popBack();
                stack.popBack();
@@ -323,9 +318,9 @@ class Parser
                       !stack[ sz - 1 ].isTerminal )
                {
                // rule 4. +- a
-               char op = (char)stack[ sz - 2 ].data.terminal;
+               char operation = (char)stack[ sz - 2 ].data.terminal;
                auto *param = stack[ sz - 1 ].data.nonTerminal;
-               auto *node = new UnaryOpNode( op, param );
+               auto *node = new UnaryOpNode( operation, param );
                stack.popBack();
                stack.popBack();
                stack.emplaceBack( node );
@@ -349,10 +344,14 @@ class Parser
 
          if ( stack.size() != 1 || stack[ 0 ].isTerminal )
             {
-            std::cout << "Syntax error\n";
+            std::cout
+               << "Syntax Error: Stack is corrupted. Could be due to "
+                  "incomplete parentheses or another formatting issue.\n";
             exit( 1 );
             }
 
          return stack[ 0 ].data.nonTerminal;
          }
    };
+
+#endif // QUERY_PARSER_H
