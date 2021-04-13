@@ -125,7 +125,7 @@ void IndexChunk::writeToDisk( const char *filename )
            serializedPostingLists.size() );
 
    // cleanup
-   scb::HashBlob::Discard(postingListOffsetHashblob);
+   scb::HashBlob::Discard( postingListOffsetHashblob );
    munmap( chunk, chunkSize );
    close( fd );
    }
@@ -176,8 +176,8 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
       }
 
    // record document metadata
-   Documents.pushBack(
-      Document{ .Url = ingest.Url /*, .LastPost = nextPost */ } );
+   Documents.pushBack( Document{
+      .Url = ingest.Url, .LastPost = static_cast<uint32_t>( nextPost ) } );
    EstSize += ingest.Url.length() + 1;
    }
 

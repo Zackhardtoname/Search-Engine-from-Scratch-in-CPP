@@ -20,7 +20,7 @@ void Persist( IndexChunk **chunk )
    char timeStr[ 1000 ];
    strftime( timeStr, 1000, "%Y_%m_%d_%H_%M_%S_", timeRepr );
    String filename( timeStr );
-   filename += RandAlphaString( 6 ) + ".index";
+   filename += RandAlphaString( 6 ) + ".chunk";
 
    ( *chunk )->writeToDisk( filename.data() );
 
@@ -85,7 +85,6 @@ int main( int argc, char **argv )
                    << std::endl;
          return 1;
          }
-      std::cout << "read ingest for url: " << ingest.Url << std::endl;
 
       curChunk->Ingest( ingest );
       if ( curChunk->EstSize >= targetSize )
