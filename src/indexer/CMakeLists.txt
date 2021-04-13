@@ -21,6 +21,18 @@ add_executable(dummy-indexer
         )
 target_link_libraries(dummy-indexer rt)
 
+add_executable(dump-indexer
+        IndexChunk.cpp
+        IndexChunk.h
+        PorterStemming.cpp
+        IndexerIngest.h
+        VLQ.cpp
+        DumpIndexer.cpp
+        ../stl/String.cpp
+        ../stl/utils.cpp
+        )
+target_link_libraries(indexer-worker rt Threads::Threads)
+
 # add_executable(create_test_chunk
 #         create_test_chunk.cpp
 #         IndexChunk.cpp
