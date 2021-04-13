@@ -108,12 +108,25 @@ class FilterWorker
       // this thread takes in a scb::Vector<ParsedUrl>, and offload them to a
       // file on disk.
       // param [this thread takes ownership]: Vector<ParsedUrl>* urls to offload
-      static void *threadOffloadUrls( void * );
+      static void *threadOffloadFilteredUrls( void * );
+
+      /// This thread takes out some unfiltered URLs when both frontier and
+      /// newLinks are full
+      // the goal is to not block the crawlers no matter what, especially when
+      // there are enough URLs in the frontier.
+      static constexpr float FULL_FACTOR = 0.9;
+      static constexpr int NUM_OFFLOAD_UNFILTERED_PER_BURST = 20000;
+      static constexpr int NUM_OFFLOAD_UNFILTERED_PER_DUMP = 1000000;
+      pthread_t pthOffloadUnfilteredUrls{};
+
+      // param: FilterWorker::this
+      [[noreturn]] static void *threadOffloadUnfilteredUrls( void * );
 
       /// A monitoring/stats thread
-      std::atomic<long> count = 0;
+      std::atomic<long> flowinCount = 0, flowoutCount = 0;
       pthread_t pthMonitor;
 
+      static constexpr float MONITOR_INTERVAL_SEC = 5.0;
       [[noreturn]] static void *threadMonitor( void * );
 
       /// /threads
@@ -134,6 +147,7 @@ class FilterWorker
       static const Robotstxt DummyRobotstxt;
       // TODO: use our own containers
       static const int MAX_NUM_ROBOTSTXT = 50000;
+
       struct LRUEntry
          {
             String Host;
@@ -144,6 +158,7 @@ class FilterWorker
                {
                }
          };
+
       std::list<LRUEntry> robotstxtLRU;
 
       struct CacheInfo

@@ -4,22 +4,27 @@
 
 #ifndef SCOOBLE_SEARCH_PAIR_H
 #define SCOOBLE_SEARCH_PAIR_H
+#include <utility>
 
-namespace scb {
-   template<typename A, typename B>
-   struct Pair {
+namespace scb
+   {
+template <typename A, typename B> struct Pair
+   {
       A first;
       B second;
 
-      template<typename F, typename S>
-      Pair(F &&first, S &&second): first(std::forward<F>(first)), second(std::forward<S>(second)) {
-      }
+      template <typename F, typename S>
+      Pair( F &&first, S &&second )
+          : first( std::forward<F>( first ) ),
+            second( std::forward<S>( second ) )
+         {
+         }
    };
 
-   template<typename A, typename B>
-   Pair<A, B> MakePair(A &&first, B &&second) {
-      return Pair(first, second);
+template <typename A, typename B> Pair<A, B> MakePair( A &&first, B &&second )
+   {
+   return Pair<A, B>( first, second );
    }
-}
+   } // namespace scb
 
-#endif //SCOOBLE_SEARCH_PAIR_H
+#endif // SCOOBLE_SEARCH_PAIR_H

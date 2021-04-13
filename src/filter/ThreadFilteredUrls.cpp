@@ -11,7 +11,7 @@
 #include "../stl/utils.h"
 #include "FilterWorker.h"
 
-void *FilterWorker::threadOffloadUrls( void *p )
+void *FilterWorker::threadOffloadFilteredUrls( void *p )
    {
    // cast and relegate the argument pointer to a smart pointer
    scb::UniquePointer urls( static_cast<Vector<ParsedUrl> *>( p ) );
@@ -62,30 +62,6 @@ void *FilterWorker::threadFilteredUrls( void *inst )
    while ( !gotSIGINT.load() )
       {
       pthread_mutex_lock( &self.lockFilteredUrls );
-
-      // offload some urls to disk if we have too many in memory
-      if ( self.filteredUrls.size() >
-           PENDING_LINKS_OFFLOAD_FACTOR * MAX_PENDING_LINKS )
-         {
-         // make a vector of URLs to offload
-         auto *offload = new Vector<ParsedUrl>;
-         while ( self.filteredUrls.size() > MAX_PENDING_LINKS )
-            {
-            offload->pushBack( std::move( self.filteredUrls.front() ) );
-            self.filteredUrls.popFront();
-            }
-
-         // spawn a new thread to offload the URLs to not block this thread
-         pthread_t th;
-         if ( pthread_create( &th, nullptr, threadOffloadUrls, offload ) != 0 )
-            {
-            // if new thread failed, just do the offloading here
-            threadOffloadUrls( offload );
-            delete offload;
-            }
-         else
-            pthread_detach( th );
-         }
 
       // count how many times have we hit this host in this tick
       Counter hostCounter;
@@ -153,7 +129,7 @@ void *FilterWorker::threadFilteredUrls( void *inst )
          self.filteredUrls.popFront();
          }
 
-      threadOffloadUrls( save );
+      threadOffloadFilteredUrls( save );
       }
 
    // kill my other brothers as well
