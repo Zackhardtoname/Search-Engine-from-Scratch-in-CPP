@@ -35,7 +35,7 @@ CURL *GetCurlHandle( String *content )
    curl_easy_setopt(
       curl, CURLOPT_USERAGENT,
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
-      "like Gecko) Chrome/88.0.4324.190 Safari/537.36 zacklt@umich.edu" );
+      "like Gecko) Chrome/88.0.4324.190 Safari/537.36 scooble-search@umich.edu" );
    curl_easy_setopt( curl, CURLOPT_HTTPGET, 1 );          // use GET
    curl_easy_setopt( curl, CURLOPT_MAXFILESIZE, 5 * MB ); // maximum size 5 MB
    curl_easy_setopt( curl, CURLOPT_TIMEOUT, 30 );         // 30 second maximum
