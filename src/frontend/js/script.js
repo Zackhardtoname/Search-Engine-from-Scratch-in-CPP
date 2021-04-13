@@ -44,13 +44,14 @@ $(function () {
 
         // TODO make requests to all servers
 
-        //         $.ajax({
-        //     type: "POST",
-        //     url: 'handler.php',
-        //     data: $form.serialize(),
-        //     success: after_form_submitted,
-        //     dataType: 'json'
-        // });
+        $.ajax({
+            type: "GET",
+            crossDomain: true,
+            url: 'http://localhost:8080/index.html',
+            data: $form.serialize(),
+            success: after_form_submitted,
+            dataType: 'json'
+        });
     });
 
     let search_bar = document.querySelector("#search-bar")

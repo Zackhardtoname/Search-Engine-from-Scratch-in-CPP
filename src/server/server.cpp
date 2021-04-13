@@ -257,6 +257,10 @@ int main( int argc, char **argv )
    // it as a stream of bytes using TCP/IP.
    listenSocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
+   int enable = 1;
+   if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+       std::cout << "setsockopt(SO_REUSEADDR) failed";
+
    // Bind the listen socket to the IP address and protocol
    // where we'd like to listen for connections.
    int bindRes = bind( listenSocket, (struct sockaddr *)&listenAddress,
