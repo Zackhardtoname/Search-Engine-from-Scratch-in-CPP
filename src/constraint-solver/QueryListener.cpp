@@ -1,3 +1,11 @@
+/*
+ * Query Listener
+ * 
+ * Runs on Each worker, responding to incoming queries with this worker's ranked results
+ * 
+ * Created by mjwolf on 4/12/2021
+ */ 
+
 #include "../stl/String.h"
 #include "../query_parser/query_parser.h"
 #include "QueryListener.h"
@@ -50,7 +58,10 @@ int main(int argc, char **argv) {
     // Run constraint solver
     ConstraintSolver::GetMatches(ast, matches, matchLimit);
 
-    // Rank
+    // TODO Rank
+    // I think we would be best off ranking by setting the rankScore of each DocumentMatch
+    // And then ordering them using a separate array of ordered indices (to avoid having to
+    // Move whole objects around in an array when sorting)
 
     // Clean up
     delete ast;

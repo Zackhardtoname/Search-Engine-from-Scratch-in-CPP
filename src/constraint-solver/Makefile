@@ -1,2 +1,2 @@
 all:
-	g++ -g3 QueryListener.cpp -o query-listener
+	g++ -g3 QueryListener.cpp ../indexer/VLQ.cpp -o query-listener

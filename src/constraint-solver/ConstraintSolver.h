@@ -1,9 +1,18 @@
 #ifndef CONSTRAINT_SOLVER_H
 #define CONSTRAINT_SOLVER_H
 
+/*
+ * Constraint Solver
+ * 
+ * Provides static methods for getting matches
+ * 
+ * Created by mjwolf on 4/12/2021
+ */
+
 #include "../query_parser/query_parser.h"
 #include "../indexer/IndexChunk.h"
 #include "QueryListener.h"
+#include "ISR.h"
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -40,19 +49,26 @@ private:
             }
 
         // Map in chunk, initially cast as header
-        ChunkHeader *header = reinterpret_cast<ChunkHeader*>(mmap( nullptr, fileSize( f ), PROT_READ, MAP_PRIVATE, f, 0 ));
+        ContiguousChunk *chunk = reinterpret_cast<ContiguousChunk*>(mmap( nullptr, fileSize( f ), PROT_READ, MAP_PRIVATE, f, 0 ));
         
         cout << "Reading '" << path.cstr() << "'\n";
 
         // * Read header 
-        cout << "\tDocument count: " << header->DocumentCount << endl;
-        cout << "\tDocument Table Start: " << header->DocumentTableOffset << endl;
-        cout << "\tDictionary Offset: " << header->WordToPostingListDictionaryOffset
+        cout << "\tDocument count: " << chunk->getHeader()->DocumentCount << endl;
+        cout << "\tDocument Table Start: " << chunk->getHeader()->DocumentTableOffset << endl;
+        cout << "\tDictionary Offset: " << chunk->getHeader()->WordToPostingListDictionaryOffset
                 << endl;
-        cout << "\tPosting List Offset: " << header->PostingListsOffset << endl;
+        cout << "\tPosting List Offset: " << chunk->getHeader()->PostingListsOffset << endl;
 
         // Get matches
-        
+        scb::String key = scb::String(static_cast<LiteralNode*>(ast)->num.c_str());
+        WordISR isr = chunk->getWordISR(key);
+
+        unsigned i;
+
+        while(i = isr.Next()) {
+            std::cout << i << std::endl;
+        }
     }
 
 
