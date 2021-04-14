@@ -16,7 +16,6 @@
 #include <iostream>
 #include <netdb.h>
 #include <pthread.h>
-#include <sstream>
 #include <cstring>
 #include <sys/socket.h>
 #include <sys/types.h>
