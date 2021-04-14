@@ -26,38 +26,34 @@ void IndexChunk::writeToDisk( const char *filename )
    {
    // Structure:
    // [Header]
-   // [Document Table (URL/document idx -> document header)]
+   // [LastPost Table]
+   // [URL Offset Table]
    // [URL List]
    // [Dictionary (word -> posting list offset)]
    // [Posting Lists]
    //
-   // Header:
-   // [i32 num of documents]
-   // [i32 offset of document table]
-   // [i32 offset of dictionary (the word->posting list offset mapping)]
-   // [i32 offset of the posting lists section]
-   //
-   // document table entry:
-   // [i32 offset of first char of URL]
-   // [i32 last post in the document]
+   // Header: See ChunkHeader
    //
    // Each Posting List:
    // [i32 offset of post1]
    // [Sync table]
-   // [post1 post2 ... postn]
+   // [post1 post2 ... post_n]
 
    // Header
    ChunkHeader header{ .DocumentCount = Documents.size() };
 
-   // Document table
-   auto docTable = scb::make_unique<DocumentTableEntry[]>( Documents.size() );
+   // Document tables
+   auto lastPostTable =
+      scb::make_unique<LastPostTableEntry[]>( Documents.size() );
+   auto urlOffsetTable =
+      scb::make_unique<UrlOffsetTableEntry[]>( Documents.size() );
 
    // make URL list, and fill in document table
    String urlList;
    for ( int i = 0;  i < Documents.size();  i++ )
       {
-      docTable[ i ].UrlOffset = urlList.size();
-      docTable[ i ].LastPost = Documents[ i ].LastPost;
+      lastPostTable[ i ] = Documents[ i ].LastPost;
+      urlOffsetTable[ i ] = urlList.size();
 
       urlList += Documents[ i ].Url;
       urlList.pushBack( '\0' );
@@ -86,9 +82,11 @@ void IndexChunk::writeToDisk( const char *filename )
       scb::HashBlob::Create( &postingListOffsetMap );
 
    // We got everything, calculate the final size and offset
-   header.DocumentTableOffset = sizeof( ChunkHeader );
-   header.UrlListOffset = header.DocumentTableOffset +
-                          Documents.size() * sizeof( DocumentTableEntry );
+   header.LastPostTableOffset = sizeof( ChunkHeader );
+   header.UrlTableOffset = header.LastPostTableOffset +
+                           Documents.size() * sizeof( LastPostTableEntry );
+   header.UrlListOffset =
+      header.UrlTableOffset + Documents.size() * sizeof( UrlOffsetTableEntry );
    header.WordToPostingListDictionaryOffset =
       header.UrlListOffset + urlList.size();
    header.PostingListsOffset = header.WordToPostingListDictionaryOffset +
@@ -112,9 +110,12 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // write header
    memcpy( chunk, &header, sizeof( ChunkHeader ) );
-   // write document table
-   memcpy( chunk + header.DocumentTableOffset, docTable.get(),
-           Documents.size() * sizeof( DocumentTableEntry ) );
+   // write last post table
+   memcpy( chunk + header.LastPostTableOffset, lastPostTable.get(),
+           Documents.size() * sizeof( LastPostTableEntry ) );
+   // write url offset table
+   memcpy( chunk + header.UrlTableOffset, urlOffsetTable.get(),
+           Documents.size() * sizeof( UrlOffsetTableEntry ) );
    // write URL list
    memcpy( chunk + header.UrlListOffset, urlList.data(), urlList.size() );
    // write word -> posting list offset dictionary
@@ -125,7 +126,7 @@ void IndexChunk::writeToDisk( const char *filename )
            serializedPostingLists.size() );
 
    // cleanup
-   scb::HashBlob::Discard(postingListOffsetHashblob);
+   scb::HashBlob::Discard( postingListOffsetHashblob );
    munmap( chunk, chunkSize );
    close( fd );
    }

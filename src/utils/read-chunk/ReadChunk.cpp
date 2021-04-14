@@ -70,7 +70,8 @@ int main( int argc, char **argv )
    // For each Document Table Entry
    for ( size_t i = 0;  i < header->DocumentCount;  ++i, ++currentEntry )
       {
-      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << "\t" << currentEntry->LastPost << endl;
+      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << "\t"
+           << currentEntry->LastPost << endl;
       }
 
    // * ===== Read URL List =====
@@ -151,7 +152,7 @@ int main( int argc, char **argv )
          prevAbsolute += decoded;
          }
 
-      cursor = decoder.getCursor();
+      cursor = decoder.GetCursor();
       }
 
    cout << "End of chunk." << endl;
