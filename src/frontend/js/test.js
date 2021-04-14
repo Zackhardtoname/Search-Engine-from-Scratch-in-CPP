@@ -22,26 +22,24 @@
 //     </div>
 // </div>
 
-function insertResults() {
-    $.getJSON("files/test-search-results.json", function (json) {
-        let toInsert = ``
+function insertResults(data) {
+    let toInsert = ``
 
-        $.each(json.pages, function (key, val) {
-            if (key >= 10) {
-                return
-            }
-            toInsert += `
-                <div class="result collection-item">
-                    <a href="https://www.google.com/search?q=${val.name}" target="_blank">${val.name}</a>
-                    <div class="snippet">
-                        <div class="col s12"><p>
-                            ${val.snippet[0]}
-                        </p></div>
-                    </div>
+    $.each(data.pages, function (key, val) {
+        if (key >= 10) {
+            return
+        }
+        toInsert += `
+            <div class="result collection-item">
+                <a href="https://www.google.com/search?q=${val.name}" target="_blank">${val.name}</a>
+                <div class="snippet">
+                    <div class="col s12"><p>
+                        ${val.snippet[0]}
+                    </p></div>
                 </div>
-            `
-        });
+            </div>
+        `
+    });
 
-        $('#search-results').append(toInsert);
-    })
+    $('#search-results').append(toInsert);
 }
