@@ -49,9 +49,9 @@ struct PostingListHeader
 struct ChunkHeader
    {
       uint32_t DocumentCount;
-      uint32_t LastPostTableOffset; // from start of the whole chunk
-      uint32_t UrlTableOffset;      // from start of the whole chunk
-      uint32_t UrlListOffset;       // from start of the whole chunk
+      uint32_t LastPostTableOffset;  // from start of the whole chunk
+      uint32_t UrlOffsetTableOffset; // from start of the whole chunk
+      uint32_t UrlListOffset;        // from start of the whole chunk
       uint32_t
          WordToPostingListDictionaryOffset; // from start of the whole chunk
       uint32_t PostingListsOffset;          // from start of the whole chunk

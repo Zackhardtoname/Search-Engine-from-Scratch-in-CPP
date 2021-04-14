@@ -54,28 +54,30 @@ int main( int argc, char **argv )
    // * ===== Read header =====
    cout << "Chunk Header:" << endl;
    cout << "\tDocument count: " << header->DocumentCount << endl;
-   cout << "\tDocument Table Start: " << header->DocumentTableOffset << endl;
+   cout << "\tLast Post Table Start: " << header->LastPostTableOffset << endl;
+   cout << "\tUrl Table Start: " << header->UrlOffsetTableOffset << endl;
    cout << "\tDictionary Offset: " << header->WordToPostingListDictionaryOffset
         << endl;
    cout << "\tPosting List Offset: " << header->PostingListsOffset << endl;
 
-   sizeof( DocumentTableEntry );
-
    // * ===== Read Document Table =====
-   const DocumentTableEntry *currentEntry =
-      reinterpret_cast<DocumentTableEntry *>( header + 1 );
+   const auto *lastPostTable = reinterpret_cast<LastPostTableEntry *>(
+      reinterpret_cast<uint8_t *>( header ) + header->LastPostTableOffset );
+   const auto *urlOffsetTable = reinterpret_cast<UrlOffsetTableEntry *>(
+      reinterpret_cast<uint8_t *>( header ) + header->UrlOffsetTableOffset );
 
    cout << "Document Table:" << endl;
-   cout << "\tIndex\tUrlOffs\tLasPost" << endl;
+   cout << "\tIndex\tUrlOffs\tLastPost" << endl;
    // For each Document Table Entry
-   for ( size_t i = 0;  i < header->DocumentCount;  ++i, ++currentEntry )
+   for ( size_t i = 0;  i < header->DocumentCount;  ++i )
       {
-      cout << "\t[" << i << "]\t" << currentEntry->UrlOffset << "\t"
-           << currentEntry->LastPost << endl;
+      cout << "\t[" << i << "]\t" << urlOffsetTable[ i ] << "\t"
+           << lastPostTable[ i ] << endl;
       }
 
    // * ===== Read URL List =====
-   const char *currentURL = reinterpret_cast<const char *>( currentEntry );
+   const char *currentURL = reinterpret_cast<const char *>(
+      reinterpret_cast<uint8_t *>( header ) + header->UrlListOffset );
 
    // std::cout<<"The thing tested against is: " << reinterpret_cast<const
    // char*> (header) + header->PostingListsOffset<<"\n"; exit(0);

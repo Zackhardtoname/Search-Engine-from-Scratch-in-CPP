@@ -83,10 +83,11 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // We got everything, calculate the final size and offset
    header.LastPostTableOffset = sizeof( ChunkHeader );
-   header.UrlTableOffset = header.LastPostTableOffset +
-                           Documents.size() * sizeof( LastPostTableEntry );
-   header.UrlListOffset =
-      header.UrlTableOffset + Documents.size() * sizeof( UrlOffsetTableEntry );
+   header.UrlOffsetTableOffset =
+      header.LastPostTableOffset +
+      Documents.size() * sizeof( LastPostTableEntry );
+   header.UrlListOffset = header.UrlOffsetTableOffset +
+                          Documents.size() * sizeof( UrlOffsetTableEntry );
    header.WordToPostingListDictionaryOffset =
       header.UrlListOffset + urlList.size();
    header.PostingListsOffset = header.WordToPostingListDictionaryOffset +
@@ -114,7 +115,7 @@ void IndexChunk::writeToDisk( const char *filename )
    memcpy( chunk + header.LastPostTableOffset, lastPostTable.get(),
            Documents.size() * sizeof( LastPostTableEntry ) );
    // write url offset table
-   memcpy( chunk + header.UrlTableOffset, urlOffsetTable.get(),
+   memcpy( chunk + header.UrlOffsetTableOffset, urlOffsetTable.get(),
            Documents.size() * sizeof( UrlOffsetTableEntry ) );
    // write URL list
    memcpy( chunk + header.UrlListOffset, urlList.data(), urlList.size() );
