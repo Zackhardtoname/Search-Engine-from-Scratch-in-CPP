@@ -100,3 +100,22 @@ def sentence_split(df, column, keep=False, mode='para'):
     new_df = df.iloc[indexes, :].copy()
     new_df[column] = new_values
     return new_df
+
+
+def extract_para(df):
+    '''
+    Converts a dataframe whose rows are pieces of documents to a new dataframe whose rows are paragraphs from documents
+    '''
+    indexes = []
+    new_values = []
+    for i, text in enumerate(df['content']):
+        split = text.split("\n")
+        new_values += split
+        indexes += [i] * len(split)
+
+    new_df = df.iloc[indexes, :].copy()
+    new_df['para'] = new_values
+    del new_df['content']
+    new_df.reset_index(level=0, inplace=True)  # make the old indeices a column
+    new_df.rename(columns={'index': 'document_idx'}, inplace=True)
+    return new_df

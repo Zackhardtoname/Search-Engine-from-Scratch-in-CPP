@@ -25,7 +25,7 @@ class Classifier():
         a dataframe whose content is ranked
         '''
         # score_dict = dict.fromkeys(self.long_keyword_dict)
-        f = lambda x: [w for w in x.split() if w in self.model.key_to_index]
+        f = lambda x: [w for w in x.lower().split() if w in self.model.key_to_index]
         self.componentDF['words'] = self.componentDF['para'].apply(f)
         self.componentDF = self.componentDF[self.componentDF['words'].apply(
             lambda x: x != [])]
@@ -47,10 +47,6 @@ def extract(df=None, topics=None,
             num_components=8, min_num_words=5, max_num_words=40):
     '''
     ranks and extracts paragraphs so they contain a specific number of words/sentences.
-    Params
-    ------
-    df: pandas.DataFrame
-        a dataframe containing paragraphs
     '''
     with open("w2v_model.pkl", "rb") as f:
         model = pickle.load(f)
@@ -67,7 +63,7 @@ def extract(df=None, topics=None,
         top_sentences['component'] = top_sentences['component'].apply(lambda x: x.strip(' [],，‘’“”\'') + '。')
         top_sentences.drop_duplicates(subset='component', keep='first', inplace=True)
         top_sentences['words'] = top_sentences['component'].apply(
-            lambda x: [w for w in x.split() if w in model.key_to_index])
+            lambda x: [w for w in x.lower().split() if w in model.key_to_index])
         top_sentences['sentence_score'] = top_sentences['words'].apply(
             lambda x: model.n_similarity(x, topic))
         top_sentences['sent_idx'] = range(len(top_sentences))
@@ -84,7 +80,7 @@ def extract(df=None, topics=None,
                 i += 1
             para = para.head(i)
             para.sort_values(by=['sent_idx'], inplace=True)
-            res = para.groupby(['topic', 'topic_score'])['component'].apply(
+            res = para.groupby(['document_idx', 'topic', 'topic_score'])['component'].apply(
                 ''.join).reset_index()
             componentDF = componentDF.append(res)
     return componentDF
