@@ -6,4 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(constraint-solver
         QueryListener.cpp
         ../stl/String.cpp
-        ISR/AND.cpp ISR/AND.h ISR/Word.cpp ISR/Word.h)
+        ISR/AND.h ISR/Word.h)
+
+add_executable(query-solver
+        QuerySolver.cpp
+        ../stl/String.cpp
+        ../indexer/VLQ.cpp
+        )

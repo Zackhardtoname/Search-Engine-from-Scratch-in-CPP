@@ -119,8 +119,9 @@ int main( int argc, char **argv )
          reinterpret_cast<const PostingListHeader *>( cursor );
 
       cout << "\tHeader:" << std::endl;
-      cout << "\t\tNumber of posts: " << plHeader->NumPosts
-           << "\n\t\tNumber of Sync Table Entries: "
+      cout << "\t\tNumber of posts: " << plHeader->NumPosts << '\n'
+           << "\t\tLast Post: " << plHeader->LastPost << '\n'
+           << "\t\tNumber of Sync Table Entries: "
            << plHeader->NumSyncTableEntries << endl;
 
       // Read and print Sync Table

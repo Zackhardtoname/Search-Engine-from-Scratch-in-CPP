@@ -13,8 +13,8 @@ class Word : public ISR
       PostingListHeader postingListHeader;
       SyncTableEntry *syncTable;
 
-      uint32_t curPost = 0;
-      uint32_t docID = 0;
+      uint32_t curPost;
+      int32_t docID;
 
       bool eof = false;
 
@@ -32,14 +32,23 @@ class Word : public ISR
             syncTable + postingListHeader.NumSyncTableEntries );
          decoder =
             VLQStreamDecoder( reinterpret_cast<const char *>( firstPost ) );
+
+         curPost = decoder.Next();
+         docID = 0;
+         while ( curPost > chunk.LastPostTable[ docID ] )
+            docID++;
          }
 
       void Next() override
          {
+         if ( eof )
+            return;
+
          // if calling Next() while we're already pointing to the last post
          if ( curPost == postingListHeader.LastPost )
             {
             eof = true;
+            curPost = -1;
             return;
             }
 
@@ -72,7 +81,8 @@ class Word : public ISR
 
       void Seek( uint32_t targetPost ) override
          {
-         assert( targetPost >= curPost );
+         if ( targetPost < curPost )
+            return;
          // if we are quite far away
          if ( targetPost - curPost > SyncTableEntry::NUM_POSTS_COVERED )
             {

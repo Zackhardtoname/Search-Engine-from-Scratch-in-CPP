@@ -109,7 +109,7 @@ struct SerialTuple
          while ( b )
             {
 
-            size_t *size_t_buf = reinterpret_cast<size_t *>( buffer );
+            auto *size_t_buf = reinterpret_cast<size_t *>( buffer );
 
             // write member vars byte by byte to buffer
             *size_t_buf++ = BytesForBucket( b );
@@ -164,7 +164,7 @@ class HashBlob
 
       // The SerialTuples will follow immediately after.
 
-      const size_t Size() const
+      size_t Size() const
          {
          return BlobSize;
          }
@@ -188,7 +188,7 @@ class HashBlob
             if ( Buckets[ i ] != 0 )
                {
                const char *currentPos = start + Buckets[ i ];
-               const scb::SerialTuple *currentTuple =
+               const auto *currentTuple =
                   reinterpret_cast<const scb::SerialTuple *>( currentPos );
 
                os << "\tBucket: " << i
@@ -218,7 +218,7 @@ class HashBlob
          return output;
          }
 
-      const SerialTuple *Find( scb::String key ) const
+      const SerialTuple *Find( const scb::String &key ) const
          {
          // if (!strcmp(key, "would")) std::cout << "testing: blob find on " <<
          // key << std::endl;
@@ -405,7 +405,8 @@ class HashBlob
                }
 
          public:
-            Iterator( const HashBlob *blob ) : Iterator( blob, 0, nullptr )
+            explicit Iterator( const HashBlob *blob )
+                : Iterator( blob, 0, nullptr )
                {
                // Increment to first bucket with something
                for ( ;  currentBucket < hashBlob->numBuckets &&
@@ -429,9 +430,7 @@ class HashBlob
                {
                }
 
-            ~Iterator()
-               {
-               }
+            ~Iterator() = default;
 
             const SerialTuple &operator*()
                {
@@ -480,7 +479,7 @@ class HashBlob
                }
 
             // Postfix ++
-            Iterator operator++( int )
+            const Iterator operator++( int )
                {
                Iterator ret = *this;
                ++( *this );

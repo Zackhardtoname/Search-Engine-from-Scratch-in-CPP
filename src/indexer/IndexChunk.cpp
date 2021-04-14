@@ -225,7 +225,8 @@ String SerializePostingList( const Vector<uint64_t> &lst )
    // make header
    PostingListHeader header{ .NumSyncTableEntries =
                                 static_cast<uint32_t>( nEntries ),
-                             .NumPosts = lst.size() };
+                             .NumPosts = lst.size(),
+                             .LastPost = static_cast<uint32_t>( lst.back() ) };
 
    String serialized( reinterpret_cast<char *>( syncTable.get() ),
                       nEntries * sizeof( SyncTableEntry ) );

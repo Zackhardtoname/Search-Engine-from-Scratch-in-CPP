@@ -16,8 +16,8 @@ class AND : public ISR
       scb::Vector<ISR *> clauses;
 
       // Try to find matches for the compliments in the same document as the
-      // anchor returns true if succeed, or EOF returns false if not possible
-      bool alignCompliments()
+      // anchor. Returns true if succeed, or EOF returns false if not possible.
+      bool alignComplimentsInSameDoc()
          {
          // trying to match in anchor's clause's DocID, which spans [docBegin,
          // docEnd]
@@ -48,12 +48,47 @@ class AND : public ISR
          // TODO: sort clauses by increasing frequency
          }
 
+      // try to align the compliments to find a match based on the current
+      // anchor, if not possible, move the anchor forward and repeat.
+      void nextMatch()
+         {
+         while ( true )
+            {
+            // give up if anchor already
+            if ( clauses.front()->IsEOF() )
+               return;
+
+            // Return if successfully align the compliments in the same
+            // document, or EOF.
+            if ( alignComplimentsInSameDoc() )
+               return;
+
+            // seek anchor to be >= all compliments's.
+            uint32_t highestCompliment = 0;
+            for ( int i = 1;  i < clauses.size();  i++ )
+               {
+               // If one of the compliments EOF
+               if ( clauses[ i ]->IsEOF() )
+                  return;
+
+               uint32_t post = clauses[ i ]->DocFirstPost();
+               if ( post > highestCompliment )
+                  highestCompliment = post;
+               }
+            clauses.front()->Seek( highestCompliment );
+            }
+         }
+
    public:
       explicit AND( scb::Vector<ISR *> cls, const ChunkHeader *chunkHeader )
           : clauses( std::move( cls ) ), ISR( chunkHeader )
          {
-         assert( cls.size() >= 2 &&
+         assert( clauses.size() >= 2 &&
                  "AND ISR combines at least two other ISRs" );
+
+         sortByFrequency();
+
+         nextMatch();
          }
 
       void Next() override
@@ -63,37 +98,10 @@ class AND : public ISR
 
       void NextDoc() override
          {
-         // return when either 1. one of the clauses EOF, or 2. find a match
-         while ( true )
-            {
-            sortByFrequency();
+         // seek anchor to the next document first
+         clauses.front()->NextDoc();
 
-            // seek anchor to the next document first
-            clauses.front()->NextDoc();
-
-            // give up if EOF
-            if ( clauses.front()->IsEOF() )
-               return;
-
-            // seek anchor to be >= all compliments's
-            uint32_t highestCompliment = 0;
-            for ( int i = 1;  i < clauses.size();  i++ )
-               {
-               uint32_t post = clauses[ i ]->DocFirstPost();
-               if ( post > highestCompliment )
-                  highestCompliment = post;
-               }
-            clauses.front()->Seek( highestCompliment );
-
-            // give up if EOF
-            if ( clauses.front()->IsEOF() )
-               return;
-
-            // if successfully align the compliments in the same document
-            // or EOF
-            if ( alignCompliments() )
-               return;
-            }
+         nextMatch();
          }
 
       bool IsEOF() override
@@ -116,11 +124,7 @@ class AND : public ISR
 
          clauses.front()->Seek( post );
 
-         // give up if EOF
-         if ( clauses.front()->IsEOF() )
-            return;
-
-         alignCompliments();
+         nextMatch();
          }
 
       float Frequency() override
@@ -134,7 +138,7 @@ class AND : public ISR
 
       uint32_t DocID() override
          {
-         return clauses.front()->DocFirstPost();
+         return clauses.front()->DocID();
          }
    };
 

@@ -21,8 +21,8 @@ struct ChunkRef
       unsigned NumTotalPosts;
    };
 
-// When an ISR is initialized, it does not point to anything yet.
-// Calling Get() before Next() is UB.
+// When an ISR is initialized, it should already point to the first occurence,
+// or EOF.
 class ISR
    {
    protected:
@@ -61,7 +61,7 @@ class ISR
          if ( docID == 0 )
             return 0;
          else
-            return chunk.LastPostTable[ docID - 1 ];
+            return chunk.LastPostTable[ docID - 1 ] + 1;
          }
    };
 
