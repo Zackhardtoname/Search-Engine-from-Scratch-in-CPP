@@ -157,6 +157,8 @@ void *Talk( void *talkSocket )
    // the path must be safe.
    int requestStartLoc = 4;
    int protocalLoc = buf.find( "HTTP" );
+   scb::String queryHint = "/index.html?query=";
+   scb::String end_char = "\r\n";
 
    if ( buf.substr( 0, 3 ) == "GET" && protocalLoc != scb::String::npos )
       {
@@ -167,40 +169,39 @@ void *Talk( void *talkSocket )
       if ( !SafePath( processedPath.cstr() ) )
          // If the path refers to a directory,
          AccessDenied( talkSocketFD );
-      /*
-      else if (strncmp(requested.c_str(), "/search/", 8))
-         {
+      else if (!strncmp(requested.cstr(), queryHint.cstr(), queryHint.length()))
          //Get search results and return them
-
-         // TODO forward to query over the network toss;
-         scb::String end_char = "\r\n";
-
-         // header
-         ss << "HTTP/1.1 200 OK" << end_char
-            << "Content-Length: " << fileEnd - fileStart << end_char
-            << "Content-Type: " << getMimetype(processedPathCStr) << end_char
-            << end_char;
-
-         // body
-         ss << fileStart;
-
-         send( talkSocketFD, ss.str().c_str(), ss.str().size(), 0 );
-         scb::String end_char = "\r\n";
-
-         // header
-         ss << "HTTP/1.1 200 OK" << end_char
-            << "Content-Length: " << fileEnd - fileStart << end_char
-            << "Content-Type: " << getMimetype(processedPathCStr) << end_char
-            << end_char;
-
-         // body
-         ss << fileStart;
-
-         send( talkSocketFD, ss.str().c_str(), ss.str().size(), 0 );
+         {
+         // TODO forward to query over the frontend server;
+         // before that, code duplication with the next else is fine since most will change
+         scb::String response = "{}";
+         char *fileStart;
+         char *fileEnd;
+         processedPath = scb::String(RootDirectory) + "/" + "files/test-search-results.json";
+         const char *processedPathCStr = processedPath.cstr();
+         int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
+         if ( mapRes < 1 )
+         {
+            FileNotFound( talkSocketFD );
          }
 
-         */
-         
+         // header
+         scb::String msg("HTTP/1.1 200 OK");
+         msg += end_char;
+         msg += "Content-Length: ";
+         // TODO remember to change length
+         msg += fileEnd - fileStart;
+         msg += end_char;
+         msg += "Content-Type: ";
+         msg += "application/json";
+         msg += end_char;
+         msg += end_char;
+
+         // body
+         msg += fileStart;
+
+         send( talkSocketFD, msg.cstr(), msg.size(), 0 );
+         }
       else
          {
          // If the path refers to a file, write it to the socket.
@@ -208,7 +209,6 @@ void *Talk( void *talkSocket )
          char *fileEnd;
          processedPath = scb::String(RootDirectory) + "/" + processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
-         // char * fileName =
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
             {
@@ -216,11 +216,7 @@ void *Talk( void *talkSocket )
             }
          else
             {
-            scb::String end_char = "\r\n";
-
             // header
-
-            
             scb::String msg("HTTP/1.1 200 OK");
             msg += end_char;
             msg += "Content-Length: ";
@@ -230,6 +226,8 @@ void *Talk( void *talkSocket )
             msg += getMimetype(processedPathCStr);
             msg += end_char;
             msg += end_char;
+
+            // body
             msg += fileStart;
 
             send( talkSocketFD, msg.cstr(), msg.size(), 0 );
