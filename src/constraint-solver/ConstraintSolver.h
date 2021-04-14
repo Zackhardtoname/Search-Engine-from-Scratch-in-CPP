@@ -10,14 +10,13 @@
  */
 
 #include "../indexer/IndexChunk.h"
-#include "../query_parser/query_parser.h"
+#include "ConstraintSolver.h"
 #include "ISR/ISR.h"
-#include "QueryListener.h"
 
+#include <cstdio>
+#include <cstring>
 #include <dirent.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -38,6 +37,7 @@ size_t fileSize( int f )
 class ConstraintSolver
    {
    private:
+      /*
       static void matchesFromIndex( AST *ast, DocumentMatch matches[],
                                     unsigned matchLimit,
                                     const scb::String &path )
@@ -85,9 +85,11 @@ class ConstraintSolver
             std::cout << i << std::endl;
             }
          }
+         */
 
    public:
       // TODO pass in folder to get matches from
+      /*
       static void GetMatches( AST *ast, DocumentMatch matches[],
                               unsigned matchLimit )
          {
@@ -126,6 +128,7 @@ class ConstraintSolver
          // For each .index file:
          // run the root ISR
          }
+         */
    };
 
 #endif // CONSTRAINT_SOLVER_H

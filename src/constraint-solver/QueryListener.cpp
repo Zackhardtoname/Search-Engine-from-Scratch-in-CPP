@@ -1,29 +1,32 @@
 /*
  * Query Listener
- * 
- * Runs on Each worker, responding to incoming queries with this worker's ranked results
- * 
+ *
+ * Runs on Each worker, responding to incoming queries with this worker's ranked
+ * results
+ *
  * Created by mjwolf on 4/12/2021
- */ 
+ */
 
 #include "../stl/String.h"
-#include "../query_parser/query_parser.h"
-#include "QueryListener.h"
+//#include "../query_parser/query_parser.h"
 #include "ConstraintSolver.h"
+#include "QueryListener.h"
 
 // TODO remove
 #include <string>
 
-using std::cout;
 using std::cerr;
+using std::cout;
 using std::endl;
 
-int main(int argc, char **argv) {
+int main( int argc, char **argv )
+   {
 
+   /*
     // Usage
     if ( argc <= 2) {
-        cerr << "Usage: " << argv[0] << " [max number of matches] [query]" << endl;
-        return 1;
+        cerr << "Usage: " << argv[0] << " [max number of matches] [query]" <<
+    endl; return 1;
     }
 
     // Read match limit from args
@@ -59,12 +62,15 @@ int main(int argc, char **argv) {
     ConstraintSolver::GetMatches(ast, matches, matchLimit);
 
     // TODO Rank
-    // I think we would be best off ranking by setting the rankScore of each DocumentMatch
-    // And then ordering them using a separate array of ordered indices (to avoid having to
+    // I think we would be best off ranking by setting the rankScore of each
+    DocumentMatch
+    // And then ordering them using a separate array of ordered indices (to
+    avoid having to
     // Move whole objects around in an array when sorting)
 
     // Clean up
     delete ast;
-    
+
     return 0;
-}
+    */
+   }

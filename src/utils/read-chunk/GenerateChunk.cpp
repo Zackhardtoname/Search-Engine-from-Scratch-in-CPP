@@ -31,14 +31,6 @@ void *threadPersistChunk( void *p )
 
 scb::Vector<scb::String> words;
 
-scb::String RandAlphaString( int len )
-   {
-   scb::String str;
-   for ( int i = 0;  i < len;  i++ )
-      str.pushBack( 'a' + rand() % 26 );
-   return str;
-   }
-
 scb::String RandWord()
    {
    return words[ rand() % words.size() ];

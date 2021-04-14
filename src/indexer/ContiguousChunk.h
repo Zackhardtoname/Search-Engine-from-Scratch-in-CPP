@@ -69,54 +69,57 @@ class ContiguousChunk
          return reinterpret_cast<ChunkHeader *>( this );
          }
 
-      WordISR getWordISR( scb::String &key )
-         {
-
-         const auto blob = reinterpret_cast<const scb::HashBlob *>(
-            reinterpret_cast<char *>( this ) +
-            header.WordToPostingListDictionaryOffset );
-
-         auto serialtuple = blob->Find( key );
-
-         // If no results (serialtuple is nullptr)
-         if ( serialtuple == nullptr )
-            {
-            std::cout << "No list for key: " << key.cstr() << std::endl;
-            return WordISR( nullptr );
-            }
-
-         unsigned internalOffset = serialtuple->Value;
-
-         const char *cursor = reinterpret_cast<const char *>( this ) +
-                              header.PostingListsOffset + internalOffset;
-
-         const PostingListHeader *plHeader =
-            reinterpret_cast<const PostingListHeader *>( cursor );
-
-         std::cout << "\tHeader:" << std::endl;
-         std::cout << "\t\tNumber of posts: " << plHeader->NumPosts
-                   << "\n\t\tNumber of Sync Table Entries: "
-                   << plHeader->NumSyncTableEntries << std::endl;
-
-         // Read and print Sync Table
-         std::cout << "\tSync Table:\tOffs:\tPost:" << std::endl;
-         const SyncTableEntry *syncEntry =
-            reinterpret_cast<const SyncTableEntry *>( plHeader + 1 );
-         for ( size_t i = 0;  i < plHeader->NumSyncTableEntries;  ++i )
-            {
-            std::cout << "\t\t[" << i << "]\t" << syncEntry->Offset << "\t"
-                      << syncEntry->Post << std::endl;
-            ++syncEntry;
-            }
-
-         cursor += sizeof( PostingListHeader ) +
-                   ( plHeader->NumSyncTableEntries * sizeof( SyncTableEntry ) );
-
-         std::cout << "ISR For posting list: "
-                   << blob->Find( key )->GetKey().cstr() << std::endl;
-
-         return WordISR( cursor );
-         }
+      //      WordISR getWordISR( scb::String &key )
+      //         {
+      //
+      //         const auto blob = reinterpret_cast<const scb::HashBlob *>(
+      //            reinterpret_cast<char *>( this ) +
+      //            header.WordToPostingListDictionaryOffset );
+      //
+      //         auto serialtuple = blob->Find( key );
+      //
+      //         // If no results (serialtuple is nullptr)
+      //         if ( serialtuple == nullptr )
+      //            {
+      //            std::cout << "No list for key: " << key.cstr() << std::endl;
+      //            return WordISR( nullptr );
+      //            }
+      //
+      //         unsigned internalOffset = serialtuple->Value;
+      //
+      //         const char *cursor = reinterpret_cast<const char *>( this ) +
+      //                              header.PostingListsOffset +
+      //                              internalOffset;
+      //
+      //         const PostingListHeader *plHeader =
+      //            reinterpret_cast<const PostingListHeader *>( cursor );
+      //
+      //         std::cout << "\tHeader:" << std::endl;
+      //         std::cout << "\t\tNumber of posts: " << plHeader->NumPosts
+      //                   << "\n\t\tNumber of Sync Table Entries: "
+      //                   << plHeader->NumSyncTableEntries << std::endl;
+      //
+      //         // Read and print Sync Table
+      //         std::cout << "\tSync Table:\tOffs:\tPost:" << std::endl;
+      //         const SyncTableEntry *syncEntry =
+      //            reinterpret_cast<const SyncTableEntry *>( plHeader + 1 );
+      //         for ( size_t i = 0;  i < plHeader->NumSyncTableEntries;  ++i )
+      //            {
+      //            std::cout << "\t\t[" << i << "]\t" << syncEntry->Offset <<
+      //            "\t"
+      //                      << syncEntry->Post << std::endl;
+      //            ++syncEntry;
+      //            }
+      //
+      //         cursor += sizeof( PostingListHeader ) +
+      //                   ( plHeader->NumSyncTableEntries * sizeof(
+      //                   SyncTableEntry ) );
+      //
+      //         std::cout << "ISR For posting list: "
+      //                   << blob->Find( key )->GetKey().cstr() << std::endl;
+      //
+      //         return WordISR( cursor );
+      //         }
    };
 
 #endif // SCOOBLE_SEARCH_CONTIGUOUSCHUNK_H

@@ -29,12 +29,12 @@ namespace scb
 constexpr size_t SerialTupleBaseSize = 3 * sizeof( size_t );
 
 using Hash = scb::HashTable<String, size_t, StringHash>;
-using Pair = Tuple<String, size_t>;
+using HashPair = Tuple<String, size_t>;
 using HashBucket = Bucket<String, size_t>;
 
 static const size_t Unknown = 0;
 
-size_t RoundUp( size_t length, size_t boundary )
+inline size_t RoundUp( size_t length, size_t boundary )
    {
    // Round up to the next multiple of the boundary, which
    // must be a power of 2.

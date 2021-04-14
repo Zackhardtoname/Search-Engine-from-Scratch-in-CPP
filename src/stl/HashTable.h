@@ -22,7 +22,7 @@ template <typename Key, typename Value> class Tuple
       Key key;
       Value value;
 
-      Tuple( const Key k, const Value v ) : key( k ), value( v )
+      Tuple( const Key &k, const Value &v ) : key( k ), value( v )
          {
          }
 
