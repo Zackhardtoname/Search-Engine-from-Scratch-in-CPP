@@ -7,7 +7,6 @@
 #include "../stl/Counter.h"
 #include "../stl/RAII.h"
 #include <cassert>
-#include <curl/curl.h>
 #include <fstream>
 #include <iostream>
 #include <mqueue.h>
@@ -42,6 +41,9 @@ void FilterWorker::Run()
    pthread_create( &pthFilteredUrls, nullptr, threadFilteredUrls, this );
 
    pthread_create( &pthMonitor, nullptr, threadMonitor, this );
+
+   pthread_create( &pthOffloadUnfilteredUrls, nullptr,
+                   threadOffloadUnfilteredUrls, this );
 
    // wait on any one of the threads
    pthread_join( pthNewLinksMqueue[ 0 ], nullptr );
@@ -86,8 +88,10 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
       curl_easy_cleanup( curl );
       pthread_mutex_lock( &args->self->lockRobotstxtMap );
       args->self->robotstxtLRU.emplace_front( args->Url.Host, DummyRobotstxt );
+#ifdef VERY_VERBOSE
       std::cerr << "robots.txt " << args->Url.Normalize( "robots.txt" )
                 << " failed: " << ex.what() << std::endl;
+#endif
       }
 
    // here, robotstxtLRU.front() must be a robots.txt, albeit maybe dummy
@@ -131,7 +135,10 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
    // all good! we can put them into filteredUrls
    pthread_mutex_lock( &args->self->lockFilteredUrls );
    for ( ParsedUrl &url : filtered )
+      {
       args->self->filteredUrls.pushBack( std::move( url ) );
+      ++args->self->flowoutCount;
+      }
    pthread_mutex_unlock( &args->self->lockFilteredUrls );
 
    return nullptr;
@@ -139,7 +146,7 @@ void *FilterWorker::threadFetchRobotstxt( void *p )
 
 void FilterWorker::handleUnfilteredLink( const String &link )
    {
-   ++count;
+   ++flowinCount;
 
    ParsedUrl url( link );
 
@@ -212,6 +219,7 @@ void FilterWorker::handleUnfilteredLink( const String &link )
       // all good! we can put that into filteredUrls
       pthread_mutex_lock( &lockFilteredUrls );
       filteredUrls.pushBack( std::move( url ) );
+      ++flowoutCount;
       pthread_mutex_unlock( &lockFilteredUrls );
       }
    else
@@ -229,7 +237,7 @@ FilterWorker::FilterWorker( const char *remoteConfigFile, int rk,
     : bloomfilter( bloomFile )
    {
    // open the queues
-   qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDONLY );
+   qNewLinks = mq_open( NEW_LINKS_QUEUE, O_RDWR );
    if ( qNewLinks == -1 )
       {
       std::cerr << "mq_open(NEW_LINKS_QUEUE) failed: " << strerror( errno )
