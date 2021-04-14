@@ -25,6 +25,7 @@ src/stl/hashTable/Top10*
 src/indexer/dummy-indexer
 src/indexer/indexer-worker
 src/query-parser/query-parser
+src/server/server
 bin/crawler-group
 bin/crawlerCmdline
 bin/create_test_chunk

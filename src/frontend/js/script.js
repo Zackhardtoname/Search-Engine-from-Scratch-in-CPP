@@ -26,13 +26,12 @@ $(function () {
             $btn.text('Sending ...');
         });
 
-        console.log("query: ", $form.serialize())
+        const searchTerms = $('#icon_prefix2').val();
 
         $.ajax({
             type: "GET",
             crossDomain: true,
-            url: 'http://localhost:8080/index.html',
-            data: $form.serialize(),
+            url: "/search?query=" + btoa(searchTerms),
             success: after_form_submitted,
             error: function(XMLHttpRequest, textStatus, errorThrown) {
                 alert("Status: " + textStatus); alert("Error: " + errorThrown);

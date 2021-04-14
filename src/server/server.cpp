@@ -13,22 +13,26 @@
 // perf issue, forcing the client browser to reconnect for each
 // request and a candidate for improvement.
 
+#include "../stl/Filesystem.h"
+#include "../stl/String.h"
+#include "../stl/Vector.h"
+#include "../stl/utils.h"
+#include "DocMatch.h"
+#include "mime.h"
+#include <cstring>
 #include <iostream>
 #include <netdb.h>
 #include <pthread.h>
-#include <cstring>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "mime.h"
-#include "../stl/String.h"
-#include "../stl/Filesystem.h"
 
 #define backlog 1000
 
+using std::cerr;
 using std::cout;
 using std::endl;
-using std::cerr;
 
 // Root directory for the website, taken from argv[ 2 ].
 // (Yes, a global variable since it never changes.)
@@ -137,7 +141,8 @@ void *Talk( void *talkSocket )
    // requested file.
 
    // Cast from void * to int * to recover the talk socket id
-   // then free the heap usage as soon as possible in case exception happens later
+   // then free the heap usage as soon as possible in case exception happens
+   // later
    cout << "received connection at socket " << talkSocket << ":" << endl;
    int talkSocketFD = *(int *)talkSocket;
    free( talkSocket );
@@ -156,7 +161,7 @@ void *Talk( void *talkSocket )
    // the path must be safe.
    int requestStartLoc = 4;
    int protocalLoc = buf.find( "HTTP" );
-   scb::String queryHint = "/index.html?query=";
+   scb::String queryHint = "/search";
    scb::String end_char = "\r\n";
 
    if ( buf.substr( 0, 3 ) == "GET" && protocalLoc != scb::String::npos )
@@ -165,31 +170,113 @@ void *Talk( void *talkSocket )
          buf.substr( requestStartLoc,
                      protocalLoc - requestStartLoc - 1 ); // 1 for whitespace
       scb::String processedPath = ( UnencodeUrlEncoding( requested ) );
-      if ( !SafePath( processedPath.cstr() ) )
-         // If the path refers to a directory,
-         AccessDenied( talkSocketFD );
-      else if (!strncmp(requested.cstr(), queryHint.cstr(), queryHint.length()))
-         //Get search results and return them
+
+      if ( processedPath == "/" )
          {
-         // TODO forward to query over the frontend server;
-         // before that, code duplication with the next else is fine since most will change
-         scb::String response = "{}";
-         char *fileStart;
-         char *fileEnd;
-         processedPath = scb::String(RootDirectory) + "/" + "files/test-search-results.json";
-         const char *processedPathCStr = processedPath.cstr();
-         int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
-         if ( mapRes < 1 )
-         {
-            FileNotFound( talkSocketFD );
+         processedPath = "/index.html";
          }
 
+      if ( !SafePath( processedPath.cstr() ) )
+         // If the path refers to a directory
+         AccessDenied( talkSocketFD );
+      else if ( !strncmp( requested.cstr(), queryHint.cstr(),
+                          queryHint.length() ) )
+      // Get search results and return them
+         {
+
+         // Extract the exact query which will be in byte format. Each worker
+         // will be responsible for decoding the byte format to read the exact
+         // query in the query parser.
+         int queryLength = buf.find( " HTTP" ) - buf.find( "/search?query=" );
+         scb::String query =
+            buf.substr( buf.find( "/search?query=" ) + 14, queryLength );
+
+         int sockFD[ 9 ];
+
+         // Connect to all nine workers via sockets on port 9001
+         for ( int workerID = 0;  workerID < 9;  workerID++ )
+            {
+            scb::String host( workerID + '0' );
+            host += ".scb.hanyou.dev";
+            addrinfo *info = QueryHost( host.cstr(), "9001" );
+            Defer freeAddrinfo(
+               [ = ]()
+               {
+                  freeaddrinfo( info );
+               } );
+
+            int sock =
+               socket( info->ai_family, info->ai_socktype, info->ai_protocol );
+            assert( sock != 0 && "error in socket()" );
+
+            // connect socket
+            int status = connect( sock, info->ai_addr, info->ai_addrlen );
+            if ( status == -1 )
+               throw std::runtime_error( strerror( errno ) );
+
+            sockFD[ workerID ] = sock;
+            }
+
+         // Send the query to all nine workers
+         for ( int workerID = 0;  workerID < 9;  workerID++ )
+            send( sockFD[ workerID ], query.cstr(), query.size() + 1, 0 );
+
+         // Listen for response from all nine workers
+         scb::Vector<scb::String> workerResps( 9 );
+         for ( int workerID = 0;  workerID < 9;  workerID++ )
+            while ( ( bytes = recv( sockFD[ workerID ], buffer,
+                                    sizeof( buffer ), 0 ) ) > 0 )
+               workerResps[ workerID ] += scb::String( buffer, bytes );
+
+         // Combine the responses to a workerResps vector
+         scb::Vector<DocMatch> allMatches;
+         for ( int workerID = 0;  workerID < 9;  workerID++ )
+            {
+            size_t consumed = -1;
+            auto matches = Deserialize<scb::Vector<DocMatch>>(
+               workerResps[ workerID ], &consumed );
+            for ( auto &match : matches )
+               allMatches.pushBack( std::move( match ) );
+            }
+
+         // Merge the response from all nine workers (sort them, and take first
+         // N)
+         qsort( allMatches.data(), allMatches.size(), sizeof( DocMatch ),
+                cmpDocMatch );
+
+         // Create a json string that is formatted appropriately to send to the
+         // client. Currently, we send the top 20 results (hence the 20
+         // iterations in the for loop) but this is subject to change depending
+         // on what we want to do
+         scb::String json = "{\n\t\"pages\":\t[\n";
+         for ( int i = 0;  i < 20;  ++i )
+            {
+            json += "\t\t{\n\t\t\t\"title\": \"";
+            json += allMatches[ i ].Title + "\",\n";
+            json += "\t\t\t\"url\": \"";
+            json += allMatches[ i ].Url + "\",\n";
+            json += "\t\t\t\"snippet\": \"";
+            json += allMatches[ i ].Snippet + "\",\n";
+            json += "\t\t\t\"rank\": \"";
+
+            // Round the rank up or down to the nearest whole number(integer)
+            // value
+            int rank = (int)( allMatches[ i ].Rank + 0.5 -
+                              ( allMatches[ i ].Rank < 0 ) );
+            json += std::to_string( rank ).c_str();
+            json += "\",\n";
+            if ( i == 19 )
+               json += "\t\t}\n";
+            else
+               json += "\t\t},\n";
+            }
+         json += "\t]\n}\n";
+
          // header
-         scb::String msg("HTTP/1.1 200 OK");
+         scb::String msg( "HTTP/1.1 200 OK" );
          msg += end_char;
          msg += "Content-Length: ";
-         // TODO remember to change length
-         msg += fileEnd - fileStart;
+         msg += json.length();
          msg += end_char;
          msg += "Content-Type: ";
          msg += "application/json";
@@ -197,8 +284,9 @@ void *Talk( void *talkSocket )
          msg += end_char;
 
          // body
-         msg += fileStart;
+         msg += json;
 
+         // Send the message with the top n results to the client
          send( talkSocketFD, msg.cstr(), msg.size(), 0 );
          }
       else
@@ -206,7 +294,8 @@ void *Talk( void *talkSocket )
          // If the path refers to a file, write it to the socket.
          char *fileStart;
          char *fileEnd;
-         processedPath = scb::String(RootDirectory) + "/" + processedPath.substr( 1 );
+         processedPath =
+            scb::String( RootDirectory ) + "/" + processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
@@ -216,13 +305,13 @@ void *Talk( void *talkSocket )
          else
             {
             // header
-            scb::String msg("HTTP/1.1 200 OK");
+            scb::String msg( "HTTP/1.1 200 OK" );
             msg += end_char;
             msg += "Content-Length: ";
             msg += fileEnd - fileStart;
             msg += end_char;
             msg += "Content-Type: ";
-            msg += getMimetype(processedPathCStr);
+            msg += getMimetype( processedPathCStr );
             msg += end_char;
             msg += end_char;
 
@@ -297,8 +386,9 @@ int main( int argc, char **argv )
    listenSocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
    int enable = 1;
-   if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-       std::cout << "setsockopt(SO_REUSEADDR) failed";
+   if ( setsockopt( listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable,
+                    sizeof( int ) ) < 0 )
+      std::cout << "setsockopt(SO_REUSEADDR) failed";
 
    // Bind the listen socket to the IP address and protocol
    // where we'd like to listen for connections.
