@@ -63,11 +63,10 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // make posting lists, and fill in the offset mapping
    String serializedPostingLists;
-   for ( scb::Tuple<scb::String, scb::Vector<uint64_t>> &tuple : PostingLists )
+   for ( auto &tuple : PostingLists )
       {
-      postingListOffsetMap[ tuple.key ] = serializedPostingLists.size();
-      serializedPostingLists +=
-         SerializePostingList( PostingLists[ tuple.key ] );
+      postingListOffsetMap[ tuple.first ] = serializedPostingLists.size();
+      serializedPostingLists += SerializePostingList( tuple.second );
       }
 
    // Debug
