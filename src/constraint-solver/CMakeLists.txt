@@ -13,4 +13,5 @@ add_executable(query-solver
         ../stl/String.cpp
         ../indexer/VLQ.cpp
         ../stl/utils.cpp
+        ../indexer/PorterStemming.cpp
         )

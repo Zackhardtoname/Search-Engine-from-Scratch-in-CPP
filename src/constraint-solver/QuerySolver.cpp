@@ -26,8 +26,9 @@ int main( int argc, char **argv )
 
       while ( !isr->IsEOF() )
          {
-         std::cout << "match post: " << isr->Get() << " in doc " << isr->DocID()
-                   << std::endl;
+         auto url = query.Url( isr->DocID() );
+         printf( "match post %d in doc %d ( %s )\n", isr->Get(), isr->DocID(),
+                 url.cstr() );
          isr->NextDoc();
          }
       }

@@ -6,6 +6,7 @@
 #define SCOOBLE_SEARCH_QUERYABLECHUNK_H
 
 #include "../indexer/ContiguousChunk.h"
+#include "../indexer/PorterStemming.h"
 #include "../query-parser/QueryParser.h"
 #include "../stl/utils.h"
 #include "ISR/AND.h"
@@ -75,7 +76,8 @@ class QueryableChunk
             }
          else if ( auto *lit = dynamic_cast<LiteralNode *>( ast ) )
             {
-            const scb::SerialTuple *it = hashblob->Find( lit->word.cstr() );
+            auto stemmed = PorterStem( lit->word );
+            const scb::SerialTuple *it = hashblob->Find( stemmed.cstr() );
             if ( it != nullptr )
                {
                auto *postingList = reinterpret_cast<uint8_t *>( chunk ) +
@@ -93,6 +95,16 @@ class QueryableChunk
             assert( !"not implemented yet" );
             }
          return nullptr;
+         }
+
+      scb::String Url( uint32_t docID )
+         {
+         const char *urlList =
+            reinterpret_cast<char *>( chunk ) + chunk->UrlListOffset;
+         auto *urlOffsetTable = reinterpret_cast<UrlOffsetTableEntry *>(
+            reinterpret_cast<char *>( chunk ) + chunk->UrlOffsetTableOffset );
+         uint32_t offset = urlOffsetTable[ docID ];
+         return scb::String( urlList + offset );
          }
    };
 
