@@ -69,11 +69,13 @@ int main( int argc, char **argv )
    cout << "Document Table:" << endl;
    cout << "\tIndex\tUrlOffs\tLastPost" << endl;
    // For each Document Table Entry
+   /*
    for ( size_t i = 0;  i < header->DocumentCount;  ++i )
       {
       cout << "\t[" << i << "]\t" << urlOffsetTable[ i ] << "\t"
            << lastPostTable[ i ] << endl;
       }
+      */
 
    // * ===== Read URL List =====
    const char *currentURL = reinterpret_cast<const char *>(
@@ -89,6 +91,7 @@ int main( int argc, char **argv )
       cout << "\t[" << i << "]\t" << currentURL << endl;
       currentURL += strlen( currentURL ) + 1;
       }
+   return 0;
 
    // * ===== Read Dictionary HashBlob =====
    const auto blob = reinterpret_cast<const HashBlob *>( currentURL );

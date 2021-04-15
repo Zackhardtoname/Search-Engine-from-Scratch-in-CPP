@@ -28,8 +28,9 @@ class Word : public ISR
             *reinterpret_cast<const PostingListHeader *>( postingList );
          syncTable =
             (SyncTableEntry *)( postingList + sizeof( postingListHeader ) );
-         firstPost = reinterpret_cast<uint8_t *>(
-            syncTable + postingListHeader.NumSyncTableEntries );
+         firstPost =
+            reinterpret_cast<uint8_t *>( syncTable ) +
+            postingListHeader.NumSyncTableEntries * sizeof( SyncTableEntry );
          decoder =
             VLQStreamDecoder( reinterpret_cast<const char *>( firstPost ) );
 
@@ -95,11 +96,11 @@ class Word : public ISR
 
             // no need to worry about 0, because the first entry in sync table
             // is always 0 so we jump to upperbound - 1
-            auto &syncPoint = syncTable[ upperbound ];
+            auto &syncPoint = syncTable[ upperbound - 1 ];
             decoder = VLQStreamDecoder(
                reinterpret_cast<const char *>( firstPost + syncPoint.Offset ) );
-            decoder
-               .Next(); // the post pointed by sync point is also delta encoded
+            // delta encoding is equivalent after consuming current position
+            decoder.Next();
             curPost = syncPoint.Post;
 
             // update docID if applicable
