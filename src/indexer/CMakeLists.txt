@@ -32,7 +32,17 @@ add_executable(dump-indexer
         ../stl/String.cpp
         ../stl/utils.cpp
         )
-target_link_libraries(indexer-worker rt Threads::Threads)
+
+add_executable(grep-dump
+        IndexChunk.cpp
+        IndexChunk.h
+        PorterStemming.cpp
+        IndexerIngest.h
+        VLQ.cpp
+        GrepDump.cpp
+        ../stl/String.cpp
+        ../stl/utils.cpp
+        )
 
 # add_executable(create_test_chunk
 #         create_test_chunk.cpp

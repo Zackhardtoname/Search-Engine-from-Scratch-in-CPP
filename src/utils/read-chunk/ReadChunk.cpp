@@ -91,7 +91,6 @@ int main( int argc, char **argv )
       cout << "\t[" << i << "]\t" << currentURL << endl;
       currentURL += strlen( currentURL ) + 1;
       }
-   return 0;
 
    // * ===== Read Dictionary HashBlob =====
    const auto blob = reinterpret_cast<const HashBlob *>( currentURL );
