@@ -83,12 +83,15 @@ def sentence_split(df, column, keep=False, mode='para'):
     indexes = list()
     new_values = list()
     df = df.dropna(subset=[column])
+
     if mode == 'sentence':  # in essense it takes a list
         for i, presplit in enumerate(df[column].astype(str)):
             values = re.split('.。|？|\?', presplit)
+
             if keep and len(values) > 1:
                 indexes.append(i)
                 new_values.append(presplit)
+
             for value in values:
                 indexes.append(i)
                 new_values.append(value)
@@ -97,17 +100,20 @@ def sentence_split(df, column, keep=False, mode='para'):
             for value in values:
                 indexes.append(i)
                 new_values.append(value)
+
     new_df = df.iloc[indexes, :].copy()
     new_df[column] = new_values
+
     return new_df
 
 
 def extract_para(df):
-    '''
+    """
     Converts a dataframe whose rows are pieces of documents to a new dataframe whose rows are paragraphs from documents
-    '''
+    """
     indexes = []
     new_values = []
+
     for i, text in enumerate(df['content']):
         split = text.split("\n")
         new_values += split
@@ -118,4 +124,5 @@ def extract_para(df):
     del new_df['content']
     new_df.reset_index(level=0, inplace=True)  # make the old indeices a column
     new_df.rename(columns={'index': 'document_idx'}, inplace=True)
+
     return new_df
