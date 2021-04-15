@@ -55,7 +55,7 @@ class ISR
       virtual uint32_t DocID() = 0;
 
       // First post of the doc this ISR is in.
-      virtual uint32_t DocFirstPost()
+      virtual uint32_t FirstPostOfCurDoc()
          {
          auto docID = DocID();
          if ( docID == 0 )

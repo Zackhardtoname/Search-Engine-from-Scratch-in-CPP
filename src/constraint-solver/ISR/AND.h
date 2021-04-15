@@ -13,6 +13,8 @@
 // called the compliments.
 class AND : public ISR
    {
+      friend class QueryableChunk;
+
       scb::Vector<ISR *> clauses;
 
       // Try to find matches for the compliments in the same document as the
@@ -22,7 +24,7 @@ class AND : public ISR
          // trying to match in anchor's clause's DocID, which spans [docBegin,
          // docEnd]
          ISR *anchor = clauses[ 0 ];
-         uint32_t docBegin = anchor->DocFirstPost();
+         uint32_t docBegin = anchor->FirstPostOfCurDoc();
          uint32_t docEnd = chunk.LastPostTable[ anchor->DocID() ];
 
          // for the compliments, try to find a match in the document
@@ -71,7 +73,7 @@ class AND : public ISR
                if ( clauses[ i ]->IsEOF() )
                   return;
 
-               uint32_t post = clauses[ i ]->DocFirstPost();
+               uint32_t post = clauses[ i ]->FirstPostOfCurDoc();
                if ( post > highestCompliment )
                   highestCompliment = post;
                }
@@ -115,7 +117,7 @@ class AND : public ISR
 
       uint32_t Get() override
          {
-         clauses.front()->DocFirstPost();
+         return clauses.front()->FirstPostOfCurDoc();
          }
 
       void Seek( uint32_t post ) override

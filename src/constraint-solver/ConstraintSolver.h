@@ -27,13 +27,6 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-size_t fileSize( int f )
-   {
-   struct stat fileInfo;
-   fstat( f, &fileInfo );
-   return fileInfo.st_size;
-   }
-
 class ConstraintSolver
    {
    private:

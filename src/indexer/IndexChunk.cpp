@@ -19,7 +19,6 @@
 #include "IndexChunk.h"
 #include "VLQ.h"
 
-const scb::String DocEnd = scb::String( DocEndDecorator );
 const scb::String TitleDec = scb::String( TitleDecorator );
 
 void IndexChunk::writeToDisk( const char *filename )
@@ -141,6 +140,9 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    // record document words
    for ( const String &word : ingest.Words )
       {
+      if ( word.size() >= MAX_WORD_LEN )
+         continue;
+
       auto &lst = PostingLists[ word ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
@@ -153,22 +155,12 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    // record title words
    for ( String &word : ingest.TitleWords )
       {
+      if ( word.size() >= MAX_WORD_LEN )
+         continue;
 
       word = TitleDec + word;
 
       auto &lst = PostingLists[ word ];
-      uint64_t post = ++nextPost;
-      if ( lst.empty() )
-         EstSize += VLQ::Length( post );
-      else
-         EstSize += VLQ::Length( post - lst.back() );
-      lst.pushBack( post );
-      }
-
-   // record document end
-      {
-
-      auto &lst = PostingLists[ DocEnd ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
          EstSize += VLQ::Length( post );

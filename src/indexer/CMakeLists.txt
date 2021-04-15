@@ -7,13 +7,14 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
 
 add_executable(indexer-worker
-       IndexerWorker.cpp
-       IndexChunk.cpp
-       IndexChunk.h
-       PorterStemming.cpp
-       IndexerIngest.h
-       VLQ.cpp
-       )
+        IndexerWorker.cpp
+        IndexChunk.cpp
+        IndexChunk.h
+        PorterStemming.cpp
+        IndexerIngest.h
+        VLQ.cpp
+        ../stl/utils.cpp
+        )
 target_link_libraries(indexer-worker rt Threads::Threads)
 
 add_executable(dummy-indexer
