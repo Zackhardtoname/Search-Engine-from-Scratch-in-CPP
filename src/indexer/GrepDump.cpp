@@ -62,6 +62,8 @@ int main( int argc, char **argv )
          for ( auto &word : ingest.TitleWords )
             std::cout << word << ' ';
          std::cout << std::endl;
+
+         return 0;
          }
       }
    }
