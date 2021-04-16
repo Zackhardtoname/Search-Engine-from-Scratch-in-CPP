@@ -80,6 +80,7 @@ class QueryableChunk
             const scb::SerialTuple *it = hashblob->Find( stemmed.cstr() );
             if ( it != nullptr )
                {
+               auto k = it->GetKey();
                auto *postingList = reinterpret_cast<uint8_t *>( chunk ) +
                                    chunk->PostingListsOffset + it->Value;
                return new Word( postingList, chunk );

@@ -22,7 +22,7 @@ template <typename Key, typename Value> class Tuple
       Key key;
       Value value;
 
-      Tuple( const Key &k, const Value &v ) : key( k ), value( v )
+      Tuple( const Key k, const Value v ) : key( k ), value( v )
          {
          }
 
@@ -143,12 +143,15 @@ template <typename Key, typename Value, typename Hash> class HashTable
             }
 
          // otherwise insert into chain if not already there
-         if ( find( k, index ) == end() )
-            {
-            buckets[ index ]->insert( k, Value(), keyHash, numUniqueWords );
-            }
-         // otherwise already in table
-         return buckets[ index ]->tuple.value;
+         auto it = find(k, index);
+         if ( it == end() )
+         {
+            buckets[index]->insert(k, Value(), keyHash, numUniqueWords);
+            return find(k, index)->value;
+         }
+         else
+            // otherwise already in table
+            return it->value;
          }
 
       void Optimize( double loading = 1.5 )

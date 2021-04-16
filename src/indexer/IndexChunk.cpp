@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <csignal>
 
 #include "../stl/HashBlob.h"
 #include "../stl/HashTable.h"
@@ -65,7 +66,15 @@ void IndexChunk::writeToDisk( const char *filename )
    String serializedPostingLists;
    for ( auto &tuple : PostingLists )
       {
+      if(tuple.first == "spaghettilik") {
+         auto* addr1 = &postingListOffsetMap[ tuple.first ];
+         auto* addr2 = &postingListOffsetMap[ tuple.first ];
+      }
       postingListOffsetMap[ tuple.first ] = serializedPostingLists.size();
+      auto &retrieved = postingListOffsetMap[ tuple.first ];
+
+      auto bucketIt = postingListOffsetMap.find( tuple.first );
+
       serializedPostingLists += SerializePostingList( tuple.second );
       }
 
@@ -76,9 +85,16 @@ void IndexChunk::writeToDisk( const char *filename )
    // TODO if possible, construct hashblob in the mapped location instead of
    // having to memcpy
    postingListOffsetMap.Optimize();
+   auto it2 = postingListOffsetMap.find("michigan");
+   auto k2 = it2->key;
+   auto v2 = it2->value;
    scb::HashBlob *postingListOffsetHashblob =
       scb::HashBlob::Create( &postingListOffsetMap );
+   auto *serial = postingListOffsetHashblob->Find("michigan");
+   auto k = serial->GetKey();
+   auto v = serial->Value;
 
+   auto *it = postingListOffsetHashblob->Find("michigan");
    // We got everything, calculate the final size and offset
    header.LastPostTableOffset = sizeof( ChunkHeader );
    header.UrlOffsetTableOffset =
