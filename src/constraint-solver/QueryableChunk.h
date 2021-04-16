@@ -10,6 +10,7 @@
 #include "../query-parser/QueryParser.h"
 #include "../stl/utils.h"
 #include "ISR/AND.h"
+#include "ISR/OR.h"
 #include "ISR/ISR.h"
 #include "ISR/Null.h"
 #include "ISR/Word.h"
@@ -52,28 +53,61 @@ class QueryableChunk
 
       ISR *MakeISR( AST *ast )
          {
+         // if is a Binary Opnode
          if ( auto *bin = dynamic_cast<BinaryOpNode *>( ast ) )
             {
-            assert( bin->operation == '&' && "operation not implemented" );
+
             ISR *leftISR = MakeISR( bin->left ),
-                *rightISR = MakeISR( bin->right );
+               *rightISR = MakeISR( bin->right );
             scb::Vector<ISR *> clauses;
 
-            // if left/right is an AND, combine them together
-            if ( AND *leftAND = dynamic_cast<AND *>( leftISR ) )
-               for ( ISR *clause : leftAND->clauses )
-                  clauses.pushBack( clause );
-            else
-               clauses.pushBack( leftISR );
+            switch ( bin->operation ) {
+               case '&':
 
-            if ( AND *rightAND = dynamic_cast<AND *>( rightISR ) )
-               for ( ISR *clause : rightAND->clauses )
-                  clauses.pushBack( clause );
-            else
-               clauses.pushBack( rightISR );
+                  // if left/right is an AND, combine them together
+                  if ( AND *leftAND = dynamic_cast<AND *>( leftISR ) )
+                     for ( ISR *clause : leftAND->clauses )
+                        clauses.pushBack( clause );
+                  else
+                     clauses.pushBack( leftISR );
 
-            return new AND( clauses, chunk );
+                  if ( AND *rightAND = dynamic_cast<AND *>( rightISR ) )
+                     for ( ISR *clause : rightAND->clauses )
+                        clauses.pushBack( clause );
+                  else
+                     clauses.pushBack( rightISR );
+
+                  return new AND( clauses, chunk );
+                  
+               case '|':
+
+                  // if left/right is an OR, combine them together
+                  if ( OR *leftOR = dynamic_cast<OR *>( leftISR ) )
+                     for ( ISR *clause : leftOR->clauses )
+                        clauses.pushBack( clause );
+                  else
+                     clauses.pushBack( leftISR );
+
+                  if ( OR *rightOR = dynamic_cast<OR *>( rightISR ) )
+                     for ( ISR *clause : rightOR->clauses )
+                        clauses.pushBack( clause );
+                  else
+                     clauses.pushBack( rightISR );
+
+                  return new OR( clauses, chunk );
+
+               default:
+                  assert( "operation not implemented" );
+                  return nullptr;
             }
+
+               
+
+               
+
+            }
+
+         // If is a LiteralNode
          else if ( auto *lit = dynamic_cast<LiteralNode *>( ast ) )
             {
             auto stemmed = PorterStem( lit->word );
