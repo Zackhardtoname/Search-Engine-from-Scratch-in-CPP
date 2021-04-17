@@ -9,6 +9,4 @@ int main()
 
    auto ast = parser( ss );
    ast->print();
-   std::cout << "\n";
-   return 0;
-   }
+   std::cout << 

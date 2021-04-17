@@ -7,7 +7,7 @@
 EXECUTABLE  = ranker
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = main.cpp
+SOURCE_FILES = main.cpp ../stl/String.cpp
 
 #######################
 #######################
@@ -19,7 +19,7 @@ CXX         = g++
 OBJECTS =  $(SOURCE_FILES:.cpp=.o)
 
 # Default Flags
-CXXFLAGS = -std=c++1z -pedantic -Ofast#-Werror -Wconversion -Wall -Wextra
+CXXFLAGS = -std=c++1z -pedantic#-Werror -Wconversion -Wall -Wextra
 
 # Libararies needed to link, including ssl and mqueue
 LINK_FLAGS = -lssl -lrt -lcrypto
@@ -45,7 +45,7 @@ endif
 
 # rule for creating objects
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $*.cpp -o $*.o
+	$(CXX) $(CXXFLAGS) -Ofast -c $*.cpp -o $*.o
 
 # make clean - remove .o files, executables, tarball
 clean:
