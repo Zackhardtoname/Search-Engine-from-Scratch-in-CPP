@@ -5,13 +5,9 @@ import utilities
 import classifiers
 
 length = 2
-keywords = ["state", "right"]
-f = open("US.txt", "r")
-const_us = f.read()
-
-f = open("Japan.txt", "r")
-const_japan = f.read()
-documents = [const_us, const_japan]
+keywords = ["covid", "vaccine"]
+document_titles = ["cnn_news_covid.txt", "cnn_news_covid_2.txt"]
+documents = [open(title, "r").read() for title in document_titles]
 
 d = {'content': documents}
 df = pd.DataFrame(data=d)
@@ -26,4 +22,6 @@ sent = classifiers.summarize(paraDF, keywords)
 
 for document_idx in range(len(documents)):
     best = sent[sent['document_idx'] == document_idx][:length]
-    print(best)
+    print(f"snippet for {document_titles[document_idx]}:")
+    print(". ".join(best["component"]))
+    print("\n\n")
