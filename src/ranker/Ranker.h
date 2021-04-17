@@ -1,6 +1,9 @@
 #include <bits/stdc++.h>
 #include "Structures.h"
 #include "../query-parser/QueryParser.h"
+#include "../indexer/PorterStemming.h"
+#include "aho-corasick.h"
+#define toInt(c) (int)(((int)c) - (int)97)
 // "harry potter and the goblet of fire"--initial test
 // harry * potter * 
 // best link types:
@@ -139,14 +142,44 @@ Now we make the trie
 
 */
 void dynamicRank(Vector<String> urls, AST * Query) {
-
-    Vector<String> queries;
+    Trie trie;
+    Vector<String> queries; 
     Vector<String> disallow;
 
+    //convert the AST into a vector of words in 'queries', and all NOTs into 'disallow'
     nodeReturner(Query, queries, disallow, 1);
 
-    Vector<std::string> urlWords;
+    //do porter stemming on all of the query words.
+    //defined in indexer (../indexer/PorterStemming.h)
+    for (int i = 0; i<q_sz; ++i)
+        queries.pushBack(PorterStem(queries[i]));
+
+    //Implement Aho-Corsick to reduce time to search URLs to linear with O(m + q)*O(n) with preprocessing rather than O(nlogn)*O(*q*d*n)
+    std::set<int> found;
+    Vector<bool> found(queries.size());
+    Vector<double> dynRank(urls.size());
+
+    for (int i = 0; i< queries.size(); ++i)
+        trie.addPattern(queries[i].cstr(),i);
+    uint urlNUM=0;
+    for (auto url : urls){
+        trie.processText(url.cstr(), found);
+        for (auto it = found.begin(); it != found.end(); it++) {
+            found[*it]=1;
+        }
+        for (int i = 0; i<found.size(); ++i)
+            dynRank[urlNUM]+=i*found[i];
+        ++urlNUM;
+    }
+    //found dynamic url rank.
+
     
+
+
+    
+
+
+    /*
     for(String url : urls) {
         
         std::string findWords(url.cstr());
@@ -168,6 +201,7 @@ void dynamicRank(Vector<String> urls, AST * Query) {
     
         urlWords.clear();
     }
+    */
 }
 
 /*

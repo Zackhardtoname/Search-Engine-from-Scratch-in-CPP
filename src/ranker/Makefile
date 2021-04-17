@@ -7,7 +7,7 @@
 EXECUTABLE  = ranker
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = main.cpp ../stl/String.cpp
+SOURCE_FILES = main.cpp ../stl/String.cpp ../indexer/PorterStemming.cpp
 
 #######################
 #######################

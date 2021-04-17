@@ -22,7 +22,7 @@ int main(){
         "https://skndisndinsdisndind.gov"
     };
     Vector<String> dynamictestbench = {
-        "https://google.com",
+        "https://googoogledisn.com",
         "http://google.com",
         "https://whatev.gov/asdfas",
         "https://bing.gov",
@@ -69,8 +69,8 @@ int main(){
     };
     */
     Parser parser;
-    auto ast = parser( "(ayy&lmao) -(given&plush-(hollandaise|youtube&isret))" );
-    ast->print();
+    auto ast = parser( "goo jesus jesgo rem aidi akj disn" );
+    //ast->print();
     
     dynamicRank(dynamictestbench, ast);
 
