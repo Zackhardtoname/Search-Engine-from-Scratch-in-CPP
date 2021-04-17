@@ -95,7 +95,8 @@ class AND : public ISR
 
       void Next() override
          {
-         assert( !"AND::Next() is meaningless" );
+         NextDoc();
+         // assert( !"AND::Next() is meaningless" );
          }
 
       void NextDoc() override

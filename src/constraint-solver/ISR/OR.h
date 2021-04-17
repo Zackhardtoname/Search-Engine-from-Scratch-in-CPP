@@ -26,11 +26,6 @@ class OR : public ISR
          assert( clauses.size() >= 2 &&
                  "OR ISR combines at least two other ISRs" );
 
-         // Advance each word ISR to their first location
-         for ( ISR* i : clauses )
-            {
-               i->Next();
-            }
          }
 
       // Move the nearest term to its next
