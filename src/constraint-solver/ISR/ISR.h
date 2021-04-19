@@ -25,8 +25,9 @@ struct ChunkRef
 // or EOF.
 class ISR
    {
-   protected:
+public:
       ChunkRef chunk{};
+protected:
 
       explicit ISR( const ChunkHeader *chunkHeader )
          {
