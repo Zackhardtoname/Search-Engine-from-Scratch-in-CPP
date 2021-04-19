@@ -23,9 +23,9 @@ int main( int argc, char **argv )
    // TODO: parallelize this
 
    //TODO: DELETE RANKER TESTBENCH
-   Vector<QueryableChunk> queryableChunksToRanker;
-   Vector<String> urlsToRanker;
-   Vector<size_t> docIdsToRanker;
+   std::vector<QueryableChunk> queryableChunksToRanker;
+   std::vector<std::string> urlsToRanker;
+   std::vector<size_t> docIdsToRanker;
    AST * queryToRanker = queryAST;
    //TODO: DELETE RANKER TESTBENCH
 
@@ -38,12 +38,12 @@ int main( int argc, char **argv )
       while ( !isr->IsEOF() )
          {
          auto url = query.Url( isr->DocID() );
-         printf( "match post %d in doc %d ( %s )\n", isr->Get(), isr->DocID(),
-                 url.cstr() );
+         //printf( "match post %d in doc %d ( %s )\n", isr->Get(), isr->DocID(),
+         //        url.cstr() );
          //TODO: DELETE RANKER TESTBENCH
-         queryableChunksToRanker.pushBack(query);
-         urlsToRanker.pushBack(url.cstr());
-         docIdsToRanker.pushBack(isr->DocID());
+         queryableChunksToRanker.push_back(query);
+         urlsToRanker.push_back(std::string(url.cstr()));
+         docIdsToRanker.push_back(isr->DocID());
          //TODO: DELETE RANKER TESTBENCH
          isr->NextDoc();
          }
