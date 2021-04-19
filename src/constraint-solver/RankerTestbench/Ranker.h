@@ -226,14 +226,15 @@ void rankerSearcher (sharedISRStruct arg){
 
 pthread_mutex_t lock;
 void * mainLoop(void * arg){
-    std::cout<<"\tThread "<<" reached mainLoop."<<std::endl;
-    struct mainLoopStruct * currStruct =   (struct mainLoopStruct *) arg;
+    pthread_mutex_lock(&lock);
+    struct mainLoopStruct * currStruct =   static_cast<mainLoopStruct *>(arg);
     auto urlStart = currStruct->currURLStart;
-    auto stemmed = currStruct->query;
+    Vector<String> stemmed(currStruct->query);
     auto urls = currStruct->splitUrls;
     Vector<QueryableChunk> chunks = currStruct->splitChunks;
     auto docID = currStruct->splitID;
-    std::cout<<"\tThread "<<" reached for loop."<<std::endl;
+    pthread_mutex_unlock(&lock);
+    //std::cout<<"\tThread "<<" reached for loop of size "<<urls.size()<<"."<<std::endl;
     for (int i = urlStart; i<urlStart+urls.size(); ++i){
         auto currUrl = urls[i-urlStart];
         pthread_mutex_lock(&lock);
@@ -242,9 +243,9 @@ void * mainLoop(void * arg){
         auto currID = docID[i-urlStart];
 
         //create an isr for each word, corresponding to the current document
-        std::cout<<"\tThread "<<" reached query loop "<<i<<" of "<<urls.size()<<"."<<std::endl;
+        //std::cout<<"\tThread "<<" reached query loop "<<i<<" of "<<urls.size()<<"."<<std::endl;
         for (auto query : stemmed){
-            std::cout<<"\t\tThread is at "<<query<<" word."<<std::endl;
+            //std::cout<<"\t\tThread is at "<<query<<" word."<<std::endl;
             pthread_mutex_lock(&lock);
             AST * ast = new LiteralNode(query);
             
@@ -259,16 +260,21 @@ void * mainLoop(void * arg){
             else  
                 isr->Seek(isr->chunk.LastPostTable[currID-1]);
             pthread_mutex_unlock(&lock);
-            std::cout<<"\tThread "<<" reached end of first atomic section."<<std::endl;
+            //std::cout<<"\tThread "<<" reached end of first atomic section."<<std::endl;
 
             //hasnt fallen off the edge
             if (isr->Get()<=edge){
+                pthread_mutex_lock(&lock);
                 struct sharedISRStruct args = sharedISRStruct{isr, strMap[query], edge, i};
                 rankerSearcher(args);
+                pthread_mutex_unlock(&lock);
             }
-            std::cout<<"\tThread "<<" reached end of loop."<<std::endl;
+            //std::cout<<"\tThread "<<" reached end of loop."<<std::endl;
         }
     }
+    //std::cout<<"\tThread "<<" reached end of mainLoop."<<std::endl;
+    //pthread_exit(0);
+    return NULL;
 }
 
 
@@ -385,18 +391,26 @@ void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks
 
         size_t currUrl = 0;
         pthread_t mainThreadVector[numUrlThreads];
+        pthread_mutex_lock(&lock);
         for (size_t i = 0; i<numUrlThreads; ++i){
+            std::cout<<"\n--------------------Loop "<< i <<"--------------------"<<std::endl;
+            
             pthread_t urlThread;
             struct mainLoopStruct args = mainLoopStruct{currUrl, stemmed, splitUrls[i], splitChunks[i], splitID[i]};
             mainThreadVector[i] = urlThread;
-            std::cout<<"Thread "<<i<<" launched.\n";
-            pthread_create(&mainThreadVector[i], NULL, mainLoop, &args);
+            //std::cout<<"Thread "<<i<<" launched.\n";
+            pthread_create(&mainThreadVector[i], NULL, mainLoop, (void *)&args);
+            //mainLoop(&args);
+            //std::cout<<"Main Loop Ended"<<std::endl;
             currUrl+=splitUrls[i].size();
-            pthread_join(mainThreadVector[i], NULL);
+            //pthread_detach(mainThreadVector[i]);
+            //std::cout<<"i is currently: " << i << std::endl;
         }
-        //for (int i = 0; i<numUrlThreads; ++i){
-        //    pthread_join(mainThreadVector[i],NULL);
-        //}
+        std::cout<<stemmed[0]<<"\n";
+        pthread_mutex_unlock(&lock);
+        for (int i = 0; i<numUrlThreads; ++i){
+            pthread_join(mainThreadVector[i],NULL);
+        }
     }
     
     //exit(0);
