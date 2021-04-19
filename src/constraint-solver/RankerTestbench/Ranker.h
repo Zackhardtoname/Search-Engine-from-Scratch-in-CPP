@@ -10,33 +10,28 @@
 #include "../QueryableChunk.h"
 #include "aho-corasick.h"
 #include <pthread.h>
+#include <atomic>
 #include <math.h>
 #define toInt(c) (int)(((int)c) - (int)97)
 // "harry potter and the goblet of fire"--initial test
 // harry * potter * 
 // best link types:
 // .gov -> .edu -> .com -> .net -> .others
-class StringHasher{
-    public:
-        size_t operator()(const String & s) const{
-            return s.hash();
-        }
-};
 
 template <typename T>
-Vector<Vector<T>> splitVector(const Vector<T> &vec, size_t n){
-    Vector<Vector<T>> ret;
+std::vector<std::vector<T>> splitVector(const std::vector<T> &vec, size_t n){
+    std::vector<std::vector<T>> ret;
     for(size_t i = 0; i < vec.size(); i += n) {
         auto last = vec.size()> i + n ? i+n:vec.size();
-        ret.emplaceBack(vec.begin() + i, vec.begin() + last);
+        ret.emplace_back(vec.begin() + i, vec.begin() + last);
     }
     return ret;
 }
 
-std::unordered_map<String, float, StringHasher> staticRankedLinks;
+std::unordered_map<std::string, float> staticRankedLinks;
 
 struct LinkInfo {
-    String link;
+    std::string link;
     // Static ranking variables
     
     bool https;
@@ -66,10 +61,10 @@ auto staticRankComparator(const LinkInfo &linkA, const LinkInfo &linkB) -> bool 
 
 // TODO: Run the static rank once at the very beginning and memory map the rank values to a file
 // We would compute the dynamic rank at runtime
-Vector<LinkInfo> staticRank(Vector<String> urls) {
+std::vector<LinkInfo> staticRank(std::vector<std::string> urls) {
     size_t numLinks = urls.size();
     float linkFactor = 1/numLinks;
-    Vector<LinkInfo> linkInfo(numLinks);
+    std::vector<LinkInfo> linkInfo(numLinks);
     uint idx = 0;
     size_t numSlashes;
     int domainType;
@@ -138,12 +133,12 @@ struct ExternalBlackBox{
     
 */
 
-void nodeReturner(AST * Query, Vector<String> &queries/*, Vector<String> &disallow*/, bool sign){
+void nodeReturner(AST * Query, std::vector<std::string> &queries/*, std::vector<std::string> &disallow*/, bool sign){
     if(auto* literal = dynamic_cast<LiteralNode*>(Query)) {
         if(sign)
-            queries.pushBack(literal->word);
+            queries.push_back( std::string(literal->word.cstr()));
         //else
-        //    disallow.pushBack(literal->word);
+        //    disallow.push_back(literal->word);
     } else if(auto* binary = dynamic_cast<BinaryOpNode*>(Query)) {
         nodeReturner(binary->left, queries/*, disallow*/, sign);
         if (binary->operation == '-')
@@ -176,7 +171,7 @@ Now we make the trie
 // to toot your own horn
 
 std::vector<std::map<uint32_t,int>> shared_isr_map;
-std::unordered_map<String, int, StringHasher> strMap;
+std::unordered_map<std::string, int> strMap;
 std::unordered_map<int,int> intOrder;
 
 struct sharedISRStruct {
@@ -188,10 +183,10 @@ struct sharedISRStruct {
 
 struct mainLoopStruct {
     size_t currURLStart;
-    Vector<String> query;
-    Vector<String> splitUrls;
-    Vector<QueryableChunk> splitChunks;
-    Vector<size_t> splitID;
+    std::vector<std::string> query;
+    std::vector<std::string> splitUrls;
+    std::vector<QueryableChunk> splitChunks;
+    std::vector<size_t> splitID;
 };
 
 
@@ -227,12 +222,12 @@ void rankerSearcher (sharedISRStruct arg){
 pthread_mutex_t lock;
 void * mainLoop(void * arg){
     pthread_mutex_lock(&lock);
-    struct mainLoopStruct * currStruct =   static_cast<mainLoopStruct *>(arg);
-    auto urlStart = currStruct->currURLStart;
-    Vector<String> stemmed(currStruct->query);
-    auto urls = currStruct->splitUrls;
-    Vector<QueryableChunk> chunks = currStruct->splitChunks;
-    auto docID = currStruct->splitID;
+    mainLoopStruct currStruct =   *((mainLoopStruct *)(arg));
+    auto urlStart = currStruct.currURLStart;
+    std::vector<std::string> stemmed = currStruct.query;
+    auto urls = currStruct.splitUrls;
+    std::vector<QueryableChunk> chunks = currStruct.splitChunks;
+    auto docID = currStruct.splitID;
     pthread_mutex_unlock(&lock);
     //std::cout<<"\tThread "<<" reached for loop of size "<<urls.size()<<"."<<std::endl;
     for (int i = urlStart; i<urlStart+urls.size(); ++i){
@@ -247,7 +242,7 @@ void * mainLoop(void * arg){
         for (auto query : stemmed){
             //std::cout<<"\t\tThread is at "<<query<<" word."<<std::endl;
             pthread_mutex_lock(&lock);
-            AST * ast = new LiteralNode(query);
+            AST * ast = new LiteralNode(String(query.c_str()));
             
             auto isr = currChunk.MakeISR(ast);
             // we want the isr to be on the location of the first matching query
@@ -274,13 +269,14 @@ void * mainLoop(void * arg){
     }
     //std::cout<<"\tThread "<<" reached end of mainLoop."<<std::endl;
     //pthread_exit(0);
+    free(arg);
     return NULL;
 }
 
 
-void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks, Vector<size_t> docID) {
+void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<QueryableChunk> chunks, std::vector<size_t> docID) {
     Trie trie;
-    Vector<String> queries; 
+    std::vector<std::string> queries; 
     shared_isr_map.resize(urls.size());
     //convert the AST into a vector of words in 'queries', and all NOTs into 'disallow'
     nodeReturner(Query, queries, 1);
@@ -288,9 +284,9 @@ void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks
     //do porter stemming on all of the query words.
     //defined in indexer (../indexer/PorterStemming.h)
     uint qsz = queries.size();
-    Vector<String> stemmed(queries.size());
+    std::vector<std::string> stemmed(queries.size());
     for (int i = 0; i<qsz; ++i){
-        stemmed[i] = PorterStem(queries[i]);
+        stemmed[i] = std::string(PorterStem(String(queries[i].c_str())).cstr());
         strMap[stemmed[i]]=i;
         intOrder[i]=stemmed[i].size();
     }
@@ -326,12 +322,12 @@ void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks
     //all done simultaneously 
     std::vector<double> contentRank(urls.size());
     
-    Vector<float> savedExponent;
+    std::vector<float> savedExponent;
 
     //std::cout<<"FUCK FUCK FUCK FUCK\n";
 
     for (int i = 1; i<=stemmed.size(); ++i){
-        savedExponent.pushBack((queries.size()-i)*(queries.size()-i));
+        savedExponent.push_back((queries.size()-i)*(queries.size()-i));
     }
     shared_isr_map.resize(urls.size());
 
@@ -343,11 +339,11 @@ void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks
             auto currChunk = chunks[i];
             auto currID = docID[i];
             //create an isr for each word, corresponding to the current document
-            //Vector<pthread_t> vectorOfThreads;
+            //std::vector<pthread_t> vectorOfThreads;
             uint idx = 0;
             for (auto query : stemmed){
                 std::cout<<"Query: "<<query<<"\n";
-                AST * ast = new LiteralNode(query);
+                AST * ast = new LiteralNode(String(query.c_str()));
                 auto isr = currChunk.MakeISR(ast);
                 // we want the isr to be on the location of the first matching query
                     //Starting at the beginning of the document specified.
@@ -384,33 +380,33 @@ void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks
             //each thread must have its specified docIDs
             //each thread must have the overall query.
 
-        Vector<Vector<String>> splitUrls = splitVector(urls, numUrlThreads);
-        Vector<Vector<QueryableChunk>> splitChunks = splitVector(chunks, numUrlThreads);
-        Vector<Vector<size_t>> splitID = splitVector(docID, numUrlThreads);
+        std::vector<std::vector<std::string>> splitUrls = splitVector(urls, numUrlThreads);
+        std::vector<std::vector<QueryableChunk>> splitChunks = splitVector(chunks, numUrlThreads);
+        std::vector<std::vector<size_t>> splitID = splitVector(docID, numUrlThreads);
 
 
         size_t currUrl = 0;
         pthread_t mainThreadVector[numUrlThreads];
-        pthread_mutex_lock(&lock);
+        //pthread_mutex_lock(&lock);
         for (size_t i = 0; i<numUrlThreads; ++i){
             std::cout<<"\n--------------------Loop "<< i <<"--------------------"<<std::endl;
             
-            pthread_t urlThread;
+            //pthread_t urlThread;
             struct mainLoopStruct args = mainLoopStruct{currUrl, stemmed, splitUrls[i], splitChunks[i], splitID[i]};
-            mainThreadVector[i] = urlThread;
+            //mainThreadVector[i] = urlThread;
             //std::cout<<"Thread "<<i<<" launched.\n";
-            pthread_create(&mainThreadVector[i], NULL, mainLoop, (void *)&args);
-            //mainLoop(&args);
+            //pthread_create(&mainThreadVector[i], NULL, mainLoop, &args);
+            mainLoop(&args);
             //std::cout<<"Main Loop Ended"<<std::endl;
             currUrl+=splitUrls[i].size();
             //pthread_detach(mainThreadVector[i]);
             //std::cout<<"i is currently: " << i << std::endl;
         }
         std::cout<<stemmed[0]<<"\n";
-        pthread_mutex_unlock(&lock);
-        for (int i = 0; i<numUrlThreads; ++i){
-            pthread_join(mainThreadVector[i],NULL);
-        }
+        //pthread_mutex_unlock(&lock);
+        //for (int i = 0; i<numUrlThreads; ++i){
+        //    pthread_join(mainThreadVector[i],NULL);
+        //}
     }
     
     //exit(0);
@@ -441,34 +437,34 @@ void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks
 
     //URL RANKING
     for (auto stem : stemmed)
-        queries.pushBack(stem);
+        queries.push_back(stem);
     std::sort(queries.begin(), queries.end());
 
     //Implement Aho-Corsick to reduce time to search URLs to linear with O(m + q)*O(n) with preprocessing rather than O(nlogn)*O(*q*d*n)
     std::set<int> found;
-    Vector<bool> _found(queries.size());
-    Vector<double> urlRank(urls.size());
+    std::vector<bool> _found(queries.size());
+    std::vector<double> urlRank(urls.size());
 
     for (int i = 0; i< queries.size(); ++i)
-        trie.addPattern(queries[i].cstr(),i);
+        trie.addPattern(queries[i],i);
 
     uint urlNUM=0;
 
     for (auto url : urls){
-        trie.processText(url.cstr(), found);
+        trie.processText(url, found);
         for (auto it = found.begin(); it != found.end(); it++) {
             _found[*it]=1;
         }
         for (int i = 0; i<_found.size(); ++i)
             urlRank[urlNUM]+=i*_found[i], _found[i]=0;
         
-        contentRank[urlNUM] += urlRank[urlNUM];
+        //contentRank[urlNUM] += urlRank[urlNUM];
         ++urlNUM;
         
     }
     /*
     //TODO REMOVE--COMPLETELY STOLEN CODE TO SHOWCASE RESULTS
-    std::vector<int> indices(contentRank.size());
+    std::std::vector<int> indices(contentRank.size());
     std::iota(indices.begin(), indices.end(), 0);
     std::sort(indices.begin(), indices.end(),
         [&](int A, int B) -> bool {
@@ -491,16 +487,16 @@ void dynamicRank(Vector<String> urls, AST * Query, Vector<QueryableChunk> chunks
 
 
     /*
-    for(String url : urls) {
+    for(std::stringurl : urls) {
         
-        std::string findWords(url.cstr());
+        std::std::stringfindWords(url.cstr());
         
         // Start at begin + 7 to avoid the https:// or http://
         //auto first = find_if(findWords.begin() + 7, findWords.end(), ::isalnum);
         //auto last = find_if_not(first, findWords.end(), ::isalnum);
         //while (first != last) {
-        //    std::string newWord(first, last);
-        //    urlWords.pushBack(newWord);
+        //    std::std::stringnewWord(first, last);
+        //    urlWords.push_back(newWord);
         //    first = find_if(last, findWords.end(), ::isalnum);
         //    last = find_if_not(first, findWords.end(), ::isalnum);
         //}
