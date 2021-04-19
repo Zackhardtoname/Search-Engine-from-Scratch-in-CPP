@@ -61,9 +61,9 @@ auto staticRankComparator(const LinkInfo &linkA, const LinkInfo &linkB) -> bool 
 
 // TODO: Run the static rank once at the very beginning and memory map the rank values to a file
 // We would compute the dynamic rank at runtime
-std::vector<LinkInfo> staticRank(std::vector<std::string> urls) {
+void staticRank(std::vector<std::string> urls) {
     size_t numLinks = urls.size();
-    float linkFactor = 1/numLinks;
+    double linkFactor = 1.0/numLinks;
     std::vector<LinkInfo> linkInfo(numLinks);
     uint idx = 0;
     size_t numSlashes;
@@ -71,6 +71,9 @@ std::vector<LinkInfo> staticRank(std::vector<std::string> urls) {
     bool https;
 
     for (auto link : urls) {
+        if (link=="https://saader.tumblr.com/tagged/JIMMY-FALLON"){
+            numSlashes=0;
+        }
         numSlashes = 0;
         https = false;
         auto start = link.end();
@@ -103,14 +106,21 @@ std::vector<LinkInfo> staticRank(std::vector<std::string> urls) {
                 domainType = 1;
                 break;
         }
+        --start;
+        --start;
+        if (*start!='\0'&&*(start--)=='r')
+            if (*start!='\0'&&*(start--)=='l')
+                if (*start!='\0'&&*(start--)=='b')
+                    if (*start!='\0'&&*(start--)=='m')
+                        domainType-=10000;
         linkInfo[idx++] = {link, https, domainType, link.size(), numSlashes};
     }
 
-    std::sort(linkInfo.begin(), linkInfo.end(), staticRankComparator);
+    //std::sort(linkInfo.begin(), linkInfo.end(), staticRankComparator);
 
     for (idx =0; idx<linkInfo.size(); ++idx)
-        staticRankedLinks[linkInfo[idx].link] = linkInfo[idx].domainType/(linkFactor*idx); 
-    return linkInfo;
+        staticRankedLinks[linkInfo[idx].link] += linkInfo[idx].domainType/(linkFactor); 
+    //return linkInfo;
 }
 
 // Dynamic Rank Factors
@@ -279,13 +289,14 @@ void * mainLoop(void * arg){
 }
 
 
+
 void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<QueryableChunk> chunks, std::vector<size_t> docID) {
     Trie trie;
     std::vector<std::string> queries; 
     shared_isr_map.resize(urls.size());
     //convert the AST into a vector of words in 'queries', and all NOTs into 'disallow'
     nodeReturner(Query, queries, 1);
-
+    
     //do porter stemming on all of the query words.
     //defined in indexer (../indexer/PorterStemming.h)
     uint qsz = queries.size();
@@ -336,8 +347,8 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
     }
     shared_isr_map.resize(urls.size());
 
-    size_t numUrlThreads = urls.size()/1000;
-    if (numUrlThreads==0){ 
+    size_t numUrlThreads = ceil(urls.size()/1000.0);
+    if (numUrlThreads<=1){ 
         for (int i = 0; i<urls.size(); ++i){
             //std::cout<<"Iteration: "<<i<<"\n";
             auto currUrl = urls[i];
@@ -384,10 +395,10 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
             //each thread must have its specified chunks
             //each thread must have its specified docIDs
             //each thread must have the overall query.
-
         splitUrls = splitVector(urls, numUrlThreads);
         splitChunks = splitVector(chunks, numUrlThreads);
         splitID = splitVector(docID, numUrlThreads);
+
         globalStemmed = stemmed;
         size_t currUrl = 0;
         pthread_t mainThreadVector[numUrlThreads];
@@ -429,18 +440,19 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
             if (occurence.first-prevKey == 1){
                 if (occurence.second-prevVal == 1){
                     ++currLen;
-                    contentRank[i]+=currLen*currLen;
+                    contentRank[i]+= contentRank[i]/20.0 +currLen*(intOrder[occurence.second]*intOrder[occurence.second]);
                 }
             }
             else{
                 currLen=1;
             }
             //length of the string, TODO figure out weighting
-            contentRank[i]+=intOrder[occurence.second];
+            contentRank[i]+=intOrder[occurence.second]-2 > 0 ? intOrder[occurence.second]-2 : 0;
         }
     }
     std::cout<<"Finished Dynamic Scoring.\n";
-    
+    staticRank(urls);
+    //std::cout<<"Finished Static Scoring.\n";
     
 
 
@@ -468,7 +480,7 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
         for (int i = 0; i<_found.size(); ++i)
             urlRank[urlNUM]+=i*_found[i], _found[i]=0;
         
-        contentRank[urlNUM] += urlRank[urlNUM];
+        contentRank[urlNUM] += staticRankedLinks[url]*.7 + urlRank[urlNUM]/42.0;
         ++urlNUM; 
     }
     std::cout<<"Finished URL Scoring.\n";
@@ -478,7 +490,7 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
         bigPairNRG.push_back({contentRank[i], urls[i]});
     }
     std::sort(bigPairNRG.begin(), bigPairNRG.end(), [](const std::pair<int,std::string> &a, const std::pair<int,std::string> &b) 
-        {return a.first>b.first;});
+        {return a.first<b.first;});
 
 
     for (int i = 0; i< bigPairNRG.size(); ++i){

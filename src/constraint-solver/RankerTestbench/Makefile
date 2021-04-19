@@ -19,7 +19,7 @@ CXX         = g++
 OBJECTS =  $(SOURCE_FILES:.cpp=.o)
 
 # Default Flags
-CXXFLAGS = -std=c++1z -pedantic#-Werror -Wconversion -Wall -Wextra
+CXXFLAGS = -std=c++1z#-Werror -Wconversion -Wall -Wextra
 
 # Libararies needed to link, including ssl and mqueue
 LINK_FLAGS = -lssl -lrt -lcrypto -lpthread
