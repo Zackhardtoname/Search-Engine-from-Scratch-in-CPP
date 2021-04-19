@@ -32,7 +32,7 @@ class IndexChunk
       size_t EstSize = 0;
 
       Vector<Document> Documents;
-      scb::HashTable<scb::String, Vector<uint64_t>, StringHash> PostingLists;
+      std::unordered_map<scb::String, Vector<uint64_t>, StringHash> PostingLists;
 
       void Ingest( const IndexerIngest &ingest );
 

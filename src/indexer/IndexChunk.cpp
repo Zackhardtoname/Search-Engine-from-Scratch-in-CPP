@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <csignal>
 
 #include "../stl/HashBlob.h"
 #include "../stl/HashTable.h"
@@ -19,45 +20,40 @@
 #include "IndexChunk.h"
 #include "VLQ.h"
 
-const scb::String DocEnd = scb::String( DocEndDecorator );
 const scb::String TitleDec = scb::String( TitleDecorator );
 
 void IndexChunk::writeToDisk( const char *filename )
    {
    // Structure:
    // [Header]
-   // [Document Table (URL/document idx -> document header)]
+   // [LastPost Table]
+   // [URL Offset Table]
    // [URL List]
    // [Dictionary (word -> posting list offset)]
    // [Posting Lists]
    //
-   // Header:
-   // [i32 num of documents]
-   // [i32 offset of document table]
-   // [i32 offset of dictionary (the word->posting list offset mapping)]
-   // [i32 offset of the posting lists section]
-   //
-   // document table entry:
-   // [i32 offset of first char of URL]
-   // [i32 last post in the document]
+   // Header: See ChunkHeader
    //
    // Each Posting List:
    // [i32 offset of post1]
    // [Sync table]
-   // [post1 post2 ... postn]
+   // [post1 post2 ... post_n]
 
    // Header
    ChunkHeader header{ .DocumentCount = Documents.size() };
 
-   // Document table
-   auto docTable = scb::make_unique<DocumentTableEntry[]>( Documents.size() );
+   // Document tables
+   auto lastPostTable =
+      scb::make_unique<LastPostTableEntry[]>( Documents.size() );
+   auto urlOffsetTable =
+      scb::make_unique<UrlOffsetTableEntry[]>( Documents.size() );
 
    // make URL list, and fill in document table
    String urlList;
    for ( int i = 0;  i < Documents.size();  i++ )
       {
-      docTable[ i ].UrlOffset = urlList.size();
-      docTable[ i ].LastPost = Documents[ i ].LastPost;
+      lastPostTable[ i ] = Documents[ i ].LastPost;
+      urlOffsetTable[ i ] = urlList.size();
 
       urlList += Documents[ i ].Url;
       urlList.pushBack( '\0' );
@@ -68,11 +64,18 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // make posting lists, and fill in the offset mapping
    String serializedPostingLists;
-   for ( scb::Tuple<scb::String, scb::Vector<uint64_t>> &tuple : PostingLists )
+   for ( auto &tuple : PostingLists )
       {
-      postingListOffsetMap[ tuple.key ] = serializedPostingLists.size();
-      serializedPostingLists +=
-         SerializePostingList( PostingLists[ tuple.key ] );
+      if(tuple.first == "spaghettilik") {
+         auto* addr1 = &postingListOffsetMap[ tuple.first ];
+         auto* addr2 = &postingListOffsetMap[ tuple.first ];
+      }
+      postingListOffsetMap[ tuple.first ] = serializedPostingLists.size();
+      auto &retrieved = postingListOffsetMap[ tuple.first ];
+
+      auto bucketIt = postingListOffsetMap.find( tuple.first );
+
+      serializedPostingLists += SerializePostingList( tuple.second );
       }
 
    // Debug
@@ -82,13 +85,23 @@ void IndexChunk::writeToDisk( const char *filename )
    // TODO if possible, construct hashblob in the mapped location instead of
    // having to memcpy
    postingListOffsetMap.Optimize();
+   auto it2 = postingListOffsetMap.find("michigan");
+   auto k2 = it2->key;
+   auto v2 = it2->value;
    scb::HashBlob *postingListOffsetHashblob =
       scb::HashBlob::Create( &postingListOffsetMap );
+   auto *serial = postingListOffsetHashblob->Find("michigan");
+   auto k = serial->GetKey();
+   auto v = serial->Value;
 
+   auto *it = postingListOffsetHashblob->Find("michigan");
    // We got everything, calculate the final size and offset
-   header.DocumentTableOffset = sizeof( ChunkHeader );
-   header.UrlListOffset = header.DocumentTableOffset +
-                          Documents.size() * sizeof( DocumentTableEntry );
+   header.LastPostTableOffset = sizeof( ChunkHeader );
+   header.UrlOffsetTableOffset =
+      header.LastPostTableOffset +
+      Documents.size() * sizeof( LastPostTableEntry );
+   header.UrlListOffset = header.UrlOffsetTableOffset +
+                          Documents.size() * sizeof( UrlOffsetTableEntry );
    header.WordToPostingListDictionaryOffset =
       header.UrlListOffset + urlList.size();
    header.PostingListsOffset = header.WordToPostingListDictionaryOffset +
@@ -112,9 +125,12 @@ void IndexChunk::writeToDisk( const char *filename )
 
    // write header
    memcpy( chunk, &header, sizeof( ChunkHeader ) );
-   // write document table
-   memcpy( chunk + header.DocumentTableOffset, docTable.get(),
-           Documents.size() * sizeof( DocumentTableEntry ) );
+   // write last post table
+   memcpy( chunk + header.LastPostTableOffset, lastPostTable.get(),
+           Documents.size() * sizeof( LastPostTableEntry ) );
+   // write url offset table
+   memcpy( chunk + header.UrlOffsetTableOffset, urlOffsetTable.get(),
+           Documents.size() * sizeof( UrlOffsetTableEntry ) );
    // write URL list
    memcpy( chunk + header.UrlListOffset, urlList.data(), urlList.size() );
    // write word -> posting list offset dictionary
@@ -139,6 +155,9 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    // record document words
    for ( const String &word : ingest.Words )
       {
+      if ( word.size() >= MAX_WORD_LEN )
+         continue;
+
       auto &lst = PostingLists[ word ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
@@ -151,22 +170,12 @@ void IndexChunk::Ingest( const IndexerIngest &ingest )
    // record title words
    for ( String &word : ingest.TitleWords )
       {
+      if ( word.size() >= MAX_WORD_LEN )
+         continue;
 
       word = TitleDec + word;
 
       auto &lst = PostingLists[ word ];
-      uint64_t post = ++nextPost;
-      if ( lst.empty() )
-         EstSize += VLQ::Length( post );
-      else
-         EstSize += VLQ::Length( post - lst.back() );
-      lst.pushBack( post );
-      }
-
-   // record document end
-      {
-
-      auto &lst = PostingLists[ DocEnd ];
       uint64_t post = ++nextPost;
       if ( lst.empty() )
          EstSize += VLQ::Length( post );
@@ -223,7 +232,8 @@ String SerializePostingList( const Vector<uint64_t> &lst )
    // make header
    PostingListHeader header{ .NumSyncTableEntries =
                                 static_cast<uint32_t>( nEntries ),
-                             .NumPosts = lst.size() };
+                             .NumPosts = lst.size(),
+                             .LastPost = static_cast<uint32_t>( lst.back() ) };
 
    String serialized( reinterpret_cast<char *>( syncTable.get() ),
                       nEntries * sizeof( SyncTableEntry ) );

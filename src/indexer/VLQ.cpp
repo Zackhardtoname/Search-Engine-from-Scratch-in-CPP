@@ -69,12 +69,12 @@ uint64_t VLQStreamDecoder::Next()
    return result;
    }
 
-const char *VLQStreamDecoder::getCursor() const
+const char *VLQStreamDecoder::GetCursor() const
    {
    return cursor;
    }
 
-void VLQStreamDecoder::setCursor( const char *cursor_in )
+void VLQStreamDecoder::SetCursor( const char *cursor_in )
    {
    cursor = cursor_in;
    }
