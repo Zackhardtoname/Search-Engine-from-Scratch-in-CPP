@@ -7,7 +7,7 @@
 EXECUTABLE  = ranker
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = QuerySolver.cpp ../../stl/String.cpp ../../indexer/PorterStemming.cpp ../../indexer/VLQ.cpp ../../stl/utils.cpp
+SOURCE_FILES = ../constraint-solver/QuerySolver.cpp ../stl/String.cpp ../indexer/PorterStemming.cpp ../indexer/VLQ.cpp ../stl/utils.cpp
 
 #######################
 #######################

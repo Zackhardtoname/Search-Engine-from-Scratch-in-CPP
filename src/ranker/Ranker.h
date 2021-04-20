@@ -2,11 +2,11 @@
 #ifndef RANKER
 #define RANKER
 
-#include "../../indexer/PorterStemming.h"
-#include "../../query-parser/QueryParser.h"
-#include "../../stl/String.h"
-#include "../ISR/ISR.h"
-#include "../QueryableChunk.h"
+#include "../indexer/PorterStemming.h"
+#include "../query-parser/QueryParser.h"
+#include "../stl/String.h"
+#include "ISR/ISR.h"
+#include "QueryableChunk.h"
 #include "aho-corasick.h"
 #include <atomic>
 #include <bits/stdc++.h>
