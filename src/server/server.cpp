@@ -196,6 +196,8 @@ void *Talk( void *talkSocket )
          URLDecoder decode;
          query = decode.escapeCodesToString(query);
 
+
+         // Call the query parser and ranker to recieve the results
          scb::Vector<scb::String> allMatches(20);
 
          // Create a json string that is formatted appropriately to send to the
@@ -216,8 +218,8 @@ void *Talk( void *talkSocket )
             // Round the rank up or down to the nearest whole number(integer)
             // value
             json += std::to_string( 5 ).c_str();
-            json += "\",\n";
-            if ( i == 19 )
+            json += "\"\n";
+            if ( i == 2 )
                json += "\t\t}\n";
             else
                json += "\t\t},\n";

@@ -1,3 +1,29 @@
+// Example json response from the C++ server:
+//
+// {
+//         "pages":        [
+//                 {
+//                         "title": "Title",
+//                         "url": "URL",
+//                         "snippet": "Snippet",
+//                         "rank": "5"
+//                 },
+//                 {
+//                         "title": "Title",
+//                         "url": "URL",
+//                         "snippet": "Snippet",
+//                         "rank": "5"
+//                 },
+//                 {
+//                         "title": "Title",
+//                         "url": "URL",
+//                         "snippet": "Snippet",
+//                         "rank": "5"
+//                 }
+//         ]
+// }
+
+
 $(function () {
     function after_form_submitted(data) {
         insertResults(data)
@@ -48,3 +74,26 @@ $(function () {
         event.preventDefault();
     });
 });
+
+
+function insertResults(data) {
+    let toInsert = ``
+
+    $.each(data.pages, function (key, val) {
+        if (key >= 10) {
+            return
+        }
+        toInsert += `
+            <div class="result collection-item">
+                <a href="${val.url}" target="_blank">${val.title}</a>
+                <div class="rank">
+                    <div class="col s12"><p>
+                        Ranker score: ${val.rank}
+                    </p></div>
+                </div>
+            </div>
+        `
+    });
+
+    $('#search-results').append(toInsert);
+}
