@@ -276,9 +276,10 @@ void *Talk( void *args )
             msg += end_char;
 
             // body
-            msg += fileStart;
+            // msg += fileStart;
 
             send( talkSocketFD, msg.cstr(), msg.size(), 0 );
+            send( talkSocketFD, fileStart, fileEnd - fileStart, 0 );
             }
          }
       }
