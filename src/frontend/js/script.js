@@ -31,7 +31,8 @@ $(function () {
         $.ajax({
             type: "GET",
             crossDomain: true,
-            url: "/search?query=" + btoa(searchTerms),
+            url: "/search?query=",
+            data: $form.serialize(),
             success: after_form_submitted,
             error: function(XMLHttpRequest, textStatus, errorThrown) {
                 alert("Status: " + textStatus); alert("Error: " + errorThrown);
