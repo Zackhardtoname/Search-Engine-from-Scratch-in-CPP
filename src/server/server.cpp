@@ -17,7 +17,6 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "../stl/utils.h"
-#include "DocMatch.h"
 #include "mime.h"
 #include <cstring>
 #include <iostream>
@@ -181,89 +180,42 @@ void *Talk( void *talkSocket )
          AccessDenied( talkSocketFD );
       else if ( !strncmp( requested.cstr(), queryHint.cstr(),
                           queryHint.length() ) )
-      // Get search results and return them
+         // Get search results and return them
          {
 
          // Extract the exact query which will be in byte format. Each worker
          // will be responsible for decoding the byte format to read the exact
          // query in the query parser.
-         int queryLength = buf.find( " HTTP" ) - buf.find( "/search?query=" );
+         scb::String beginQuery = "/search?query=";
+         scb::String endOfQuery = " HTTP";
+         // 18 refers to the length of the string "GET /search?query=" which will
+         // always be the same length
+         int queryLength = buf.find( endOfQuery, 0 ) - 18;
          scb::String query =
-            buf.substr( buf.find( "/search?query=" ) + 14, queryLength );
+            buf.substr( 18, queryLength );
 
          int sockFD[ 9 ];
 
-         // Connect to all nine workers via sockets on port 9001
-         for ( int workerID = 0;  workerID < 9;  workerID++ )
-            {
-            scb::String host( workerID + '0' );
-            host += ".scb.hanyou.dev";
-            addrinfo *info = QueryHost( host.cstr(), "9001" );
-            Defer freeAddrinfo(
-               [ = ]()
-               {
-                  freeaddrinfo( info );
-               } );
-
-            int sock =
-               socket( info->ai_family, info->ai_socktype, info->ai_protocol );
-            assert( sock != 0 && "error in socket()" );
-
-            // connect socket
-            int status = connect( sock, info->ai_addr, info->ai_addrlen );
-            if ( status == -1 )
-               throw std::runtime_error( strerror( errno ) );
-
-            sockFD[ workerID ] = sock;
-            }
-
-         // Send the query to all nine workers
-         for ( int workerID = 0;  workerID < 9;  workerID++ )
-            send( sockFD[ workerID ], query.cstr(), query.size() + 1, 0 );
-
-         // Listen for response from all nine workers
-         scb::Vector<scb::String> workerResps( 9 );
-         for ( int workerID = 0;  workerID < 9;  workerID++ )
-            while ( ( bytes = recv( sockFD[ workerID ], buffer,
-                                    sizeof( buffer ), 0 ) ) > 0 )
-               workerResps[ workerID ] += scb::String( buffer, bytes );
-
-         // Combine the responses to a workerResps vector
-         scb::Vector<DocMatch> allMatches;
-         for ( int workerID = 0;  workerID < 9;  workerID++ )
-            {
-            size_t consumed = -1;
-            auto matches = Deserialize<scb::Vector<DocMatch>>(
-               workerResps[ workerID ], &consumed );
-            for ( auto &match : matches )
-               allMatches.pushBack( std::move( match ) );
-            }
-
-         // Merge the response from all nine workers (sort them, and take first
-         // N)
-         qsort( allMatches.data(), allMatches.size(), sizeof( DocMatch ),
-                cmpDocMatch );
+         scb::Vector<scb::String> allMatches(20);
 
          // Create a json string that is formatted appropriately to send to the
          // client. Currently, we send the top 20 results (hence the 20
          // iterations in the for loop) but this is subject to change depending
          // on what we want to do
          scb::String json = "{\n\t\"pages\":\t[\n";
-         for ( int i = 0;  i < 20;  ++i )
+         for ( int i = 0;  i < 3;  ++i )
             {
             json += "\t\t{\n\t\t\t\"title\": \"";
-            json += allMatches[ i ].Title + "\",\n";
+            json += "Title\",\n";
             json += "\t\t\t\"url\": \"";
-            json += allMatches[ i ].Url + "\",\n";
+            json += "URL\",\n";
             json += "\t\t\t\"snippet\": \"";
-            json += allMatches[ i ].Snippet + "\",\n";
+            json += "Snippet\",\n";
             json += "\t\t\t\"rank\": \"";
 
             // Round the rank up or down to the nearest whole number(integer)
             // value
-            int rank = (int)( allMatches[ i ].Rank + 0.5 -
-                              ( allMatches[ i ].Rank < 0 ) );
-            json += std::to_string( rank ).c_str();
+            json += std::to_string( 5 ).c_str();
             json += "\",\n";
             if ( i == 19 )
                json += "\t\t}\n";
@@ -285,6 +237,8 @@ void *Talk( void *talkSocket )
 
          // body
          msg += json;
+         std::cout << "query: " << query.cstr() << endl;
+         std::cout << json.cstr() << endl;
 
          // Send the message with the top n results to the client
          send( talkSocketFD, msg.cstr(), msg.size(), 0 );
