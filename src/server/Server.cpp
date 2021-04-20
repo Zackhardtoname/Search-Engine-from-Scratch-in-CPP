@@ -27,6 +27,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "../constraint-solver/QuerySolver.h"
 
 #define backlog 1000
 
@@ -38,6 +39,8 @@ struct threadArgs
 {
    char *rootDirectory;
    int talkSocket;
+   int numChunks;
+   char **chunks;
 };
 
 int HexLiteralCharacter( char c )
@@ -202,7 +205,7 @@ void *Talk( void *args )
 
 
          // Call the query parser and ranker to recieve the results
-         scb::Vector<scb::String> allMatches(20);
+         scb::Vector<displayFields> topMatches = handleQuery(query, arguments->numChunks, arguments->chunks);
 
          // Create a json string that is formatted appropriately to send to the
          // client. Currently, we send the top 20 results (hence the 20
@@ -295,15 +298,17 @@ void *Talk( void *args )
 
 int main( int argc, char **argv )
    {
-   if ( argc != 3 )
+   if ( argc < 4 )
       {
-      cerr << "Usage:  " << argv[ 0 ] << " port rootdirectory" << endl;
+      cerr << "Usage:  " << argv[ 0 ] << " [port] [rootdirectory] [index chunk 1] [index chunk 2] ..." << endl;
       return 1;
       }
 
    int port = atoi( argv[ 1 ] );
    struct threadArgs args;
    args.rootDirectory = argv[ 2 ];
+   args.numChunks = argc - 3;
+   args.chunks = (argv + 3);
 
    // Discard any trailing slash.  (Any path specified in
    // an HTTP header will have to start with /.)

@@ -7,7 +7,7 @@
 EXECUTABLE  = server
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = Server.cpp#../constraint-solver/QuerySolver.cpp ../stl/String.cpp ../indexer/PorterStemming.cpp ../indexer/VLQ.cpp ../stl/utils.cpp
+SOURCE_FILES = Server.cpp ../stl/String.cpp ../indexer/PorterStemming.cpp ../indexer/VLQ.cpp ../stl/utils.cpp
 
 #######################
 #######################

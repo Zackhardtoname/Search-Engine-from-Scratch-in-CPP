@@ -1,5 +1,8 @@
+#ifndef QUERY_SOLVER
+#define QUERY_SOLVER
+
 #include "../query-parser/QueryParser.h"
-#include "../stl/HashBlob.h"
+//#include "../stl/HashBlob.h"
 #include "../stl/String.h"
 #include "ConstraintSolver.h"
 #include "ISR/AND.h"
@@ -7,18 +10,17 @@
 #include "QueryableChunk.h"
 #include "../ranker/Ranker.h"
 
+struct displayFields {
+   scb::String title;
+   scb::String URL;
+   scb::String rank;
+};
 
-int main( int argc, char **argv )
+// TODO return as reference
+scb::Vector<displayFields> handleQuery( scb::String query, int numChunks, char **chunks )
    {
-   if ( argc < 3 )
-      {
-      fprintf( stderr,
-               "Usage: %s [query] [index chunk 1] [index chunk 2] ...\n",
-               argv[ 0 ] );
-      return 1;
-      }
 
-   AST *queryAST = Parser()( argv[ 1 ] );
+   AST *queryAST = Parser()( query );
 
    // TODO: parallelize this
 
@@ -30,9 +32,9 @@ int main( int argc, char **argv )
    //TODO: DELETE RANKER TESTBENCH
 
 
-   for ( int i = 2;  i < argc;  i++ )
+   for ( int i = 0;  i < numChunks;  i++ )
       {
-      QueryableChunk query( argv[ i ] );
+      QueryableChunk query( chunks[ i ] );
       ISR *isr = query.MakeISR( queryAST );
 
       while ( !isr->IsEOF() )
@@ -50,6 +52,9 @@ int main( int argc, char **argv )
       }
    
    dynamicRank(urlsToRanker, queryToRanker, queryableChunksToRanker, docIdsToRanker);
+   scb::Vector<displayFields> rankedResults;
 
-   return 0;
+   return rankedResults;
    }
+
+#endif // QUERY_SOLVER

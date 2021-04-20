@@ -26,7 +26,7 @@ src/indexer/dummy-indexer
 src/indexer/indexer-worker
 src/query-parser/query-parser
 src/ranker/ranker*
-src/server/server
+src/server/server*
 src/server/client
 bin/crawler-group
 bin/crawlerCmdline
