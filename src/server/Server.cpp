@@ -34,9 +34,11 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-// Root directory for the website, taken from argv[ 2 ].
-// (Yes, a global variable since it never changes.)
-char *RootDirectory;
+struct threadArgs
+{
+   char *rootDirectory;
+   int talkSocket;
+};
 
 int HexLiteralCharacter( char c )
    {
@@ -135,17 +137,19 @@ void FileNotFound( int talkSocket )
    send( talkSocket, fileNotFound, sizeof( fileNotFound ) - 1, 0 );
    }
 
-void *Talk( void *talkSocket )
+void *Talk( void *args )
    {
+
+    struct threadArgs *arguments = ( struct threadArgs *)args;
+
    // Look for a GET message, then reply with the
    // requested file.
 
    // Cast from void * to int * to recover the talk socket id
    // then free the heap usage as soon as possible in case exception happens
    // later
-   cout << "received connection at socket " << talkSocket << ":" << endl;
-   int talkSocketFD = *(int *)talkSocket;
-   free( talkSocket );
+   cout << "received connection at socket " << arguments->talkSocket << ":" << endl;
+   int talkSocketFD = arguments->talkSocket;
 
    // Read the request from the socket and parse it to extract
    // the action and the path, unencoding any %xx encodings.
@@ -251,7 +255,7 @@ void *Talk( void *talkSocket )
          char *fileStart;
          char *fileEnd;
          processedPath =
-            scb::String( RootDirectory ) + "/" + processedPath.substr( 1 );
+            scb::String( arguments->rootDirectory ) + "/" + processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
@@ -297,11 +301,12 @@ int main( int argc, char **argv )
       }
 
    int port = atoi( argv[ 1 ] );
-   RootDirectory = argv[ 2 ];
+   struct threadArgs args;
+   args.rootDirectory = argv[ 2 ];
 
    // Discard any trailing slash.  (Any path specified in
    // an HTTP header will have to start with /.)
-   char *r = RootDirectory;
+   char *r = args.rootDirectory;
    if ( *r )
       {
       do
@@ -394,7 +399,8 @@ int main( int argc, char **argv )
            talkSocket != -1 )
       {
       pthread_t child;
-      pthread_create( &child, nullptr, Talk, new int( talkSocket ) );
+      args.talkSocket = int( talkSocket );
+      pthread_create( &child, nullptr, Talk, (void *)&args );
       pthread_detach( child );
       }
 
