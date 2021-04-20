@@ -12,6 +12,9 @@
 #include <pthread.h>
 #include <atomic>
 #include <math.h>
+
+#define threadThreshold 800
+
 #define toInt(c) (int)(((int)c) - (int)97)
 // "harry potter and the goblet of fire"--initial test
 // harry * potter * 
@@ -196,7 +199,7 @@ struct mainLoopStruct {
     std::vector<size_t> splitID;
 };
 
-
+pthread_mutex_t lock;
 //concatenate a cat
 //pthread_mutex_t lock;
 void rankerSearcher (sharedISRStruct arg){
@@ -207,7 +210,9 @@ void rankerSearcher (sharedISRStruct arg){
     auto urlNum = currStruct->urlNum;
     while ((long long)isr->Get()<edge){
         //std::cout<<isr->Get()<<" must be less than " << edge<<"\n";
+        pthread_mutex_lock(&lock);
         shared_isr_map[urlNum][isr->Get()] = query;
+        pthread_mutex_unlock(&lock);
         isr->Next();
     }
     //pthread_mutex_unlock(&lock);
@@ -226,17 +231,18 @@ void rankerSearcher (sharedISRStruct arg){
     //keep searching.
 }
 
-pthread_mutex_t lock;
+
 std::vector<std::vector<std::string>> splitUrls;
 std::vector<std::vector<QueryableChunk>> splitChunks;
 std::vector<std::vector<size_t>> splitID;
 std::vector<std::string> globalStemmed;
+std::vector<double> contentRank;
 
 void * mainLoop(void * arg){
-    pthread_mutex_lock(&lock);
+    //pthread_mutex_lock(&lock);
     int currInt = *(int *)arg;
     //struct mainLoopStruct * currStruct =   ((struct mainLoopStruct *)(arg));
-    auto urlStart = currInt*1000;
+    auto urlStart = currInt*threadThreshold;
     std::vector<std::string> stemmed = globalStemmed;
     auto urls = splitUrls[currInt];
     std::vector<QueryableChunk> chunks = splitChunks[currInt];
@@ -283,14 +289,34 @@ void * mainLoop(void * arg){
     //std::cout<<"\tThread "<<" reached end of mainLoop."<<std::endl;
     //pthread_exit(0);
     //free(arg);
-    
-    pthread_mutex_unlock(&lock);
+    for (int i = urlStart; i<urlStart+urls.size(); ++i){
+        uint32_t prevKey = shared_isr_map[i].begin()->first;
+        int      prevVal = shared_isr_map[i].begin()->second;
+        uint     currLen = 1;
+
+        for (auto occurence : shared_isr_map[i]){
+            //order
+            if (occurence.first-prevKey == 1){
+                if (occurence.second-prevVal == 1){
+                    ++currLen;
+                    contentRank[i]+= contentRank[i]/20.0 +currLen*(intOrder[occurence.second]*intOrder[occurence.second]);
+                }
+            }
+            else{
+                currLen=1;
+            }
+            //length of the string, TODO figure out weighting
+            contentRank[i]+=intOrder[occurence.second]-2 > 0 ? intOrder[occurence.second]-2 : 0;
+        }
+    }
+    //pthread_mutex_unlock(&lock);
     return NULL;
 }
 
 
 
 void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<QueryableChunk> chunks, std::vector<size_t> docID) {
+    std::ios_base::sync_with_stdio(0);
     Trie trie;
     std::vector<std::string> queries; 
     shared_isr_map.resize(urls.size());
@@ -336,18 +362,18 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
 
     //this for loop is actually a shit ton of threads, and this isnt saved in this function
     //all done simultaneously 
-    std::vector<double> contentRank(urls.size());
+    contentRank.resize((urls.size()));
     
     std::vector<float> savedExponent;
 
     //std::cout<<"FUCK FUCK FUCK FUCK\n";
 
-    for (int i = 1; i<=stemmed.size(); ++i){
-        savedExponent.push_back((queries.size()-i)*(queries.size()-i));
-    }
+    //for (int i = 1; i<=stemmed.size(); ++i){
+    //    savedExponent.push_back((queries.size()-i)*(queries.size()-i));
+    //}
     shared_isr_map.resize(urls.size());
 
-    size_t numUrlThreads = ceil(urls.size()/1000.0);
+    size_t numUrlThreads = ceil(urls.size()/threadThreshold);
     if (numUrlThreads<=1){ 
         for (int i = 0; i<urls.size(); ++i){
             //std::cout<<"Iteration: "<<i<<"\n";
@@ -430,6 +456,7 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
     std::cout<<"Finished Ranking.\n";
     //exit(0);
     //TODO FIX ACTUAL RANKING
+    /*
     for (int i = 0; i<shared_isr_map.size(); ++i){
         uint32_t prevKey = shared_isr_map[i].begin()->first;
         int      prevVal = shared_isr_map[i].begin()->second;
@@ -450,6 +477,7 @@ void dynamicRank(std::vector<std::string> urls, AST * Query, std::vector<Queryab
             contentRank[i]+=intOrder[occurence.second]-2 > 0 ? intOrder[occurence.second]-2 : 0;
         }
     }
+    */
     std::cout<<"Finished Dynamic Scoring.\n";
     staticRank(urls);
     //std::cout<<"Finished Static Scoring.\n";
