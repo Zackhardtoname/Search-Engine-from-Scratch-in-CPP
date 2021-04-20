@@ -31,14 +31,6 @@ void *threadPersistChunk( void *p )
 
 scb::Vector<scb::String> words;
 
-scb::String RandAlphaString( int len )
-   {
-   scb::String str;
-   for ( int i = 0;  i < len;  i++ )
-      str.pushBack( 'a' + rand() % 26 );
-   return str;
-   }
-
 scb::String RandWord()
    {
    return words[ rand() % words.size() ];
@@ -159,6 +151,11 @@ int main( int argc, char **argv )
       assert( consumed == msg.size() );
       curChunk->Ingest( ingest );
 
+      std::cout << "====================== doc " << i
+                << " ====================" << std::endl;
+      for ( auto &word : testIngest.Words )
+         std::cout << word << ' ';
+      std::cout << std::endl;
       // std::ofstream ingestfile;
       // std::string filename = "most_recent_" + std::to_string(i) + ".ingest";
       // ingestfile.open (filename, std::ios::trunc);

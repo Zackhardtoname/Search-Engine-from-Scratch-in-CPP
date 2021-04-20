@@ -22,7 +22,7 @@
 // TODO remove
 #include "../stl/StringHash.h"
 
-using scb::Pair;
+using scb::HashPair;
 using scb::Queue;
 using scb::String;
 using scb::Vector;

@@ -20,5 +20,8 @@ static constexpr int PENDING_LINKS_OFFLOAD_FACTOR = 2;
 // when lost connection to a remote worker, how many times to
 // retry before suspending and issue a warning to discord.
 static constexpr int REMOTE_WORKER_DOWN_RETRY_LIMIT = 500;
+static constexpr int MAX_WORD_LEN = 28; // antidisestablishmentarianism
+// Decorators
+static constexpr char TitleDecorator = '@';
 
 #endif // SCOOBLE_SEARCH_DEFS_H

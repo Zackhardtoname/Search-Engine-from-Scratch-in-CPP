@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <string>
+#include <sys/stat.h>
 
 #include "utils.h"
 
@@ -63,4 +64,13 @@ scb::String RandAlphaString( int len )
    for ( int i = 0;  i < len;  i++ )
       str.pushBack( 'a' + rand() % 26 );
    return str;
+   }
+
+size_t FileSize( int fd )
+   {
+   struct stat fileInfo
+      {
+      };
+   fstat( fd, &fileInfo );
+   return fileInfo.st_size;
    }

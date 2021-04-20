@@ -29,14 +29,6 @@ void *threadPersistChunk( void *p )
    return nullptr;
    }
 
-scb::String RandAlphaString( int len )
-   {
-   scb::String str;
-   for ( int i = 0;  i < len;  i++ )
-      str.pushBack( 'a' + rand() % 26 );
-   return str;
-   }
-
 int main()
    {
    mqd_t mq = mq_open( PARSED_DOCS_QUEUE, O_RDONLY );

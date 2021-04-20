@@ -15,6 +15,7 @@ add_subdirectory(filter)
 add_subdirectory(indexer)
 add_subdirectory(server)
 add_subdirectory(utils)
+add_subdirectory(constraint-solver)
 add_subdirectory(stl)
 
 
