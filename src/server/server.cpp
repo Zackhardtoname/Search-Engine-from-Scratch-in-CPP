@@ -17,6 +17,7 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "../stl/utils.h"
+#include "httpEscapeCodes.h"
 #include "mime.h"
 #include <cstring>
 #include <iostream>
@@ -183,10 +184,7 @@ void *Talk( void *talkSocket )
          // Get search results and return them
          {
 
-         // Extract the exact query which will be in byte format. Each worker
-         // will be responsible for decoding the byte format to read the exact
-         // query in the query parser.
-         scb::String beginQuery = "/search?query=";
+         // Begin by extracting the query from the HTTP request header
          scb::String endOfQuery = " HTTP";
          // 18 refers to the length of the string "GET /search?query=" which will
          // always be the same length
@@ -194,7 +192,9 @@ void *Talk( void *talkSocket )
          scb::String query =
             buf.substr( 18, queryLength );
 
-         int sockFD[ 9 ];
+         // Convert all of the HTTP symbols to the correct symbols in the query
+         URLDecoder decode;
+         query = decode.escapeCodesToString(query);
 
          scb::Vector<scb::String> allMatches(20);
 
