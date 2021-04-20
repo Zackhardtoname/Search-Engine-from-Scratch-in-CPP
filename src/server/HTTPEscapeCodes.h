@@ -18,6 +18,8 @@ public:
       codeToCharTable->insert(String("7C"), '|');
       codeToCharTable->insert(String("40"), '@');
       codeToCharTable->insert(String("25"), '%');
+      // TODO: add more symbol codes if necessary... if an unrecognized code is found,
+      // we currently just swap it for a space
 
       codeToCharTable->Optimize();
    }
@@ -26,7 +28,6 @@ public:
       delete codeToCharTable;
    }
 
-   // TODO func here
    String escapeCodesToString(String &escapedIn) {
 
       String escapedOut;
@@ -38,7 +39,11 @@ public:
             String characterCode; 
             characterCode += *(++character);
             characterCode += *(++character);
-            escapedOut.pushBack(codeToCharTable->find(characterCode)->value);
+            auto it = codeToCharTable->find(characterCode);
+            if (it != codeToCharTable->end())
+               escapedOut.pushBack(codeToCharTable->find(characterCode)->value);
+            else
+               escapedOut.pushBack(' ');
          }
          else
          {
