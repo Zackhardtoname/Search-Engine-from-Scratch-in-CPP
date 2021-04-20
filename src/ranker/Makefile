@@ -7,7 +7,7 @@
 EXECUTABLE  = ranker
 
 # Change 'source_files' to match the component source files needed
-SOURCE_FILES = main.cpp ../stl/String.cpp ../indexer/PorterStemming.cpp ../indexer/VLQ.cpp
+SOURCE_FILES = QuerySolver.cpp ../../stl/String.cpp ../../indexer/PorterStemming.cpp ../../indexer/VLQ.cpp ../../stl/utils.cpp
 
 #######################
 #######################
@@ -19,10 +19,10 @@ CXX         = g++
 OBJECTS =  $(SOURCE_FILES:.cpp=.o)
 
 # Default Flags
-CXXFLAGS = -std=c++1z -pedantic#-Werror -Wconversion -Wall -Wextra
+CXXFLAGS = -std=c++1z#-Werror -Wconversion -Wall -Wextra
 
 # Libararies needed to link, including ssl and mqueue
-LINK_FLAGS = -lssl -lrt -lcrypto
+LINK_FLAGS = -lssl -lrt -lcrypto -lpthread
 
 # make all - set as default command run
 all: $(SOURCE_FILES) $(EXECUTABLE)
