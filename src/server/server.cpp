@@ -17,8 +17,8 @@
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "../stl/utils.h"
-#include "httpEscapeCodes.h"
-#include "mime.h"
+#include "HTTPEscapeCodes.h"
+#include "Mime.h"
 #include <cstring>
 #include <iostream>
 #include <netdb.h>

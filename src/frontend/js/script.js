@@ -54,6 +54,9 @@ $(function () {
 
         const searchTerms = $('#icon_prefix2').val();
 
+        // Show search results
+        $('#search-results').show();
+
         $.ajax({
             type: "GET",
             crossDomain: true,
