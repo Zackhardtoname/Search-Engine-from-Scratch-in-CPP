@@ -57,6 +57,8 @@ TEST( ParsedUrlTest, CheckNormalize )
                     "http://domain.com/here?a=b" );
       EXPECT_STREQ( url.Normalize( "/here?a=b#anchor" ).cstr(),
                     "http://domain.com/here?a=b" );
+      EXPECT_STREQ( url.Normalize( "//another.com/a/b" ).cstr(),
+                    "http://another.com/a/b" );
       }
 
       {

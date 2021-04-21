@@ -11,9 +11,12 @@
 
 #include "../../indexer/ContiguousChunk.h"
 #include "../../indexer/VLQ.h"
+#include "../../stl/HashBlob.h"
 
+using scb::HashBlob;
 using std::cerr;
 using std::cout;
+using std::endl;
 
 size_t fileSize( int f )
    {
@@ -26,87 +29,136 @@ int main( int argc, char **argv )
    {
    if ( argc != 2 )
       {
-      std::cout << "usage: " << argv[ 0 ] << " [chunk file]" << std::endl;
+      std::cout << "usage: " << argv[ 0 ] << " [chunk file]" << endl;
       return 1;
       }
 
-   ContiguousChunk *chunk;
-
-   // File read method
-   // FILE *f = fopen(argv[1], "r");
-   // char buf[10000];
-   // size_t count = fread(buf, sizeof(ContiguousChunk), 1, f);
-
-   // fclose(f);
-
-   // std::cout << "Contiguous Chunk read: " << count << " element" <<
-   // std::endl;
-
-   // chunk =reinterpret_cast< ContiguousChunk* >(buf);
-   // mmap() method
+   ChunkHeader *header;
 
    int f = open( argv[ 1 ], O_RDONLY );
    if ( f == -1 )
       {
-      cerr << "Error opening file " << argv[ 1 ] << std::endl;
+      cerr << "Error opening file " << argv[ 1 ] << endl;
       return 1;
       }
 
-   chunk = (ContiguousChunk *)mmap( nullptr, fileSize( f ), PROT_READ,
-                                    MAP_PRIVATE, f, 0 );
-   if ( chunk == MAP_FAILED )
+   // Map in chunk, initially cast as header
+   header = (ChunkHeader *)mmap( nullptr, fileSize( f ), PROT_READ, MAP_PRIVATE,
+                                 f, 0 );
+   if ( header == MAP_FAILED )
       {
-      cerr << "Error memory-mapping file " << argv[ 1 ] << std::endl;
+      cerr << "Error memory-mapping file " << argv[ 1 ] << endl;
       return 1;
       }
 
-   // Read header
+   // * ===== Read header =====
+   cout << "Chunk Header:" << endl;
+   cout << "\tDocument count: " << header->DocumentCount << endl;
+   cout << "\tLast Post Table Start: " << header->LastPostTableOffset << endl;
+   cout << "\tUrl Table Start: " << header->UrlOffsetTableOffset << endl;
+   cout << "\tDictionary Offset: " << header->WordToPostingListDictionaryOffset
+        << endl;
+   cout << "\tPosting List Offset: " << header->PostingListsOffset << endl;
 
-   cout << "Chunk Header:" << std::endl;
-   cout << "\tDocument count: " << chunk->header.DocCount << std::endl;
-   cout << "\tDictionary Offset: " << chunk->header.DictionaryOffset
-        << std::endl;
-   cout << "\tPosting List Offset: " << chunk->header.PostingListsOffset
-        << std::endl;
-   cout << "\tEnd Offset: " << chunk->header.EndOffset << std::endl;
+   // * ===== Read Document Table =====
+   const auto *lastPostTable = reinterpret_cast<LastPostTableEntry *>(
+      reinterpret_cast<uint8_t *>( header ) + header->LastPostTableOffset );
+   const auto *urlOffsetTable = reinterpret_cast<UrlOffsetTableEntry *>(
+      reinterpret_cast<uint8_t *>( header ) + header->UrlOffsetTableOffset );
 
-   // Read URL List
-   cout << "URLs:" << std::endl;
-   const char *cursor = chunk->data;
-
-   // TODO check if faster to just print character by character
-   while ( cursor < chunk->data + chunk->header.DictionaryOffset )
+   cout << "Document Table:" << endl;
+   cout << "\tIndex\tUrlOffs\tLastPost" << endl;
+   // For each Document Table Entry
+   /*
+   for ( size_t i = 0;  i < header->DocumentCount;  ++i )
       {
-      cout << "\t" << cursor << std::endl;
-      cursor += strlen( cursor ) + 1;
+      cout << "\t[" << i << "]\t" << urlOffsetTable[ i ] << "\t"
+           << lastPostTable[ i ] << endl;
+      }
+      */
+
+   // * ===== Read URL List =====
+   const char *currentURL = reinterpret_cast<const char *>(
+      reinterpret_cast<uint8_t *>( header ) + header->UrlListOffset );
+
+   // std::cout<<"The thing tested against is: " << reinterpret_cast<const
+   // char*> (header) + header->PostingListsOffset<<"\n"; exit(0);
+   cout << "URLs:" << endl;
+
+   // Print each URL
+   for ( size_t i = 0;  i < header->DocumentCount;  ++i )
+      {
+      cout << "\t[" << i << "]\t" << currentURL << endl;
+      currentURL += strlen( currentURL ) + 1;
       }
 
-   // TODO print dictionary
-   cursor = chunk->data + chunk->header.PostingListsOffset;
-   // Print decoded posts
-   VLQStreamDecoder decoder( cursor );
-   cout << "Posting Lists:" << std::endl;
-   int plCounter = 0;
-   uint64_t decoded;
+   // * ===== Read Dictionary HashBlob =====
+   const auto blob = reinterpret_cast<const HashBlob *>( currentURL );
+
+   cout << "Dictionary HashBlob:" << endl;
+
+   // Print blob header and contents
+   cout << *blob << endl;
+
+   // * ===== Read Posting Lists =====
+   auto PlIt = blob->begin();
+   ++PlIt;
+   size_t ctr = 0;
 
    // For each posting list
-   while ( cursor < chunk->data + chunk->header.EndOffset )
+   for ( auto PlIt = blob->begin();  PlIt != blob->end();  ++PlIt )
       {
+      const char *cursor = reinterpret_cast<const char *>( header ) +
+                           header->PostingListsOffset + PlIt->Value;
 
+      // cout << "Posting List [" << ctr++ << "] for '" << PlIt->Key << "':" <<
+      // endl;
+      cout << "Posting List [" << ctr++ << "] for '" << PlIt->GetKey()
+           << "':" << endl;
+
+      // Read and print posting list header
       const PostingListHeader *plHeader =
          reinterpret_cast<const PostingListHeader *>( cursor );
 
-      cursor += sizeof( PostingListHeader ) + plHeader->postsOffset;
+      cout << "\tHeader:" << std::endl;
+      cout << "\t\tNumber of posts: " << plHeader->NumPosts << '\n'
+           << "\t\tLast Post: " << plHeader->LastPost << '\n'
+           << "\t\tNumber of Sync Table Entries: "
+           << plHeader->NumSyncTableEntries << endl;
 
-      decoder.setCursor( cursor );
-
-      cout << "\t" << plCounter++ << " (postsOffset = " << plHeader->postsOffset
-           << "):" << std::endl;
-      while ( ( decoded = decoder.Next() ) != 0 )
+      // Read and print Sync Table
+      cout << "\tSync Table:\tOffs:\tPost:" << std::endl;
+      const SyncTableEntry *syncEntry =
+         reinterpret_cast<const SyncTableEntry *>( plHeader + 1 );
+      for ( size_t i = 0;  i < plHeader->NumSyncTableEntries;  ++i )
          {
-         cout << "\t\t" << decoded << std::endl;
+         cout << "\t\t[" << i << "]\t" << syncEntry->Offset << "\t"
+              << syncEntry->Post << std::endl;
+         ++syncEntry;
          }
 
-      cursor = decoder.getCursor();
+      size_t postsOffset = static_cast<uint32_t>(
+         sizeof( PostingListHeader ) +
+         plHeader->NumSyncTableEntries * sizeof( SyncTableEntry ) );
+
+      cursor += postsOffset;
+
+      // Read and print posts
+      cout << "\tPosts:\tDelta:\tAbsolute" << std::endl;
+
+      uint64_t decoded;
+      uint64_t prevAbsolute = 0;
+      VLQStreamDecoder decoder( cursor );
+      // decoder.setCursor( cursor );
+
+      while ( ( decoded = decoder.Next() ) != 0 )
+         {
+         cout << "\t\t" << decoded << "\t" << prevAbsolute + decoded << endl;
+         prevAbsolute += decoded;
+         }
+
+      cursor = decoder.GetCursor();
       }
+
+   cout << "End of chunk." << endl;
    }

@@ -38,6 +38,14 @@ uint64_t VLQ::Decode( StringRef s, size_t *consumed )
    return result;
    }
 
+int VLQ::Length( uint64_t x )
+   {
+   int result = 1;
+   while ( x >>= 7 )
+      result++;
+   return result;
+   }
+
 // VLQ Stream Decoder
 
 VLQStreamDecoder::VLQStreamDecoder( const char *s )
@@ -61,12 +69,12 @@ uint64_t VLQStreamDecoder::Next()
    return result;
    }
 
-const char *VLQStreamDecoder::getCursor() const
+const char *VLQStreamDecoder::GetCursor() const
    {
    return cursor;
    }
 
-void VLQStreamDecoder::setCursor( const char *cursor_in )
+void VLQStreamDecoder::SetCursor( const char *cursor_in )
    {
    cursor = cursor_in;
    }

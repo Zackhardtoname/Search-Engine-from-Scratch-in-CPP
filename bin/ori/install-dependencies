@@ -1,0 +1,8 @@
+#!/bin/bash
+sudo apt-get update
+sudo apt-get -y install g++ cmake libssl-dev libcurl4-openssl-dev
+mkdir ~/scooble
+sudo mkfs.ext4 -m 0 -T largefile /dev/sdb
+sudo mount /dev/sdb ~/scooble
+mkdir ~/scooble/filter
+mkdir ~/scooble/indexer

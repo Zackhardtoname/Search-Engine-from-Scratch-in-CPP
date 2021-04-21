@@ -28,6 +28,8 @@ int main( int argc, char **argv )
    mqd_t parsedDocsQueue = mq_open( PARSED_DOCS_QUEUE, O_RDONLY );
    assert( parsedDocsQueue != -1 && "mq_open() failed" );
 
+   long numDocs = 0;
+   unsigned lastTime = time( NULL );
    while ( true )
       {
       // get current time
@@ -43,7 +45,7 @@ int main( int argc, char **argv )
       char buffer[ sizeof( int32_t ) + PARSED_DOCS_QUEUE_MAX_MSGSIZE ];
       auto *header = reinterpret_cast<int32_t *>( buffer );
       // if still within target dump size
-      while ( curSize < targetSize )
+      for ( ;  curSize < targetSize;  numDocs++ )
          {
          // get a message from mq
          ssize_t msgSize =
@@ -53,9 +55,18 @@ int main( int argc, char **argv )
          *header = static_cast<int32_t>( msgSize );
 
          // write to dump file
-         size_t written = fwrite( buffer, 1, sizeof( int32_t ) + msgSize, f );
-         assert( written == sizeof( int32_t ) + msgSize && "fwrite() failed" );
-         curSize += written;
+         size_t written = fwrite( buffer, sizeof( int32_t ) + msgSize, 1, f );
+         assert( written == 1 && "fwrite() failed" );
+         curSize += sizeof( int32_t ) + msgSize;
+
+         if ( numDocs % 2000 == 0 )
+            {
+            int elapsed = time( NULL ) - lastTime;
+            std::cout << "doc count: " << numDocs
+                      << ", rate (doc/s) = " << ( 2000.0 / elapsed )
+                      << std::endl;
+            lastTime = time( NULL );
+            }
          }
 
       // close file and open the next one

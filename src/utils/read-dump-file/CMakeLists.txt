@@ -4,3 +4,4 @@ project(read-dump-file)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(read-dump-file ReadDumpFile.cpp)
+add_executable(count-dump-file CountDumpFile.cpp)

@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <string>
+#include <sys/stat.h>
 
 #include "utils.h"
 
@@ -55,4 +56,21 @@ void SetNonBlocking( int fd )
    assert( flags != -1 && "error in fcntl()" );
    assert( fcntl( fd, F_SETFL, flags | O_NONBLOCK ) == 0 &&
            "error in fcntl()" );
+   }
+
+scb::String RandAlphaString( int len )
+   {
+   scb::String str;
+   for ( int i = 0;  i < len;  i++ )
+      str.pushBack( 'a' + rand() % 26 );
+   return str;
+   }
+
+size_t FileSize( int fd )
+   {
+   struct stat fileInfo
+      {
+      };
+   fstat( fd, &fileInfo );
+   return fileInfo.st_size;
    }

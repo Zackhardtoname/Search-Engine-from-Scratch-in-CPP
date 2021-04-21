@@ -1,4 +1,5 @@
 #include <csignal>
+#include <curl/curl.h>
 #include <mqueue.h>
 
 #include "../stl/RAII.h"
@@ -10,50 +11,52 @@
 #include "../defs.h"
 #include "../indexer/PorterStemming.h"
 #include "../parser/ParsedHtml.h"
+#include "CrawlerGroup.h"
+#include "CrawlerParserWorker.h"
 #include "EnglishDictChecker.h"
 
-int main( int argc, char **argv )
+EnglishDictChecker *englishDictChecker;
+mqd_t frontier, newLinks, parsedDocs;
+std::atomic<bool> die = false;
+std::atomic<int> numSentToIndexer = 0;
+
+void *ThreadCrawlerParserWorker( void * )
    {
-   if ( argc != 2 )
-      {
-      fprintf( stderr, "Usage: %s [english_dict]\n", argv[ 1 ] );
-      return 1;
-      }
-
-   // If we want to go with multiple queues with different priorities,
-   //    add flag O_NONBLOCK and poll from them.
-   mqd_t frontier = mq_open( FRONTIER_MQ, O_RDONLY );
-   assert( frontier != -1 && "mq_open() failed" );
-
-   mqd_t newLinks = mq_open( NEW_LINKS_QUEUE, O_WRONLY );
-   assert( newLinks != -1 && "mq_open() failed" );
-
-   mqd_t parsedDocs = mq_open( PARSED_DOCS_QUEUE, O_WRONLY );
-   assert( parsedDocs != -1 && "mq_open() failed" );
-
-   EnglishDictChecker englishDictChecker( argv[ 1 ] );
+   String content;
+   CURL *curl = GetCurlHandle( &content );
 
    char buf[ MAX_URL_LEN + 1 ];
-   for ( int numPages = 0;  ;  numPages++ )
+   while ( !die.load() )
       {
+
       ssize_t sz = mq_receive( frontier, buf, MAX_URL_LEN, nullptr );
+      ++flowinCount;
+      if ( sz == -1 && errno == EINTR )
+         {
+         die = true;
+         break;
+         }
       assert( sz != -1 && "mq_receive() failed" );
       buf[ sz ] = '\0';
-
-      std::cout << "crawling: " << buf << std::endl;
+      String url( buf );
 
       try
          {
-         String url( buf );
+         curl_easy_cleanup( curl );
+         curl = GetCurlHandle( &content );
+         curl_easy_setopt( curl, CURLOPT_URL, url.cstr() );
+         content.clear();
+         CURLcode code = curl_easy_perform( curl );
+         HandleCurlCode( curl, code );
 
-         auto httpResp = FetchUrl( url );
-
-         ParsedHtml parsedHtml( httpResp );
+         ParsedHtml parsedHtml( content );
          // filter out non-english page by HTML
          if ( !parsedHtml.Language.empty() &&
               !parsedHtml.Language.hasPrefix( "en" ) )
             {
-            std::cout << "not english by html" << std::endl;
+#ifdef VERY_VERBOSE
+            std::cout << "not english by html: " << url << std::endl;
+#endif
             continue;
             }
 
@@ -66,13 +69,16 @@ int main( int argc, char **argv )
             word = PorterStem( word );
 
          // check dictionary for language
-         if ( !englishDictChecker.Check( parsedHtml ) )
+         if ( !englishDictChecker->Check( parsedHtml ) )
             {
-            std::cout << "not english by dict" << std::endl;
+#ifdef VERY_VERBOSE
+            std::cout << "not english by dict: " << url << std::endl;
+#endif
             continue;
             }
 
          // post parsedHtml to the indexer queue
+         ++flowoutCount;
          IndexerIngest ingest{ .Words = parsedHtml.Words,
                                .TitleWords = parsedHtml.TitleWords,
                                .Url = url };
@@ -80,28 +86,45 @@ int main( int argc, char **argv )
          // if too large a document, ignore
          if ( blob.size() <= PARSED_DOCS_QUEUE_MAX_MSGSIZE )
             {
-            mq_send( parsedDocs, blob.data(), blob.size(), 0 );
-            std::cout << numPages << " posted to indexer queue" << std::endl;
+            if ( mq_send( parsedDocs, blob.data(), blob.size(), 0 ) != 0 )
+               std::cerr << "mq_send() error: " << strerror( errno ) << " : "
+                         << url << std::endl;
+#ifdef VERY_VERBOSE
+            std::cout << "posted to indexer queue, total " << ++numSentToIndexer
+                      << ": " << url << std::endl;
+#else
+            if ( ( ++numSentToIndexer ) % 2000 == 0 )
+               std::cout << "posted to indexer queue, total " << numSentToIndexer << std::endl;
+#endif
             }
          else
-            std::cout << numPages << " doc too large" << std::endl;
+            {
+#ifdef VERY_VERBOSE
+            std::cout << "doc too large: " << url << std::endl;
+#endif
+            }
 
          // post URLs to the bloom filter queue
          ParsedUrl pageUrl( buf );
-         for ( Link &link : parsedHtml.Links )
+         for ( String &link : parsedHtml.Links )
             {
-            String normalizedUrl = pageUrl.Normalize( link.Href );
+            String normalizedUrl = pageUrl.Normalize( link );
             mq_send( newLinks, normalizedUrl.data(), normalizedUrl.size(), 0 );
-            std::cout << "posted to filter: " << normalizedUrl << std::endl;
             }
+#ifdef VERY_VERBOSE
+         std::cout << "posted " << parsedHtml.Links.size()
+                   << " to filter: " << url << std::endl;
+#endif
          }
       catch ( std::exception &s )
          {
          // we're not going to recover anyway
-         std::cout << "failed: " << s.what() << std::endl;
+#ifdef VERY_VERBOSE
+         std::cout << "failed: " << s.what() << ": " << url << std::endl;
+#endif
          continue;
          }
       }
 
-   return 0;
+   return nullptr;
    }

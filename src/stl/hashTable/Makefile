@@ -3,8 +3,8 @@ all:  Top10 HashTable HashBlob HashFile #test
 Top10: Top10.cpp Common.h Common.cpp TopN.h TopN.cpp HashTable_orig.h 
 	g++ -std=c++1z -g3 Top10.cpp Common.cpp TopN.cpp -o Top10
 
-HashTable: HashTable_orig.cpp Common.h Common.cpp HashTable_orig.h Timer.h
-	g++ -std=c++1z -g3 HashTable_orig.cpp Common.cpp -o HashTable
+HashTable: HashTable.cpp Common.h Common.cpp HashTable.h Timer.h
+	g++ -std=c++1z -g3 HashTable.cpp Common.cpp -o HashTable
 
 HashBlob:  HashBlob_orig.cpp HashTable_orig.h HashBlob_orig.h Common.h Common.cpp Timer.h
 	g++ -std=c++1z -g3 HashBlob_orig.cpp Common.cpp -o HashBlob

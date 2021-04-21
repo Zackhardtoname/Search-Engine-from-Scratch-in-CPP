@@ -1,0 +1,37 @@
+#!/bin/bash
+DIR=$(pwd)
+if [[ $DIR != *"/scooble_search/bin"* ]]; then
+	echo "Error: You are not in the /scooble_search/bin directory!"
+	echo "This bash script is set to use filepaths realative to the bin folder."
+	echo "Change your directory with:"
+	echo "	  cd [path-to-scooble_search]/scooble_search/bin"
+	echo "Then run ./shut-down-crawlers directly from the bin directory instead."
+	exit 1
+fi
+
+echo "WARNING: Are you sure you want to shut down the crawler? This script will perform the following actions:"
+echo "    Delete all open mqueues and their corresponding data"
+echo "    Kill every parent and child worker process for the index, filter, and crawler."
+echo "    Delete the created bloom filter file"
+echo "    Run ./clean to remove all the code executables in this directory."
+echo "If you meant to simply pause the crawler to continue running later, run ./pause-crawlers"
+read -n1 -s -r -p $'Press \'s\' to shut down the crawlers. Press any other key to cancel...\n' key
+
+if [ "$key" = 's' ]; then
+	# Delete the mqueues
+	sudo ./handle-mq delete frontier newLinks docs
+
+	# Kill all the indexer, filter, and crawler processes
+	pkill -SIGINT dummy-indexer &> /dev/null
+	pkill -SIGINT filter-worker &> /dev/null
+	pkill -SIGINT crawler-group &> /dev/null
+
+	# Remove the bloom filter file
+	rm -rf bloom
+
+	# Clean up the executables
+	./clean
+else
+	echo "Shutdown cancelled"
+	exit 1
+fi

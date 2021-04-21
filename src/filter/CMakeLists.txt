@@ -3,12 +3,19 @@ project(filter)
 
 set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
+find_package(CURL REQUIRED)
 
-add_executable(dummy-filter
-        DummyFilterWorker.cpp
+#add_executable(dummy-filter
+#        DummyFilterWorker.cpp
+#        ../stl/String.cpp
+#        )
+#target_link_libraries(dummy-filter rt)
+
+add_executable(constant-filter
+        ConstantFilterWorker.cpp
         ../stl/String.cpp
         )
-target_link_libraries(dummy-filter rt)
+target_link_libraries(constant-filter rt)
 
 add_executable(filter-worker
         FilterWorker.cpp
@@ -18,8 +25,12 @@ add_executable(filter-worker
         ../crawler/ParsedUrl.cpp
         ../stl/String.cpp
         ../stl/utils.cpp
-        )
-target_link_libraries(filter-worker rt Threads::Threads ssl crypto)
+        ThreadNewLinksMqueue.cpp
+        ThreadOffloadUnfilteredUrls.cpp
+        ThreadRemoteWorkers.cpp
+        ThreadRemoteUrls.cpp
+        ThreadFilteredUrls.cpp ThreadMonitor.cpp)
+target_link_libraries(filter-worker rt Threads::Threads ssl crypto ${CURL_LIBRARIES})
 
 # testing
 
