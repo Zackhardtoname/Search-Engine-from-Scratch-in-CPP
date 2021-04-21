@@ -16,16 +16,17 @@
 
 #define toInt( c ) (int)( ( (int)c ) - (int)97 )
 
-struct displayField {
-   scb::String title;
-   scb::String URL;
-   double rank;
-
-   const bool operator==( const displayField &check) const
+struct displayField
    {
-      return check.URL == URL;
-   }
-};
+      scb::String title;
+      scb::String URL;
+      double rank;
+
+      const bool operator==( const displayField &check ) const
+         {
+         return check.URL == URL;
+         }
+   };
 
 template <typename T>
 std::vector<std::vector<T>> splitVector( const std::vector<T> &vec, size_t n )
@@ -296,9 +297,10 @@ void *mainLoop( void *arg )
    return NULL;
    }
 
-std::vector<displayField> dynamicRank( std::vector<std::string> urls, AST *Query,
-                  std::vector<QueryableChunk> chunks,
-                  std::vector<size_t> docID )
+std::vector<displayField> dynamicRank( std::vector<std::string> urls,
+                                       AST *Query,
+                                       std::vector<QueryableChunk> chunks,
+                                       std::vector<size_t> docID )
    {
    std::ios_base::sync_with_stdio( 0 );
    Trie trie;
@@ -433,23 +435,24 @@ std::vector<displayField> dynamicRank( std::vector<std::string> urls, AST *Query
       }
    std::cout << "Finished URL Scoring.\n";
 
-   std::vector<displayField> rankedResults(urls.size());
+   std::vector<displayField> rankedResults( urls.size() );
    for ( int i = 0;  i < urls.size();  ++i )
       {
       // TODO: figure out the title and set it here
-      rankedResults[i].title = urls[ i ].c_str();
-      rankedResults[i].URL = urls[ i ].c_str();
-      rankedResults[i].rank = contentRank[ i ];
+      rankedResults[ i ].title = urls[ i ].c_str();
+      rankedResults[ i ].URL = urls[ i ].c_str();
+      rankedResults[ i ].rank = contentRank[ i ];
       }
 
    std::sort( rankedResults.begin(), rankedResults.end(),
-              []( const displayField &a,
-                  const displayField &b )
+              []( const displayField &a, const displayField &b )
               {
                  return a.rank > b.rank;
               } );
    // Remove duplicates if the URLs match
-   rankedResults.erase( std::unique(rankedResults.begin(), rankedResults.end()), rankedResults.end());
+   rankedResults.erase(
+      std::unique( rankedResults.begin(), rankedResults.end() ),
+      rankedResults.end() );
 
    return rankedResults;
    }

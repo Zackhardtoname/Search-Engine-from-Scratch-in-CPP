@@ -13,6 +13,7 @@
 // perf issue, forcing the client browser to reconnect for each
 // request and a candidate for improvement.
 
+#include "../constraint-solver/QuerySolver.h"
 #include "../stl/Filesystem.h"
 #include "../stl/String.h"
 #include "../stl/Vector.h"
@@ -27,7 +28,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "../constraint-solver/QuerySolver.h"
 
 #define backlog 1000
 
@@ -36,12 +36,12 @@ using std::cout;
 using std::endl;
 
 struct threadArgs
-{
-   char *rootDirectory;
-   int talkSocket;
-   int numChunks;
-   char **chunks;
-};
+   {
+      char *rootDirectory;
+      int talkSocket;
+      int numChunks;
+      char **chunks;
+   };
 
 int HexLiteralCharacter( char c )
    {
@@ -143,7 +143,7 @@ void FileNotFound( int talkSocket )
 void *Talk( void *args )
    {
 
-    struct threadArgs *arguments = ( struct threadArgs *)args;
+   struct threadArgs *arguments = (struct threadArgs *)args;
 
    // Look for a GET message, then reply with the
    // requested file.
@@ -151,7 +151,8 @@ void *Talk( void *args )
    // Cast from void * to int * to recover the talk socket id
    // then free the heap usage as soon as possible in case exception happens
    // later
-   cout << "received connection at socket " << arguments->talkSocket << ":" << endl;
+   cout << "received connection at socket " << arguments->talkSocket << ":"
+        << endl;
    int talkSocketFD = arguments->talkSocket;
 
    // Read the request from the socket and parse it to extract
@@ -188,32 +189,33 @@ void *Talk( void *args )
          AccessDenied( talkSocketFD );
       else if ( !strncmp( requested.cstr(), queryHint.cstr(),
                           queryHint.length() ) )
-         // Get search results and return them
+      // Get search results and return them
          {
 
          // Begin by extracting the query from the HTTP request header
          scb::String endOfQuery = " HTTP";
-         // 18 refers to the length of the string "GET /search?query=" which will
-         // always be the same length
+         // 18 refers to the length of the string "GET /search?query=" which
+         // will always be the same length
          int queryLength = buf.find( endOfQuery, 0 ) - 18;
-         scb::String query =
-            buf.substr( 18, queryLength );
+         scb::String query = buf.substr( 18, queryLength );
 
          // Convert all of the HTTP symbols to the correct symbols in the query
          URLDecoder decode;
-         query = decode.escapeCodesToString(query);
-
+         query = decode.escapeCodesToString( query );
 
          // Call the query parser and ranker to recieve the results
-         // TODO: write our own std::sort function for vectors so we can use scb::Vector instead
-         std::vector<displayField> topMatches = handleQuery(query, arguments->numChunks, arguments->chunks);
+         // TODO: write our own std::sort function for vectors so we can use
+         // scb::Vector instead
+         std::vector<displayField> topMatches =
+            handleQuery( query, arguments->numChunks, arguments->chunks );
 
          // Create a json string that is formatted appropriately to send to the
          // client. Currently, we send the top 20 results (hence the 20
          // iterations in the for loop) but this is subject to change depending
          // on what we want to do
          scb::String json = "{\n\t\"pages\":\t[\n";
-         // TODO: Adjust how many times the for loop runs to modify how many results we want to display
+         // TODO: Adjust how many times the for loop runs to modify how many
+         // results we want to display
          for ( int i = 0;  i < 30;  ++i )
             {
             if ( i != 0 )
@@ -256,8 +258,8 @@ void *Talk( void *args )
          // If the path refers to a file, write it to the socket.
          char *fileStart;
          char *fileEnd;
-         processedPath =
-            scb::String( arguments->rootDirectory ) + "/" + processedPath.substr( 1 );
+         processedPath = scb::String( arguments->rootDirectory ) + "/" +
+                         processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
@@ -299,7 +301,9 @@ int main( int argc, char **argv )
    {
    if ( argc < 4 )
       {
-      cerr << "Usage:  " << argv[ 0 ] << " [port] [rootdirectory] [index chunk 1] [index chunk 2] ..." << endl;
+      cerr << "Usage:  " << argv[ 0 ]
+           << " [port] [rootdirectory] [index chunk 1] [index chunk 2] ..."
+           << endl;
       return 1;
       }
 
@@ -307,7 +311,7 @@ int main( int argc, char **argv )
    struct threadArgs args;
    args.rootDirectory = argv[ 2 ];
    args.numChunks = argc - 3;
-   args.chunks = (argv + 3);
+   args.chunks = ( argv + 3 );
 
    // Discard any trailing slash.  (Any path specified in
    // an HTTP header will have to start with /.)
