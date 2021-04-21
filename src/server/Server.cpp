@@ -205,32 +205,33 @@ void *Talk( void *args )
 
 
          // Call the query parser and ranker to recieve the results
-         scb::Vector<displayFields> topMatches = handleQuery(query, arguments->numChunks, arguments->chunks);
+         // TODO: write our own std::sort function for vectors so we can use scb::Vector instead
+         std::vector<displayField> topMatches = handleQuery(query, arguments->numChunks, arguments->chunks);
 
          // Create a json string that is formatted appropriately to send to the
          // client. Currently, we send the top 20 results (hence the 20
          // iterations in the for loop) but this is subject to change depending
          // on what we want to do
          scb::String json = "{\n\t\"pages\":\t[\n";
-         for ( int i = 0;  i < 3;  ++i )
+         // TODO: Adjust how many times the for loop runs to modify how many results we want to display
+         for ( int i = 0;  i < 30;  ++i )
             {
+            if ( i != 0 )
+               json += "\t\t},\n";
             json += "\t\t{\n\t\t\t\"title\": \"";
-            json += "Title\",\n";
+            json += topMatches[ i ].title + "\",\n";
             json += "\t\t\t\"url\": \"";
-            json += "URL\",\n";
+            json += topMatches[ i ].URL + "\",\n";
             json += "\t\t\t\"snippet\": \"";
             json += "Snippet\",\n";
             json += "\t\t\t\"rank\": \"";
 
             // Round the rank up or down to the nearest whole number(integer)
             // value
-            json += std::to_string( 5 ).c_str();
+            json += std::to_string( topMatches[ i ].rank ).c_str();
             json += "\"\n";
-            if ( i == 2 )
-               json += "\t\t}\n";
-            else
-               json += "\t\t},\n";
             }
+         json += "\t\t}\n";
          json += "\t]\n}\n";
 
          // header
@@ -246,8 +247,6 @@ void *Talk( void *args )
 
          // body
          msg += json;
-         std::cout << "query: " << query.cstr() << endl;
-         std::cout << json.cstr() << endl;
 
          // Send the message with the top n results to the client
          send( talkSocketFD, msg.cstr(), msg.size(), 0 );

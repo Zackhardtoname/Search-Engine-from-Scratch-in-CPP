@@ -16,6 +16,17 @@
 
 #define toInt( c ) (int)( ( (int)c ) - (int)97 )
 
+struct displayField {
+   scb::String title;
+   scb::String URL;
+   double rank;
+
+   const bool operator==( const displayField &check) const
+   {
+      return check.URL == URL;
+   }
+};
+
 template <typename T>
 std::vector<std::vector<T>> splitVector( const std::vector<T> &vec, size_t n )
    {
@@ -247,7 +258,7 @@ void *mainLoop( void *arg )
          if ( isr->Get() <= edge )
             {
             struct sharedISRStruct args =
-               sharedISRStruct{ isr, strMap[ query ], edge, i };
+               sharedISRStruct{ isr, strMap[ query ], edge, (size_t)i };
             rankerSearcher( args );
             }
          }
@@ -285,7 +296,7 @@ void *mainLoop( void *arg )
    return NULL;
    }
 
-void dynamicRank( std::vector<std::string> urls, AST *Query,
+std::vector<displayField> dynamicRank( std::vector<std::string> urls, AST *Query,
                   std::vector<QueryableChunk> chunks,
                   std::vector<size_t> docID )
    {
@@ -346,7 +357,7 @@ void dynamicRank( std::vector<std::string> urls, AST *Query,
                {
                // pthread_t new_thread;
                struct sharedISRStruct args =
-                  sharedISRStruct{ isr, strMap[ query ], edge, i };
+                  sharedISRStruct{ isr, strMap[ query ], edge, (size_t)i };
                rankerSearcher( args );
                ++idx;
                }
@@ -422,22 +433,24 @@ void dynamicRank( std::vector<std::string> urls, AST *Query,
       }
    std::cout << "Finished URL Scoring.\n";
 
-   std::vector<std::pair<double, std::string>> bigPairNRG;
+   std::vector<displayField> rankedResults(urls.size());
    for ( int i = 0;  i < urls.size();  ++i )
       {
-      bigPairNRG.push_back( { contentRank[ i ], urls[ i ] } );
+      // TODO: figure out the title and set it here
+      rankedResults[i].title = urls[ i ].c_str();
+      rankedResults[i].URL = urls[ i ].c_str();
+      rankedResults[i].rank = contentRank[ i ];
       }
-   std::sort( bigPairNRG.begin(), bigPairNRG.end(),
-              []( const std::pair<int, std::string> &a,
-                  const std::pair<int, std::string> &b )
-              {
-                 return a.first < b.first;
-              } );
 
-   for ( int i = 0;  i < bigPairNRG.size();  ++i )
-      {
-      std::cout << bigPairNRG[ i ].second << ":\t" << bigPairNRG[ i ].first
-                << "\n";
-      }
+   std::sort( rankedResults.begin(), rankedResults.end(),
+              []( const displayField &a,
+                  const displayField &b )
+              {
+                 return a.rank > b.rank;
+              } );
+   // Remove duplicates if the URLs match
+   rankedResults.erase( std::unique(rankedResults.begin(), rankedResults.end()), rankedResults.end());
+
+   return rankedResults;
    }
 #endif // RANKER

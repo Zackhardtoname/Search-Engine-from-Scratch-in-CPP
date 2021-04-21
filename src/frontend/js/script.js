@@ -64,7 +64,7 @@ $(function () {
             data: $form.serialize(),
             success: after_form_submitted,
             error: function(XMLHttpRequest, textStatus, errorThrown) {
-                alert("Status: " + textStatus); alert("Error: " + errorThrown);
+                alert("Status: " + textStatus + "\nError: " + errorThrown);
             },
             dataType: 'json'
         });

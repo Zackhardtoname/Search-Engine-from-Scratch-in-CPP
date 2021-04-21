@@ -10,14 +10,8 @@
 #include "QueryableChunk.h"
 #include "../ranker/Ranker.h"
 
-struct displayFields {
-   scb::String title;
-   scb::String URL;
-   scb::String rank;
-};
-
 // TODO return as reference
-scb::Vector<displayFields> handleQuery( scb::String query, int numChunks, char **chunks )
+std::vector<displayField> handleQuery( scb::String query, int numChunks, char **chunks )
    {
 
    AST *queryAST = Parser()( query );
@@ -51,10 +45,7 @@ scb::Vector<displayFields> handleQuery( scb::String query, int numChunks, char *
          }
       }
    
-   dynamicRank(urlsToRanker, queryToRanker, queryableChunksToRanker, docIdsToRanker);
-   scb::Vector<displayFields> rankedResults;
-
-   return rankedResults;
+   return dynamicRank(urlsToRanker, queryToRanker, queryableChunksToRanker, docIdsToRanker);
    }
 
 #endif // QUERY_SOLVER
