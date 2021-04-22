@@ -14,7 +14,7 @@
   <meta property="og:url" content="">
   <meta property="og:image" content="">
 
-  <link rel="icon" href="img/favicon/favicon.ico">
+  <link rel="icon" href="../img/favicon/favicon.ico">
   <link rel="apple-touch-icon" href="img/favicon/apple-touch-icon.png">
   <meta name="theme-color" content="#fafafa">
 
@@ -25,149 +25,81 @@
 </head>
 
 <body>
-<nav class="purple darken-4" role="navigation">
-  <div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo">Logo</a>
-    <ul class="right hide-on-med-and-down">
-      <li><a href="#">Home</a></li>
-      <li><a href="#about">About</a></li>
-      <li><a href="#features">Features</a></li>
-    </ul>
 
-    <ul id="nav-mobile" class="sidenav">
-      <li><a href="#">Home</a></li>
-      <li><a href="#about">About</a></li>
-      <li><a href="#features">Features</a></li>
-    </ul>
-    <a href="#" data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-  </div>
-</nav>
+  <!-- Main page content -->
+  <main>
+    <div class="section no-pad-bot" id="index-banner">
+      <div class="container">
+        <br><br>
 
-<br><br>
-<br><br>
-<div class="section no-pad-bot" id="index-banner">
-  <div class="container">
-    <br><br>
-    <h1 class="header center orange-text">Scooble Search</h1>
+        <img class="center scooble-logo" src="img/logo/IMG_0756.png">
 
-    <div class="row center">
-      <h5 class="header col s12 light">A modern responsive search engine</h5>
-    </div>
-
-    <div id="search-bar">
-      <div class="row center">
-        <form id="search-form" class="col s12">
-          <div class="row">
-            <div class="input-field col s12">
-              <i class="material-icons prefix">search</i>
-              <textarea id="icon_prefix2" name="query" required="" aria-required="true" class="materialize-textarea"></textarea>
-              <label for="icon_prefix2">What's in your mind?</label>
-            </div>
-          </div>
+        <div id="search-bar">
           <div class="row center">
-            <button id="search-btn" class="btn-large waves-effect waves-light purple darken-3 submitbtn" type="submit">Submit</button>
+            <form id="search-form" class="col s12">
+              <div class="row">
+                <div class="input-field col s12">
+                  <i class="material-icons prefix">search</i>
+                  <textarea id="icon_prefix2" name="query" required="" aria-required="true" class="materialize-textarea"></textarea>
+                  <label for="icon_prefix2">What's on your mind?</label>
+                </div>
+              </div>
+              <div class="row center">
+                <button id="search-btn" class="btn-large waves-effect waves-light purple darken-3 submitbtn" type="submit">Submit</button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="search-results" class="collection container">
-</div>
-
-<div id="features" class="container">
-  <div class="section">
-
-    <!--   Icon Section   -->
-    <div class="row">
-      <div class="col s12 m4">
-        <div class="icon-block">
-          <h2 class="center light-blue-text"><i class="material-icons">flash_on</i></h2>
-          <h5 class="center">Lightning Search</h5>
-
-          <p class="light">We did most of the heavy lifting for you to provide a default stylings that incorporate our
-            custom components. Additionally, we refined animations and transitions to provide a smoother experience for
-            developers.</p>
-        </div>
-      </div>
-
-      <div class="col s12 m4">
-        <div class="icon-block">
-          <h2 class="center light-blue-text"><i class="material-icons">group</i></h2>
-          <h5 class="center">User Experience Focused</h5>
-
-          <p class="light">By utilizing elements and principles of Material Design, we were able to create a framework
-            that incorporates components and animations that provide more feedback to users. Additionally, a single
-            underlying responsive system across all platforms allow for a more unified user experience.</p>
-        </div>
-      </div>
-
-      <div class="col s12 m4">
-        <div class="icon-block">
-          <h2 class="center light-blue-text"><i class="material-icons">settings</i></h2>
-          <h5 class="center">Easy to work with API</h5>
-
-          <p class="light">We have provided detailed documentation as well as specific code examples to help new users
-            get started. We are also always open to feedback and can answer any questions a user may have about
-            Materialize.</p>
         </div>
       </div>
     </div>
 
-  </div>
-</div>
+    <!-- Search results - hidden by default -->
+    <div id="search-results" class="collection container" hidden>
+    </div>
 
-<footer id="about" class="page-footer indigo darken-4">
-  <div class="container">
-    <div class="row">
-      <div class="col l6 s12">
-        <h5 class="white-text">Company Bio</h5>
-        <p class="grey-text text-lighten-4">We are a team of college students working on this project like it's our full
-          time job. Any amount would help support and continue development on this project and is greatly
-          appreciated.</p>
+  </main>
 
+  <!-- Footer -->
+  <footer id="about" class="page-footer purple darken-4">
+    <div class="container">
+      <div class="row center">
+        <div class="col s2">
+          <a class="white-text" href="https://github.com/AnishGRao">Anish Rao</a>
+        </div>
+        <div class="col s2">
+          <a class="white-text" href="https://github.com/epfeiffe">Emerson Pfeiffer</a>
+        </div>
+        <div class="col s2">
+          <a class="white-text" href="https://github.com/sqd">Han You</a>
+        </div>
+        <div class="col s2">
+          <a class="white-text" href="https://github.com/wolfm">Michael Wolf</a>
+        </div>
+        <div class="col s2">
+          <a class="white-text" href="https://github.com/smikell">Sam Mikell</a>
+        </div>
+        <div class="col s2">
+          <a class="white-text" href="https://github.com/Zackhardtoname">Zack Light</a>
+        </div>
       </div>
-      <div class="col l3 s12">
-        <h5 class="white-text">Project Links</h5>
-        <ul>
-          <li><a class="white-text" href="#!">Link 1</a></li>
-          <li><a class="white-text" href="#!">Link 2</a></li>
-          <li><a class="white-text" href="#!">Link 3</a></li>
-          <li><a class="white-text" href="#!">Link 4</a></li>
-        </ul>
-      </div>
-      <div class="col l3 s12">
-        <h5 class="white-text">Humans</h5>
-        <ul>
-          <!-- TODO Linkedin or Github -->
-          <li><a class="white-text" href="#!">Anish Rao</a></li>
-          <li><a class="white-text" href="#!">Emerson Pfeiffer</a></li>
-          <li><a class="white-text" href="#!">Han You</a></li>
-          <li><a class="white-text" href="#!">Michael Wolf</a></li>
-          <li><a class="white-text" href="#!">Sam Mikell</a></li>
-          <li><a class="white-text" href="#!">Zack Light</a></li>
-        </ul>
+      <div class="footer-copyright">
+        <div class="container center">
+          Made with ❤️ in Michigan in 2021
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="footer-copyright">
-    <div class="container center">
-      Made by with ❤️ in Michigan @2021
-    </div>
-  </div>
-</footer>
+  </footer>
 
 
 <!--  Scripts-->
 <!-- materialize CDN -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
-<script src="js/init.js"></script>
-<script src="js/test.js"></script>
-<script src="js/script.js"></script>
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="js/init.js"></script>
+  <script src="js/script.js"></script>
 </body>
 
 </html>

@@ -66,10 +66,7 @@ void IndexChunk::writeToDisk( const char *filename )
    String serializedPostingLists;
    for ( auto &tuple : PostingLists )
       {
-      if(tuple.first == "spaghettilik") {
-         auto* addr1 = &postingListOffsetMap[ tuple.first ];
-         auto* addr2 = &postingListOffsetMap[ tuple.first ];
-      }
+      
       postingListOffsetMap[ tuple.first ] = serializedPostingLists.size();
       auto &retrieved = postingListOffsetMap[ tuple.first ];
 
