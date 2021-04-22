@@ -1,3 +1,8 @@
+clang-format-440
+# Python
+3_9_venv
+*.pkl
+
 # VSCode Config Files
 .vscode/
 
