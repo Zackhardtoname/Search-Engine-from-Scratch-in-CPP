@@ -2,9 +2,9 @@
 #define SCOOBLE_SEARCH_MIME_H
 
 struct MimetypeMap
-{
-   const char *Extension, *Mimetype;
-};
+   {
+      const char *Extension, *Mimetype;
+   };
 
 const MimetypeMap MimeTable[] = {
    // List of some of the most common MIME types in sorted order.
@@ -144,22 +144,22 @@ const MimetypeMap MimeTable[] = {
 };
 
 //  Multipurpose Internet Mail Extensions (MIME) types
-const char *getMimetype(const std::string path )
-{
+const char *getMimetype( const std::string path )
+   {
    std::string fnPath( path );
-   int extensionStart = fnPath.find_last_of('.' );
-   const char *ext = fnPath.substr(extensionStart ).c_str();
+   int extensionStart = fnPath.find_last_of( '.' );
+   const char *ext = fnPath.substr( extensionStart ).c_str();
 
    for ( int i = 0;  i < sizeof( MimeTable );  i++ )
-   {
-      if ( !strcmp( MimeTable[ i ].Extension, ext ) )
       {
+      if ( !strcmp( MimeTable[ i ].Extension, ext ) )
+         {
          return MimeTable[ i ].Mimetype;
+         }
       }
-   }
 
    // Anything not matched is an "octet-stream", treated
    // as an unknown binary, which can be downloaded.
    return "application/octet-stream";
-}
-#endif //SCOOBLE_SEARCH_MIME_H
+   }
+#endif // SCOOBLE_SEARCH_MIME_H

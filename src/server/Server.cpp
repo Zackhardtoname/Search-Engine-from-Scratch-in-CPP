@@ -13,26 +13,35 @@
 // perf issue, forcing the client browser to reconnect for each
 // request and a candidate for improvement.
 
+#include "../constraint-solver/QuerySolver.h"
+#include "../stl/Filesystem.h"
+#include "../stl/String.h"
+#include "../stl/Vector.h"
+#include "../stl/utils.h"
+#include "HTTPEscapeCodes.h"
+#include "Mime.h"
+#include <cstring>
 #include <iostream>
 #include <netdb.h>
 #include <pthread.h>
-#include <cstring>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "mime.h"
-#include "../stl/String.h"
-#include "../stl/Filesystem.h"
 
 #define backlog 1000
 
+using std::cerr;
 using std::cout;
 using std::endl;
-using std::cerr;
 
-// Root directory for the website, taken from argv[ 2 ].
-// (Yes, a global variable since it never changes.)
-char *RootDirectory;
+struct threadArgs
+   {
+      char *rootDirectory;
+      int talkSocket;
+      int numChunks;
+      char **chunks;
+   };
 
 int HexLiteralCharacter( char c )
    {
@@ -131,16 +140,20 @@ void FileNotFound( int talkSocket )
    send( talkSocket, fileNotFound, sizeof( fileNotFound ) - 1, 0 );
    }
 
-void *Talk( void *talkSocket )
+void *Talk( void *args )
    {
+
+   struct threadArgs *arguments = (struct threadArgs *)args;
+
    // Look for a GET message, then reply with the
    // requested file.
 
    // Cast from void * to int * to recover the talk socket id
-   // then free the heap usage as soon as possible in case exception happens later
-   cout << "received connection at socket " << talkSocket << ":" << endl;
-   int talkSocketFD = *(int *)talkSocket;
-   free( talkSocket );
+   // then free the heap usage as soon as possible in case exception happens
+   // later
+   cout << "received connection at socket " << arguments->talkSocket << ":"
+        << endl;
+   int talkSocketFD = arguments->talkSocket;
 
    // Read the request from the socket and parse it to extract
    // the action and the path, unencoding any %xx encodings.
@@ -156,7 +169,7 @@ void *Talk( void *talkSocket )
    // the path must be safe.
    int requestStartLoc = 4;
    int protocalLoc = buf.find( "HTTP" );
-   scb::String queryHint = "/index.html?query=";
+   scb::String queryHint = "/search";
    scb::String end_char = "\r\n";
 
    if ( buf.substr( 0, 3 ) == "GET" && protocalLoc != scb::String::npos )
@@ -165,31 +178,69 @@ void *Talk( void *talkSocket )
          buf.substr( requestStartLoc,
                      protocalLoc - requestStartLoc - 1 ); // 1 for whitespace
       scb::String processedPath = ( UnencodeUrlEncoding( requested ) );
-      if ( !SafePath( processedPath.cstr() ) )
-         // If the path refers to a directory,
-         AccessDenied( talkSocketFD );
-      else if (!strncmp(requested.cstr(), queryHint.cstr(), queryHint.length()))
-         //Get search results and return them
+
+      if ( processedPath == "/" )
          {
-         // TODO forward to query over the frontend server;
-         // before that, code duplication with the next else is fine since most will change
-         scb::String response = "{}";
-         char *fileStart;
-         char *fileEnd;
-         processedPath = scb::String(RootDirectory) + "/" + "files/test-search-results.json";
-         const char *processedPathCStr = processedPath.cstr();
-         int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
-         if ( mapRes < 1 )
-         {
-            FileNotFound( talkSocketFD );
+         processedPath = "/index.html";
          }
 
+      if ( !SafePath( processedPath.cstr() ) )
+         // If the path refers to a directory
+         AccessDenied( talkSocketFD );
+      else if ( !strncmp( requested.cstr(), queryHint.cstr(),
+                          queryHint.length() ) )
+      // Get search results and return them
+         {
+
+         // Begin by extracting the query from the HTTP request header
+         scb::String endOfQuery = " HTTP";
+         // 18 refers to the length of the string "GET /search?query=" which
+         // will always be the same length
+         int queryLength = buf.find( endOfQuery, 0 ) - 18;
+         scb::String query = buf.substr( 18, queryLength );
+
+         // Convert all of the HTTP symbols to the correct symbols in the query
+         URLDecoder decode;
+         query = decode.escapeCodesToString( query );
+
+         // Call the query parser and ranker to recieve the results
+         // TODO: write our own std::sort function for vectors so we can use
+         // scb::Vector instead
+         std::vector<displayField> topMatches =
+            handleQuery( query, arguments->numChunks, arguments->chunks );
+
+         // Create a json string that is formatted appropriately to send to the
+         // client. Currently, we send the top 20 results (hence the 20
+         // iterations in the for loop) but this is subject to change depending
+         // on what we want to do
+         scb::String json = "{\n\t\"pages\":\t[\n";
+         // TODO: Adjust how many times the for loop runs to modify how many
+         // results we want to display
+         for ( int i = 0;  i < 30;  ++i )
+            {
+            if ( i != 0 )
+               json += "\t\t},\n";
+            json += "\t\t{\n\t\t\t\"title\": \"";
+            json += topMatches[ i ].title + "\",\n";
+            json += "\t\t\t\"url\": \"";
+            json += topMatches[ i ].URL + "\",\n";
+            json += "\t\t\t\"snippet\": \"";
+            json += "Snippet\",\n";
+            json += "\t\t\t\"rank\": \"";
+
+            // Round the rank up or down to the nearest whole number(integer)
+            // value
+            json += std::to_string( topMatches[ i ].rank ).c_str();
+            json += "\"\n";
+            }
+         json += "\t\t}\n";
+         json += "\t]\n}\n";
+
          // header
-         scb::String msg("HTTP/1.1 200 OK");
+         scb::String msg( "HTTP/1.1 200 OK" );
          msg += end_char;
          msg += "Content-Length: ";
-         // TODO remember to change length
-         msg += fileEnd - fileStart;
+         msg += json.length();
          msg += end_char;
          msg += "Content-Type: ";
          msg += "application/json";
@@ -197,8 +248,9 @@ void *Talk( void *talkSocket )
          msg += end_char;
 
          // body
-         msg += fileStart;
+         msg += json;
 
+         // Send the message with the top n results to the client
          send( talkSocketFD, msg.cstr(), msg.size(), 0 );
          }
       else
@@ -206,7 +258,8 @@ void *Talk( void *talkSocket )
          // If the path refers to a file, write it to the socket.
          char *fileStart;
          char *fileEnd;
-         processedPath = scb::String(RootDirectory) + "/" + processedPath.substr( 1 );
+         processedPath = scb::String( arguments->rootDirectory ) + "/" +
+                         processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
@@ -216,20 +269,21 @@ void *Talk( void *talkSocket )
          else
             {
             // header
-            scb::String msg("HTTP/1.1 200 OK");
+            scb::String msg( "HTTP/1.1 200 OK" );
             msg += end_char;
             msg += "Content-Length: ";
             msg += fileEnd - fileStart;
             msg += end_char;
             msg += "Content-Type: ";
-            msg += getMimetype(processedPathCStr);
+            msg += getMimetype( processedPathCStr );
             msg += end_char;
             msg += end_char;
 
             // body
-            msg += fileStart;
+            // msg += fileStart;
 
             send( talkSocketFD, msg.cstr(), msg.size(), 0 );
+            send( talkSocketFD, fileStart, fileEnd - fileStart, 0 );
             }
          }
       }
@@ -245,18 +299,23 @@ void *Talk( void *talkSocket )
 
 int main( int argc, char **argv )
    {
-   if ( argc != 3 )
+   if ( argc < 4 )
       {
-      cerr << "Usage:  " << argv[ 0 ] << " port rootdirectory" << endl;
+      cerr << "Usage:  " << argv[ 0 ]
+           << " [port] [rootdirectory] [index chunk 1] [index chunk 2] ..."
+           << endl;
       return 1;
       }
 
    int port = atoi( argv[ 1 ] );
-   RootDirectory = argv[ 2 ];
+   struct threadArgs args;
+   args.rootDirectory = argv[ 2 ];
+   args.numChunks = argc - 3;
+   args.chunks = ( argv + 3 );
 
    // Discard any trailing slash.  (Any path specified in
    // an HTTP header will have to start with /.)
-   char *r = RootDirectory;
+   char *r = args.rootDirectory;
    if ( *r )
       {
       do
@@ -297,8 +356,9 @@ int main( int argc, char **argv )
    listenSocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
    int enable = 1;
-   if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-       std::cout << "setsockopt(SO_REUSEADDR) failed";
+   if ( setsockopt( listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable,
+                    sizeof( int ) ) < 0 )
+      std::cout << "setsockopt(SO_REUSEADDR) failed";
 
    // Bind the listen socket to the IP address and protocol
    // where we'd like to listen for connections.
@@ -348,7 +408,8 @@ int main( int argc, char **argv )
            talkSocket != -1 )
       {
       pthread_t child;
-      pthread_create( &child, nullptr, Talk, new int( talkSocket ) );
+      args.talkSocket = int( talkSocket );
+      pthread_create( &child, nullptr, Talk, (void *)&args );
       pthread_detach( child );
       }
 

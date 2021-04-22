@@ -1,3 +1,29 @@
+// Example json response from the C++ server:
+//
+// {
+//         "pages":        [
+//                 {
+//                         "title": "Title",
+//                         "url": "URL",
+//                         "snippet": "Snippet",
+//                         "rank": "5"
+//                 },
+//                 {
+//                         "title": "Title",
+//                         "url": "URL",
+//                         "snippet": "Snippet",
+//                         "rank": "5"
+//                 },
+//                 {
+//                         "title": "Title",
+//                         "url": "URL",
+//                         "snippet": "Snippet",
+//                         "rank": "5"
+//                 }
+//         ]
+// }
+
+
 $(function () {
     function after_form_submitted(data) {
         insertResults(data)
@@ -26,16 +52,19 @@ $(function () {
             $btn.text('Sending ...');
         });
 
-        console.log("query: ", $form.serialize())
+        const searchTerms = $('#icon_prefix2').val();
+
+        // Show search results
+        $('#search-results').show();
 
         $.ajax({
             type: "GET",
             crossDomain: true,
-            url: 'http://localhost:8080/index.html',
+            url: "/search",
             data: $form.serialize(),
             success: after_form_submitted,
             error: function(XMLHttpRequest, textStatus, errorThrown) {
-                alert("Status: " + textStatus); alert("Error: " + errorThrown);
+                alert("Status: " + textStatus + "\nError: " + errorThrown);
             },
             dataType: 'json'
         });
@@ -48,3 +77,26 @@ $(function () {
         event.preventDefault();
     });
 });
+
+
+function insertResults(data) {
+    let toInsert = ``
+
+    $.each(data.pages, function (key, val) {
+        if (key >= 10) {
+            return
+        }
+        toInsert += `
+            <div class="result collection-item">
+                <a href="${val.url}" target="_blank">${val.title}</a>
+                <div class="rank">
+                    <div class="col s12"><p>
+                        Ranker score: ${val.rank}
+                    </p></div>
+                </div>
+            </div>
+        `
+    });
+
+    $('#search-results').append(toInsert);
+}
