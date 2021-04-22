@@ -9,7 +9,6 @@ add_executable(constraint-solver
         ISR/AND.h ISR/Word.h QueryableChunk.cpp QueryableChunk.h ISR/Null.h)
 
 add_executable(query-solver
-        QuerySolver.cpp
         ../stl/String.cpp
         ../indexer/VLQ.cpp
         ../stl/utils.cpp
