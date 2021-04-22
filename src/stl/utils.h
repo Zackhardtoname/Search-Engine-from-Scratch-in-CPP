@@ -23,8 +23,6 @@ addrinfo *QueryHost( const char *host, const char *service );
 
 scb::String RandAlphaString( int len );
 
-// Decorators
-static const char DocEndDecorator = '/';
-static const char TitleDecorator = '@';
+size_t FileSize( int fd );
 
 #endif // IO_UTILS_H

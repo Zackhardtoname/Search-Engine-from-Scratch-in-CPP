@@ -205,9 +205,8 @@ class LiteralNode : public AST
          std::cout << word.cstr();
          }
 
-      LiteralNode( String n )
+      LiteralNode( String n ) : word( std::move( n ) )
          {
-         word = n;
          }
    };
 
