@@ -170,7 +170,7 @@ void *Talk( void *args )
    int requestStartLoc = 4;
    int protocalLoc = buf.find( "HTTP" );
    scb::String queryHint = "/search";
-   scb::String end_char = "\r\n";
+   scb::String HTTPNewline = "\r\n";
 
    if ( buf.substr( 0, 3 ) == "GET" && protocalLoc != scb::String::npos )
       {
@@ -238,14 +238,16 @@ void *Talk( void *args )
 
          // header
          scb::String msg( "HTTP/1.1 200 OK" );
-         msg += end_char;
+         msg += HTTPNewline;
          msg += "Content-Length: ";
-         msg += json.length();
-         msg += end_char;
+         char contentLengthStr[ 100 ];
+         sprintf( contentLengthStr, "%d", json.length() );
+         msg += contentLengthStr;
+         msg += HTTPNewline;
          msg += "Content-Type: ";
          msg += "application/json";
-         msg += end_char;
-         msg += end_char;
+         msg += HTTPNewline;
+         msg += HTTPNewline;
 
          // body
          msg += json;
@@ -270,14 +272,16 @@ void *Talk( void *args )
             {
             // header
             scb::String msg( "HTTP/1.1 200 OK" );
-            msg += end_char;
+            msg += HTTPNewline;
             msg += "Content-Length: ";
-            msg += fileEnd - fileStart;
-            msg += end_char;
+            char contentLengthStr[ 100 ];
+            sprintf( contentLengthStr, "%d", fileEnd - fileStart );
+            msg += contentLengthStr;
+            msg += HTTPNewline;
             msg += "Content-Type: ";
             msg += getMimetype( processedPathCStr );
-            msg += end_char;
-            msg += end_char;
+            msg += HTTPNewline;
+            msg += HTTPNewline;
 
             // body
             // msg += fileStart;
