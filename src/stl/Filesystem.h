@@ -1,8 +1,6 @@
 #ifndef HW3_UTILITIES_H
 #define HW3_UTILITIES_H
 
-#endif // HW3_UTILITIES_H
-
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
@@ -127,12 +125,12 @@ void ListDirectory( scb::String &filePath, scb::Vector<scb::String> &files,
       std::cerr << "open handle failed, errno = " << errno;
    }
 
-size_t FileSize( int f )
-   {
-   struct stat fileInfo;
-   fstat( f, &fileInfo );
-   return fileInfo.st_size;
-   }
+//size_t FileSize( int f )
+//   {
+//   struct stat fileInfo;
+//   fstat( f, &fileInfo );
+//   return fileInfo.st_size;
+//   }
 
 int mapfile( const char **file, char **start, char **end )
    {
@@ -148,3 +146,5 @@ int mapfile( const char **file, char **start, char **end )
       }
    return f;
    }
+
+#endif // HW3_UTILITIES_H
