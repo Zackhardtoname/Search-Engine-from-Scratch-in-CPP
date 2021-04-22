@@ -1,5 +1,5 @@
-#ifndef QUERY_SOLVER
-#define QUERY_SOLVER
+#ifndef SCOOBLE_SEARCH_QUERY_SOLVER_H
+#define SCOOBLE_SEARCH_QUERY_SOLVER_H
 
 #include "../query-parser/QueryParser.h"
 //#include "../stl/HashBlob.h"
@@ -11,11 +11,11 @@
 #include "QueryableChunk.h"
 
 // TODO return as reference
-std::vector<displayField> handleQuery( scb::String query, int numChunks,
+std::vector<displayField> handleQuery( const scb::String &query, int numChunks,
                                        char **chunks )
    {
 
-   AST *queryAST = Parser()( query );
+   AST *queryAST = ParseQuery( query );
 
    // TODO: parallelize this
 
@@ -50,4 +50,4 @@ std::vector<displayField> handleQuery( scb::String query, int numChunks,
                        docIdsToRanker );
    }
 
-#endif // QUERY_SOLVER
+#endif // SCOOBLE_SEARCH_QUERY_SOLVER_H

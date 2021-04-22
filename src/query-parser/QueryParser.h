@@ -16,140 +16,98 @@ using scb::Pair;
 using scb::String;
 using scb::Vector;
 
-inline double str_to_num( const String &str )
-   {
-   double ll;
-   try
-      {
-      // Hamilton has said we should prioritize 'asking for forgiveness' over
-      // 'asking for permission', so I have left the use of std::stod (string to
-      // double) here, unless someone else wants to write a function that
-      // handles this.
-      // TODO: Write our own version of std::stod
-      std::string temp = str.cstr();
-      ll = std::stod( temp );
-      return ll;
-      }
-   catch ( std::exception e )
-      {
-      std::cout << "Syntax Error: Failure to convert string to double\n";
-      exit( 1 );
-      }
-   }
-
-inline String num_to_str( const double num )
-   {
-   std::ostringstream o;
-   o << num;
-   return o.str().c_str();
-   }
-
-enum class Token
+enum class QueryToken
 {
-   literal,
-   OR = '|',
-   sub = '-',
-   AND = '&',
-   lpar = '(',
-   rpar = ')',
-   div = '/',
-   eof = -1,
-   str
+   Or = '|',
+   Sub = '-',
+   And = '&',
+   LPar = '(',
+   RPar = ')',
+   Div = '/',
+   Eof = -1,
+   Str
 };
 
 class Lexer
    {
+      String buff;
+
    public:
-      Token current_token;
-      String curr_text;
-      std::istream *lexer_input_stream;
+      QueryToken curToken;
+      String curText;
 
-      explicit Lexer( std::istream &_is ) : lexer_input_stream{ &_is }
+      std::stringstream inputStream;
+
+      explicit Lexer( const String &s ) : inputStream( s.cstr() )
          {
-         current_token = getTok(), curr_text = buff;
-         is_beginning = false;
+         curToken = getTok(), curText = buff;
+         isBeginning = false;
          }
 
-      explicit Lexer( std::istream *_is ) : lexer_input_stream{ _is }
-         {
-         current_token = getTok(), curr_text = buff;
-         is_beginning = false;
-         }
+      bool lastTokenWasOperator = false;
+      bool isBeginning = true;
 
-      bool last_token_was_operator = false;
-      bool is_beginning = true;
-      Token getTok()
+      QueryToken getTok()
          {
-         auto &in = *lexer_input_stream;
          buff.clear();
-         auto c = in.get();
+         char c = inputStream.get();
 
          if ( isspace( c ) )
             {
             while ( isspace( c ) )
-               c = in.get();
-            if ( is_beginning )
-               {
+               c = inputStream.get();
+
+            if ( isBeginning || lastTokenWasOperator )
                ;
-               }
-            else if ( !in )
-               {
-               return Token::eof;
-               }
+            else if ( !inputStream )
+               return QueryToken::Eof;
             else if ( c == '|' || c == '-' || c == '&' || c == '/' ||
                       c == '(' || c == ')' )
                {
-               buff = c;
-               last_token_was_operator = true;
-               return Token( c );
-               }
-            else if ( last_token_was_operator )
-               {
-               ;
+               buff = static_cast<char>( c );
+               lastTokenWasOperator = true;
+               return QueryToken( c );
                }
             else
                {
-               in.putback( c );
-               c = '&';
+               inputStream.putback( c );
                buff = '&';
-               return Token::AND;
+               return QueryToken::And;
                }
             }
          // EOF
-         if ( !in )
-            return Token::eof;
+         if ( !inputStream )
+            return QueryToken::Eof;
          buff = c;
          if ( c == '|' || c == '-' || c == '&' || c == '/' || c == '(' ||
               c == ')' )
             {
-            last_token_was_operator = true;
-            return Token( c );
+            lastTokenWasOperator = true;
+            return QueryToken( c );
             }
-         c = in.get();
+         c = inputStream.get();
          while ( !( c == '|' || c == '-' || c == '&' || c == '/' || c == '(' ||
                     c == ')' || c == ' ' ) &&
-                 in )
+                 inputStream )
             {
-            buff += c, c = in.get();
+            buff += c, c = inputStream.get();
             }
-         in.putback( c );
-         last_token_was_operator = false;
-         return Token::str;
+         inputStream.putback( c );
+         lastTokenWasOperator = false;
+         return QueryToken::Str;
          }
 
       void nextTok()
          {
-         if ( current_token != Token::eof )
-            current_token = getTok(), curr_text = buff;
+         if ( curToken != QueryToken::Eof )
+            curToken = getTok(), curText = buff;
          }
-
-      String buff;
    };
 
 class AST
    {
    public:
-      virtual void print() = 0;
+      virtual void Print() = 0;
    };
 
 class BinaryOpNode : public AST
@@ -158,12 +116,12 @@ class BinaryOpNode : public AST
       AST *left, *right;
       char operation;
 
-      void print()
+      void Print()
          {
          std::cout << "(";
-         left->print();
+         left->Print();
          std::cout << operation;
-         right->print();
+         right->Print();
          std::cout << ")";
          }
 
@@ -181,11 +139,11 @@ class UnaryOpNode : public AST
       char operation;
       AST *param;
 
-      void print()
+      void Print()
          {
          std::cout << "(";
          std::cout << operation;
-         param->print();
+         param->Print();
          std::cout << ")";
          }
 
@@ -200,13 +158,41 @@ class LiteralNode : public AST
    {
    public:
       String word;
-      void print()
+
+      void Print()
          {
          std::cout << word.cstr();
          }
 
       LiteralNode( String n ) : word( std::move( n ) )
          {
+         }
+   };
+
+struct QuerySymbol
+   {
+      bool isTerminal; // if is terminal
+      union
+         {
+            QueryToken terminal;
+            AST *nonTerminal;
+         } data;
+
+      bool is( QueryToken tok )
+         {
+         return isTerminal && data.terminal == tok;
+         }
+
+      QuerySymbol( AST *ast )
+         {
+         isTerminal = false;
+         data.nonTerminal = ast;
+         }
+
+      QuerySymbol( QueryToken tok )
+         {
+         isTerminal = true;
+         data.terminal = tok;
          }
    };
 
@@ -217,140 +203,104 @@ class LiteralNode : public AST
 // 2. a*/b -> Mult/Div(a, b)
 // 3. a+-b (lookahead != */) -> Add/Sub(a, b)
 // 4. +-a -> Pos/Neg(a) (lookahead != +-*/)
-class Parser
+AST *ParseQuery( const String &s )
    {
-      struct Symbol
+   Lexer lex( s );
+
+   Vector<QuerySymbol> stack;
+
+   Vector<Pair<QueryToken, String>> tokens;
+   while ( lex.curToken != QueryToken::Eof )
+      {
+      tokens.emplaceBack( lex.curToken, lex.curText );
+      lex.nextTok();
+      }
+
+   while ( true )
+      {
+      int sz = stack.size();
+      if ( sz >= 3 && stack[ sz - 3 ].is( QueryToken::LPar ) &&
+           !stack[ sz - 2 ].isTerminal &&
+           stack[ sz - 1 ].is( QueryToken::RPar ) )
          {
-            bool isTerminal; // if is terminal
-            union
-               {
-                  Token terminal;
-                  AST *nonTerminal;
-               } data;
-
-            bool is( Token tok )
-               {
-               return isTerminal && data.terminal == tok;
-               }
-
-            Symbol( AST *ast )
-               {
-               isTerminal = false;
-               data.nonTerminal = ast;
-               }
-
-            Symbol( Token tok )
-               {
-               isTerminal = true;
-               data.terminal = tok;
-               }
-         };
-
-   public:
-      AST *operator()( const String &s )
-         {
-         std::istringstream parser_input_stream{ s.cstr() };
-         Lexer lex{ parser_input_stream };
-
-         Vector<Symbol> stack;
-
-         Vector<Pair<Token, String>> tokens;
-         while ( lex.current_token != Token::eof )
-            {
-            tokens.emplaceBack( lex.current_token, lex.curr_text );
-            lex.nextTok();
-            }
-
-         while ( true )
-            {
-            int sz = stack.size();
-            if ( sz >= 3 && stack[ sz - 3 ].is( Token::lpar ) &&
-                 !stack[ sz - 2 ].isTerminal &&
-                 stack[ sz - 1 ].is( Token::rpar ) )
-               {
-               // rule 1. (num)
-               auto sym = stack[ sz - 2 ];
-               stack.popBack();
-               stack.popBack();
-               stack.popBack();
-               stack.pushBack( sym );
-               }
-            else if ( sz >= 3 && !stack[ sz - 3 ].isTerminal &&
-                      ( stack[ sz - 2 ].is( Token::AND ) ||
-                        stack[ sz - 2 ].is( Token::div ) ) &&
-                      !stack[ sz - 1 ].isTerminal )
-               {
-               // rule 2. a*/b
-               auto left = stack[ sz - 3 ];
-               char operation = (char)stack[ sz - 2 ].data.terminal;
-               auto right = stack[ sz - 1 ];
-               auto *node = new BinaryOpNode(
-                  left.data.nonTerminal, right.data.nonTerminal, operation );
-               stack.popBack();
-               stack.popBack();
-               stack.popBack();
-               stack.emplaceBack( node );
-               }
-            else if ( sz >= 3 && !stack[ sz - 3 ].isTerminal &&
-                      ( stack[ sz - 2 ].is( Token::OR ) ||
-                        stack[ sz - 2 ].is( Token::sub ) ) &&
-                      !stack[ sz - 1 ].isTerminal &&
-                      ( tokens.empty() ||
-                        ( tokens[ 0 ].first != Token::AND &&
-                          tokens[ 0 ].first != Token::div ) ) )
-               {
-               // rule 3. a+-b (lookahead != */)
-               auto left = stack[ sz - 3 ];
-               char operation = (char)stack[ sz - 2 ].data.terminal;
-               auto right = stack[ sz - 1 ];
-               auto *node = new BinaryOpNode(
-                  left.data.nonTerminal, right.data.nonTerminal, operation );
-               stack.popBack();
-               stack.popBack();
-               stack.popBack();
-               stack.emplaceBack( node );
-               }
-            else if ( ( sz == 2 ||
-                        ( sz >= 3 && stack[ sz - 3 ].isTerminal ) ) &&
-                      ( stack[ sz - 2 ].is( Token::OR ) ||
-                        stack[ sz - 2 ].is( Token::sub ) ) &&
-                      !stack[ sz - 1 ].isTerminal )
-               {
-               // rule 4. +- a
-               char operation = (char)stack[ sz - 2 ].data.terminal;
-               auto *param = stack[ sz - 1 ].data.nonTerminal;
-               auto *node = new UnaryOpNode( operation, param );
-               stack.popBack();
-               stack.popBack();
-               stack.emplaceBack( node );
-               }
-            else if ( tokens.empty() )
-               {
-               break;
-               }
-            else
-               {
-               // rule 0
-               if ( tokens[ 0 ].first == Token::literal ||
-                    tokens[ 0 ].first == Token::str )
-                  stack.emplaceBack( new LiteralNode( tokens[ 0 ].second ) );
-               else
-                  stack.emplaceBack( tokens[ 0 ].first );
-
-               tokens.erase( 0 );
-               }
-            }
-
-         if ( stack.size() != 1 || stack[ 0 ].isTerminal )
-            {
-            std::cout
-               << "Syntax Error: Stack is corrupted. Could be due to "
-                  "incomplete parentheses or another formatting issue.\n";
-            exit( 1 );
-            }
-
-         return stack[ 0 ].data.nonTerminal;
+         // rule 1. (num)
+         auto sym = stack[ sz - 2 ];
+         stack.popBack();
+         stack.popBack();
+         stack.popBack();
+         stack.pushBack( sym );
          }
-   };
+      else if ( sz >= 3 && !stack[ sz - 3 ].isTerminal &&
+                ( stack[ sz - 2 ].is( QueryToken::And ) ||
+                  stack[ sz - 2 ].is( QueryToken::Div ) ) &&
+                !stack[ sz - 1 ].isTerminal )
+         {
+         // rule 2. a*/b
+         auto left = stack[ sz - 3 ];
+         char operation = (char)stack[ sz - 2 ].data.terminal;
+         auto right = stack[ sz - 1 ];
+         auto *node = new BinaryOpNode( left.data.nonTerminal,
+                                        right.data.nonTerminal, operation );
+         stack.popBack();
+         stack.popBack();
+         stack.popBack();
+         stack.emplaceBack( node );
+         }
+      else if ( sz >= 3 && !stack[ sz - 3 ].isTerminal &&
+                ( stack[ sz - 2 ].is( QueryToken::Or ) ||
+                  stack[ sz - 2 ].is( QueryToken::Sub ) ) &&
+                !stack[ sz - 1 ].isTerminal &&
+                ( tokens.empty() || ( tokens[ 0 ].first != QueryToken::And &&
+                                      tokens[ 0 ].first != QueryToken::Div ) ) )
+         {
+         // rule 3. a+-b (lookahead != */)
+         auto left = stack[ sz - 3 ];
+         char operation = (char)stack[ sz - 2 ].data.terminal;
+         auto right = stack[ sz - 1 ];
+         auto *node = new BinaryOpNode( left.data.nonTerminal,
+                                        right.data.nonTerminal, operation );
+         stack.popBack();
+         stack.popBack();
+         stack.popBack();
+         stack.emplaceBack( node );
+         }
+      else if ( ( sz == 2 || ( sz >= 3 && stack[ sz - 3 ].isTerminal ) ) &&
+                ( stack[ sz - 2 ].is( QueryToken::Or ) ||
+                  stack[ sz - 2 ].is( QueryToken::Sub ) ) &&
+                !stack[ sz - 1 ].isTerminal )
+         {
+         // rule 4. +- a
+         char operation = (char)stack[ sz - 2 ].data.terminal;
+         auto *param = stack[ sz - 1 ].data.nonTerminal;
+         auto *node = new UnaryOpNode( operation, param );
+         stack.popBack();
+         stack.popBack();
+         stack.emplaceBack( node );
+         }
+      else if ( tokens.empty() )
+         {
+         break;
+         }
+      else
+         {
+         // rule 0
+         if ( tokens[ 0 ].first == QueryToken::Str )
+            stack.emplaceBack( new LiteralNode( tokens[ 0 ].second ) );
+         else
+            stack.emplaceBack( tokens[ 0 ].first );
+
+         tokens.erase( 0 );
+         }
+      }
+
+   if ( stack.size() != 1 || stack[ 0 ].isTerminal )
+      {
+      std::cout << "Syntax Error: Stack is corrupted. Could be due to "
+                   "incomplete parentheses or another formatting issue.\n";
+      exit( 1 );
+      }
+
+   return stack[ 0 ].data.nonTerminal;
+   }
 
 #endif // QUERY_PARSER_H
