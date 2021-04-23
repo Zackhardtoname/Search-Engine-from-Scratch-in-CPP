@@ -20,7 +20,6 @@
 
   <!-- CSS  -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
   <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
 </head>
 
@@ -46,6 +45,10 @@
               </div>
               <div class="row center">
                 <button id="search-btn" class="btn-large waves-effect waves-light purple darken-3 submitbtn" type="submit">Submit</button>
+                <div id="loading-container" class="loading-container" hidden>
+            	  <div class="circle"></div>
+            	  <div class="circle"></div>
+                </div>
               </div>
             </form>
           </div>
@@ -93,12 +96,9 @@
 
 
 <!--  Scripts-->
-<!-- materialize CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="js/init.js"></script>
   <script src="js/script.js"></script>
 </body>
 
