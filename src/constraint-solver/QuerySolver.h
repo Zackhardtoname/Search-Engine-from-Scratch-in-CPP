@@ -19,12 +19,10 @@ std::vector<displayField> handleQuery( scb::String query, int numChunks,
 
    // TODO: parallelize this
 
-   // TODO: DELETE RANKER TESTBENCH
    std::vector<QueryableChunk> queryableChunksToRanker;
    std::vector<std::string> urlsToRanker;
    std::vector<size_t> docIdsToRanker;
    AST *queryToRanker = queryAST;
-   // TODO: DELETE RANKER TESTBENCH
 
    for ( int i = 0;  i < numChunks;  i++ )
       {
@@ -34,17 +32,29 @@ std::vector<displayField> handleQuery( scb::String query, int numChunks,
       while ( !isr->IsEOF() )
          {
          auto url = query.Url( isr->DocID() );
-         // printf( "match post %d in doc %d ( %s )\n", isr->Get(),
-         // isr->DocID(),
-         //        url.cstr() );
-         // TODO: DELETE RANKER TESTBENCH
          queryableChunksToRanker.push_back( query );
-         urlsToRanker.push_back( std::string( url.cstr() ) );
+         std::string urlToAdd( url.cstr() );
+
+         // Only add strings that match BEFORE the query string which starts
+         // with a question mark (?) in order to remove duplicates with
+         // erase and unique before returning
+         urlsToRanker.push_back( urlToAdd.substr( 0, urlToAdd.find( '?' ) ) );
          docIdsToRanker.push_back( isr->DocID() );
-         // TODO: DELETE RANKER TESTBENCH
          isr->NextDoc();
          }
       }
+
+   // Sort to prepare to remove duplicates
+   std::sort( urlsToRanker.begin(), urlsToRanker.end(),
+              []( const std::string &a, const std::string &b )
+              {
+                 return a < b;
+              } );
+
+   // Remove duplicates if the URLs match
+   urlsToRanker.erase(
+      std::unique( urlsToRanker.begin(), urlsToRanker.end() ),
+      urlsToRanker.end() );
 
    return dynamicRank( urlsToRanker, queryToRanker, queryableChunksToRanker,
                        docIdsToRanker );

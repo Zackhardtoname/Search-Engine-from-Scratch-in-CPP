@@ -447,12 +447,12 @@ std::vector<displayField> dynamicRank( std::vector<std::string> urls,
    std::sort( rankedResults.begin(), rankedResults.end(),
               []( const displayField &a, const displayField &b )
               {
+                 if ( a.rank == b.rank )
+                    {
+                    return a.URL < b.URL;
+                    }
                  return a.rank > b.rank;
               } );
-   // Remove duplicates if the URLs match
-   rankedResults.erase(
-      std::unique( rankedResults.begin(), rankedResults.end() ),
-      rankedResults.end() );
 
    return rankedResults;
    }
