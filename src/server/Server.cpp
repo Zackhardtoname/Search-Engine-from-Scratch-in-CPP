@@ -31,17 +31,18 @@
 
 #define backlog 1000
 
+// TODO: Segfaults on query "emerson and michael" and "michael and emerson"
+// TODO: When making a second search, clear the json from the last search
+// TODO: Allow more json to be displayed on the frontend
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
-struct threadArgs
-   {
-      char *rootDirectory;
-      int talkSocket;
-      int numChunks;
-      char **chunks;
-   };
+char *rootDirectory;
+char **chunks;
+int numChunks;
+
 
 int HexLiteralCharacter( char c )
    {
@@ -140,20 +141,17 @@ void FileNotFound( int talkSocket )
    send( talkSocket, fileNotFound, sizeof( fileNotFound ) - 1, 0 );
    }
 
-void *Talk( void *args )
+void *Talk( void *talkSocket)
    {
-
-   struct threadArgs *arguments = (struct threadArgs *)args;
-
    // Look for a GET message, then reply with the
    // requested file.
 
    // Cast from void * to int * to recover the talk socket id
    // then free the heap usage as soon as possible in case exception happens
    // later
-   cout << "received connection at socket " << arguments->talkSocket << ":"
-        << endl;
-   int talkSocketFD = arguments->talkSocket;
+   cout << "received connection at socket " << talkSocket << ":" << endl;
+   int talkSocketFD = *(int *)talkSocket;
+   free( talkSocket );
 
    // Read the request from the socket and parse it to extract
    // the action and the path, unencoding any %xx encodings.
@@ -207,7 +205,7 @@ void *Talk( void *args )
          // TODO: write our own std::sort function for vectors so we can use
          // scb::Vector instead
          std::vector<displayField> topMatches =
-            handleQuery( query, arguments->numChunks, arguments->chunks );
+            handleQuery( query, numChunks, chunks );
 
          // Create a json string that is formatted appropriately to send to the
          // client. Currently, we send the top 20 results (hence the 20
@@ -258,7 +256,7 @@ void *Talk( void *args )
          // If the path refers to a file, write it to the socket.
          char *fileStart;
          char *fileEnd;
-         processedPath = scb::String( arguments->rootDirectory ) + "/" +
+         processedPath = scb::String( rootDirectory ) + "/" +
                          processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
@@ -308,14 +306,13 @@ int main( int argc, char **argv )
       }
 
    int port = atoi( argv[ 1 ] );
-   struct threadArgs args;
-   args.rootDirectory = argv[ 2 ];
-   args.numChunks = argc - 3;
-   args.chunks = ( argv + 3 );
+   rootDirectory = argv[ 2 ];
+   numChunks = argc - 3;
+   chunks = ( argv + 3 );
 
    // Discard any trailing slash.  (Any path specified in
    // an HTTP header will have to start with /.)
-   char *r = args.rootDirectory;
+   char *r = rootDirectory;
    if ( *r )
       {
       do
@@ -408,8 +405,7 @@ int main( int argc, char **argv )
            talkSocket != -1 )
       {
       pthread_t child;
-      args.talkSocket = int( talkSocket );
-      pthread_create( &child, nullptr, Talk, (void *)&args );
+      pthread_create( &child, nullptr, Talk, new int( talkSocket ) );
       pthread_detach( child );
       }
 
