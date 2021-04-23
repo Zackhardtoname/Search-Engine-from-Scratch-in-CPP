@@ -43,7 +43,6 @@ char *rootDirectory;
 char **chunks;
 int numChunks;
 
-
 int HexLiteralCharacter( char c )
    {
    // If c contains the Ascii code for a hex character, return the
@@ -141,7 +140,7 @@ void FileNotFound( int talkSocket )
    send( talkSocket, fileNotFound, sizeof( fileNotFound ) - 1, 0 );
    }
 
-void *Talk( void *talkSocket)
+void *Talk( void *talkSocket )
    {
    // Look for a GET message, then reply with the
    // requested file.
@@ -214,7 +213,9 @@ void *Talk( void *talkSocket)
          scb::String json = "{\n\t\"pages\":\t[\n";
          // TODO: Adjust how many times the for loop runs to modify how many
          // results we want to display
-         for ( int i = 0;  i < 30;  ++i )
+         int numberOfLinksToDisplay =
+            ( topMatches.size() > 30 ) ? 30 : topMatches.size();
+         for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
             {
             if ( i != 0 )
                json += "\t\t},\n";
@@ -256,8 +257,8 @@ void *Talk( void *talkSocket)
          // If the path refers to a file, write it to the socket.
          char *fileStart;
          char *fileEnd;
-         processedPath = scb::String( rootDirectory ) + "/" +
-                         processedPath.substr( 1 );
+         processedPath =
+            scb::String( rootDirectory ) + "/" + processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
