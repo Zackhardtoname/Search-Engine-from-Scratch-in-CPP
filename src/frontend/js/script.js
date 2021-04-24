@@ -23,6 +23,7 @@
 //         ]
 // }
 
+var lastQuery = '';
 
 $(function () {
     function after_form_submitted(data) {
@@ -44,18 +45,23 @@ $(function () {
         e.preventDefault();
         $form = $(this);
 
+        // If the current query equals the one we just executed,
+        // do nothing.
+        if($form.serialize() === lastQuery) {
+            return;
+        }
+        lastQuery = $form.serialize();
+
         //show some response on the button
         $('button[type="submit"]', $form).each(function () {
             $btn = $(this);
             $btn.prop('type', 'button');
             $btn.prop('orig_label', $btn.text());
             $btn.text('Sending ...');
+			$('#loading-container').show();
         });
 
         const searchTerms = $('#icon_prefix2').val();
-
-        // Show search results
-        $('#search-results').show();
 
         $.ajax({
             type: "GET",
@@ -83,7 +89,7 @@ function insertResults(data) {
     let toInsert = ``
 
     $.each(data.pages, function (key, val) {
-        if (key >= 10) {
+        if (key >= 30) {
             return
         }
         toInsert += `
@@ -97,6 +103,11 @@ function insertResults(data) {
             </div>
         `
     });
+    
+	$('#loading-container').hide();
 
+    // Show search results
+    $('#search-results').show();
+    $('#search-results').empty();
     $('#search-results').append(toInsert);
 }

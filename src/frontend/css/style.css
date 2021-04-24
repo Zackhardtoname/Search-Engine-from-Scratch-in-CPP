@@ -32,3 +32,43 @@ main {
   margin-left: auto;
   margin-right: auto;
 }
+
+.loading-container {
+  animation: rotate 2s linear infinite;
+  height: 50px;
+  width: 50px;
+  transform-origin: bottom center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.circle {
+  animation: grow 1.5s linear infinite;
+  background-color: purple;
+  border-radius: 50%;
+  display: inline-block;
+  margin: -10px;
+  height: 40px;
+  width: 40px;
+  transform: scale(0);
+}
+
+.circle:nth-of-type(2) {
+  animation-delay: .75s;
+  background-color: palevioletred;
+}
+
+@keyframes grow {
+  50% {
+  	transform: scale(1);
+  }
+}
+

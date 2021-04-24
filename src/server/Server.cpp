@@ -31,10 +31,6 @@
 
 #define backlog 1000
 
-// TODO: Segfaults on query "emerson and michael" and "michael and emerson"
-// TODO: When making a second search, clear the json from the last search
-// TODO: Allow more json to be displayed on the frontend
-
 using std::cerr;
 using std::cout;
 using std::endl;
