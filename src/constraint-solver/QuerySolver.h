@@ -56,9 +56,8 @@ std::vector<displayField> handleQuery( scb::String queryIn, int numChunks,
               } );
 
    // Remove duplicates if the URLs match
-   urlsToRanker.erase(
-      std::unique( urlsToRanker.begin(), urlsToRanker.end() ),
-      urlsToRanker.end() );
+   urlsToRanker.erase( std::unique( urlsToRanker.begin(), urlsToRanker.end() ),
+                       urlsToRanker.end() );
 
    return dynamicRank( urlsToRanker, queryToRanker, queryableChunksToRanker,
                        docIdsToRanker );
