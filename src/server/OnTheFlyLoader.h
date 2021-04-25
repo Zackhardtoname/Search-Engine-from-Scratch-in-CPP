@@ -13,9 +13,10 @@ struct OnTheFlyResources
    {
       scb::String Title;
       ParsedHtml Html;
+      scb::String snippet;
 
-      OnTheFlyResources( const scb::String &url, const scb::String &content )
-          : Html( content )
+      OnTheFlyResources( const scb::String &url, const scb::String &content, const scb::String &snippet )
+          : Html( content ), snippet( snippet)
          {
          Title = url;
          int titleTagStart = content.find( "<title" );

@@ -117,11 +117,12 @@ function insertResults(data) {
             }
             toInsert += `
                 <div class="result collection-item">
-                    <a href="${val.url}" target="_blank">${val.title}</a>
-                    <div class="rank">
-                        <div class="col s12"><p>
-                            Ranker score: ${val.rank}
-                        </p></div>
+                    <a href="${val.url}" target="_blank">${val.title}</a> [Ranker score: ${ parseFloat(val.rank).toFixed(2)}]
+                    <div class="url">
+                        ${val.url}
+                    </div>
+                    <div class="snippet">
+                        ${val.snippet}
                     </div>
                 </div>
             `

@@ -230,10 +230,13 @@ void *Talk( void *talkSocket )
 
             void *threadRet = nullptr;
             pthread_join( onTheFlyLoaderThreads[ i ], &threadRet );
+            scb::String snippet = "Snippet unavailable";
+
             if ( threadRet )
                {
                auto *rsc = static_cast<OnTheFlyResources *>( threadRet );
                json += CleanJsonString( rsc->Title ) + "\",\n";
+               snippet = CleanJsonString(rsc->snippet);
                delete rsc;
                }
             else
@@ -242,7 +245,7 @@ void *Talk( void *talkSocket )
             json += "\t\t\t\"url\": \"";
             json += CleanJsonString( topMatches[ i ].URL ) + "\",\n";
             json += "\t\t\t\"snippet\": \"";
-            json += "Snippet\",\n";
+            json += snippet + "\",\n";
             json += "\t\t\t\"rank\": \"";
 
             // Round the rank up or down to the nearest whole number(integer)
