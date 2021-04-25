@@ -88,7 +88,16 @@ $(function () {
 function insertResults(data) {
     let toInsert = ``
 
-    $.each(data.pages, function (key, val) {
+    const deduplicatedPages = [];
+    data.pages.forEach(page => {
+        for (let i = 0; i < deduplicatedPages.length; i++) {
+            if(deduplicatedPages[i].title === page.title)
+                return;
+        }
+        deduplicatedPages.push(page);
+    });
+
+    $.each(deduplicatedPages, function (key, val) {
         if (key >= 30) {
             return
         }

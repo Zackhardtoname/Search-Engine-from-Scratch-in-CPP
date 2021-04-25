@@ -8,24 +8,27 @@
 #include "../stl/String.h"
 
 // Clean JSON string to be properly displayed
-scb::String CleanJsonString(const scb::String &s) {
+scb::String CleanJsonString( const scb::String &s )
+   {
    scb::String escaped;
-   for (char c: s) {
-      switch (c) {
+   for ( char c : s )
+      {
+      switch ( c )
+         {
          case '"':
             escaped += "\\\"";
             break;
          case '\t':
-            escaped.pushBack(' ');
+            escaped.pushBack( ' ' );
             break;
          case '\n':
          case '\r':
             break;
          default:
-            escaped.pushBack(c);
+            escaped.pushBack( c );
+         }
       }
-   }
    return escaped;
-}
+   }
 
-#endif //SCOOBLE_SEARCH_JSON_H
+#endif // SCOOBLE_SEARCH_JSON_H
