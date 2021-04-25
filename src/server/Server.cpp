@@ -14,13 +14,17 @@
 // request and a candidate for improvement.
 
 #include "../constraint-solver/QuerySolver.h"
+#include "../parser/ParsedHtml.h"
 #include "../stl/Filesystem.h"
 #include "../stl/String.h"
 #include "../stl/Vector.h"
 #include "../stl/utils.h"
 #include "HTTPEscapeCodes.h"
+#include "JSON.h"
 #include "Mime.h"
+#include "OnTheFlyLoader.h"
 #include <cstring>
+#include <curl/curl.h>
 #include <iostream>
 #include <netdb.h>
 #include <pthread.h>
@@ -211,14 +215,32 @@ void *Talk( void *talkSocket )
          // results we want to display
          int numberOfLinksToDisplay =
             ( topMatches.size() > 30 ) ? 30 : topMatches.size();
+
+         curl_global_init( CURL_GLOBAL_DEFAULT );
+         scb::Vector<pthread_t> onTheFlyLoaderThreads;
+         for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
+            onTheFlyLoaderThreads.pushBack(
+               SpawnFetchHtml( topMatches[ i ].URL ) );
+
          for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
             {
             if ( i != 0 )
-               json += "\t\t},\n";
+               json += ",";
             json += "\t\t{\n\t\t\t\"title\": \"";
-            json += topMatches[ i ].title + "\",\n";
+
+            void *threadRet = nullptr;
+            pthread_join( onTheFlyLoaderThreads[ i ], &threadRet );
+            if ( threadRet )
+               {
+               auto *rsc = static_cast<OnTheFlyResources *>( threadRet );
+               json += CleanJsonString( rsc->Title ) + "\",\n";
+               delete rsc;
+               }
+            else
+               json += topMatches[ i ].URL + "\",\n";
+
             json += "\t\t\t\"url\": \"";
-            json += topMatches[ i ].URL + "\",\n";
+            json += CleanJsonString( topMatches[ i ].URL ) + "\",\n";
             json += "\t\t\t\"snippet\": \"";
             json += "Snippet\",\n";
             json += "\t\t\t\"rank\": \"";
@@ -227,15 +249,17 @@ void *Talk( void *talkSocket )
             // value
             json += std::to_string( topMatches[ i ].rank ).c_str();
             json += "\"\n";
+            json += "\t\t}\n";
             }
-         json += "\t\t}\n";
          json += "\t]\n}\n";
 
          // header
          scb::String msg( "HTTP/1.1 200 OK" );
          msg += end_char;
          msg += "Content-Length: ";
-         msg += json.length();
+         char contentLenStr[ 100 ];
+         sprintf( contentLenStr, "%d", json.length() );
+         msg += contentLenStr;
          msg += end_char;
          msg += "Content-Type: ";
          msg += "application/json";
@@ -258,16 +282,16 @@ void *Talk( void *talkSocket )
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
          if ( mapRes < 1 )
-            {
             FileNotFound( talkSocketFD );
-            }
          else
             {
             // header
             scb::String msg( "HTTP/1.1 200 OK" );
             msg += end_char;
             msg += "Content-Length: ";
-            msg += fileEnd - fileStart;
+            char contentLenStr[ 100 ];
+            sprintf( contentLenStr, "%d", fileEnd - fileStart );
+            msg += contentLenStr;
             msg += end_char;
             msg += "Content-Type: ";
             msg += getMimetype( processedPathCStr );
