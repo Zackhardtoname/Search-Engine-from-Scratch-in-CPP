@@ -226,7 +226,7 @@ void *Talk( void *talkSocket )
             {
             if ( i != 0 )
                json += ",";
-            json += "\t\t{\n\t\t\t\"title\": \"";
+            json += "\n\t\t{\n\t\t\t\"title\": \"";
 
             void *threadRet = nullptr;
             pthread_join( onTheFlyLoaderThreads[ i ], &threadRet );
@@ -249,12 +249,8 @@ void *Talk( void *talkSocket )
             // value
             json += std::to_string( topMatches[ i ].rank ).c_str();
             json += "\"\n";
-            json += "\t\t}\n";
+            json += "\t\t}";
             }
-         // If there aren't any document matches, we don't want to add this
-         // extra bracket
-         if ( numberOfLinksToDisplay != 0 )
-            json += "\t\t}\n";
          json += "\t]\n}\n";
 
          // header
