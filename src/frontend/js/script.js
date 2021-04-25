@@ -86,32 +86,48 @@ $(function () {
 
 
 function insertResults(data) {
-    let toInsert = ``
+    let toInsert = ``;
 
-    const deduplicatedPages = [];
-    data.pages.forEach(page => {
-        for (let i = 0; i < deduplicatedPages.length; i++) {
-            if(deduplicatedPages[i].title === page.title)
-                return;
-        }
-        deduplicatedPages.push(page);
-    });
-
-    $.each(deduplicatedPages, function (key, val) {
-        if (key >= 30) {
-            return
-        }
+    // TODO: Ajax calls without /search when we remove data.pages.length === 'undefined' ||
+    // from this if statement
+    if (data.pages.length === 'undefined' || data.pages.length === 0) {
         toInsert += `
             <div class="result collection-item">
-                <a href="${val.url}" target="_blank">${val.title}</a>
                 <div class="rank">
                     <div class="col s12"><p>
-                        Ranker score: ${val.rank}
+                        No results for the given query.
                     </p></div>
                 </div>
             </div>
         `
-    });
+    }
+    else {
+        const deduplicatedPages = [];
+        data.pages.forEach(page => {
+            for (let i = 0; i < deduplicatedPages.length; i++) {
+                if(deduplicatedPages[i].title === page.title)
+                    return;
+            }
+            deduplicatedPages.push(page);
+        });
+
+        $.each(data.pages, function (key, val) {
+            if (key >= 30) {
+                return
+            }
+            toInsert += `
+                <div class="result collection-item">
+                    <a href="${val.url}" target="_blank">${val.title}</a>
+                    <div class="rank">
+                        <div class="col s12"><p>
+                            Ranker score: ${val.rank}
+                        </p></div>
+                    </div>
+                </div>
+            `
+        });
+    }
+
     
 	$('#loading-container').hide();
 

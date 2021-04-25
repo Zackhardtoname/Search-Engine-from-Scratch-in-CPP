@@ -21,10 +21,11 @@ class OR : public ISR
    public:
       explicit OR( scb::Vector<ISR *> cls, const ChunkHeader *chunkHeader )
           : clauses( std::move( cls ) ), ISR( chunkHeader ),
-          currentPost( 0 )
+          currentPost( 0 ), docID( 0 )
          {
          assert( clauses.size() >= 2 &&
                  "OR ISR combines at least two other ISRs" );
+         Next();
 
          }
 
