@@ -454,6 +454,15 @@ std::vector<displayField> dynamicRank( std::vector<std::string> urls,
                  return a.rank > b.rank;
               } );
 
+   staticRankedLinks.clear();
+   shared_isr_map.clear();
+   intOrder.clear();
+   strMap.clear();
+   splitUrls.clear();
+   splitChunks.clear();
+   splitID.clear();
+   globalStemmed.clear();
+   contentRank.clear();
    return rankedResults;
    }
 #endif // RANKER
