@@ -11,11 +11,11 @@
 #include "QueryableChunk.h"
 
 // TODO return as reference
-std::vector<displayField> handleQuery( scb::String query, int numChunks,
+std::vector<displayField> handleQuery( scb::String queryIn, int numChunks,
                                        char **chunks )
    {
 
-   AST *queryAST = Parser()( query );
+   AST *queryAST = Parser()( queryIn );
 
    // TODO: parallelize this
 
