@@ -235,7 +235,9 @@ void *Talk( void *talkSocket )
          scb::String msg( "HTTP/1.1 200 OK" );
          msg += end_char;
          msg += "Content-Length: ";
-         msg += json.length();
+         char contentLenStr[ 100 ];
+         sprintf( contentLenStr, "%d", json.length() );
+         msg += contentLenStr;
          msg += end_char;
          msg += "Content-Type: ";
          msg += "application/json";
@@ -267,7 +269,9 @@ void *Talk( void *talkSocket )
             scb::String msg( "HTTP/1.1 200 OK" );
             msg += end_char;
             msg += "Content-Length: ";
-            msg += fileEnd - fileStart;
+            char contentLenStr[ 100 ];
+            sprintf( contentLenStr, "%d", fileEnd - fileStart );
+            msg += contentLenStr;
             msg += end_char;
             msg += "Content-Type: ";
             msg += getMimetype( processedPathCStr );
