@@ -228,7 +228,10 @@ void *Talk( void *talkSocket )
             json += std::to_string( topMatches[ i ].rank ).c_str();
             json += "\"\n";
             }
-         json += "\t\t}\n";
+         // If there aren't any document matches, we don't want to add this
+         // extra bracket
+         if ( numberOfLinksToDisplay != 0 )
+            json += "\t\t}\n";
          json += "\t]\n}\n";
 
          // header

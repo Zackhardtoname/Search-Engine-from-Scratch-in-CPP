@@ -86,23 +86,39 @@ $(function () {
 
 
 function insertResults(data) {
-    let toInsert = ``
+    let toInsert = ``;
 
-    $.each(data.pages, function (key, val) {
-        if (key >= 30) {
-            return
-        }
+    // TODO: Ajax calls without /search when we remove data.pages.length === 'undefined' ||
+    // from this if statement
+    if (data.pages.length === 'undefined' || data.pages.length === 0) {
         toInsert += `
             <div class="result collection-item">
-                <a href="${val.url}" target="_blank">${val.title}</a>
                 <div class="rank">
                     <div class="col s12"><p>
-                        Ranker score: ${val.rank}
+                        No results for the given query.
                     </p></div>
                 </div>
             </div>
         `
-    });
+    }
+    else {
+        $.each(data.pages, function (key, val) {
+            if (key >= 30) {
+                return
+            }
+            toInsert += `
+                <div class="result collection-item">
+                    <a href="${val.url}" target="_blank">${val.title}</a>
+                    <div class="rank">
+                        <div class="col s12"><p>
+                            Ranker score: ${val.rank}
+                        </p></div>
+                    </div>
+                </div>
+            `
+        });
+    }
+
     
 	$('#loading-container').hide();
 
