@@ -102,6 +102,15 @@ function insertResults(data) {
         `
     }
     else {
+        const deduplicatedPages = [];
+        data.pages.forEach(page => {
+            for (let i = 0; i < deduplicatedPages.length; i++) {
+                if(deduplicatedPages[i].title === page.title)
+                    return;
+            }
+            deduplicatedPages.push(page);
+        });
+
         $.each(data.pages, function (key, val) {
             if (key >= 30) {
                 return
