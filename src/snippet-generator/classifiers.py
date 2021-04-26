@@ -61,7 +61,7 @@ def summarize(df=None, topics=None,
         top_paras.rename(columns={'index': 'para_idx'}, inplace=True)
         top_sentences = utilities.sentence_split(top_paras, 'para', mode='sentence')  # split into sentences
         top_sentences.rename(columns={'para': 'component'}, inplace=True)
-        top_sentences['component'] = top_sentences['component'].apply(lambda x: x.strip(' [],，‘’“”\'') + '。')
+        top_sentences['component'] = top_sentences['component'].apply(lambda x: x.strip(' [],，‘’“”。\''))
         top_sentences.drop_duplicates(subset='component', keep='first', inplace=True)
         top_sentences['words'] = top_sentences['component'].apply(
             lambda x: [w for w in x.lower().split() if w in model.key_to_index])
