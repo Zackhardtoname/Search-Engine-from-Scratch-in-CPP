@@ -13,6 +13,7 @@ response = requests.get(url)
 document = BeautifulSoup(response.content, "lxml").text
 documents = [document]
 length = 3
+max_chars = 200
 
 d = {'content': documents}
 df = pd.DataFrame(data=d)
@@ -28,4 +29,4 @@ sent = classifiers.summarize(paraDF, keywords)
 for document_idx in range(len(documents)):
     best = sent[sent['document_idx'] == document_idx][:length]
     # print(f"snippet for {document_titles[document_idx]}:")
-    print(". ".join(best["component"]))
+    print(". ".join(best["component"])[:max_chars])
