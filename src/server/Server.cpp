@@ -236,7 +236,7 @@ void *Talk( void *talkSocket )
 
             void *threadRet = nullptr;
             pthread_join( onTheFlyLoaderThreads[ i ], &threadRet );
-            scb::String snippet = "Snippet unavailable";
+            scb::String snippet = "";
 
             if ( threadRet )
                {
@@ -290,8 +290,10 @@ void *Talk( void *talkSocket )
             scb::String( rootDirectory ) + "/" + processedPath.substr( 1 );
          const char *processedPathCStr = processedPath.cstr();
          int mapRes = mapfile( &processedPathCStr, &fileStart, &fileEnd );
-         if ( mapRes < 1 )
+         if ( mapRes < 1 ) {
             FileNotFound( talkSocketFD );
+            std::cout << "Couldn't find: " << processedPathCStr << "\n";
+         }
          else
             {
             // header

@@ -37,7 +37,7 @@ void *onTheFlyDownloader( void *p )
          {
             scb::String baseCommand = " ../snippet-generator/3_9_venv/bin/python3.9 -W ignore ../snippet-generator/snippet_generator.py ";
             scb::String errRedirect = " 2> /dev/null";
-            scb::String command = baseCommand + url + query + errRedirect;
+            scb::String command = baseCommand + url + " " + query + errRedirect;
             FILE *pFile = popen(command.cstr(), "r");
             char buffer [100];
 
@@ -46,12 +46,13 @@ void *onTheFlyDownloader( void *p )
             {
                while ( ! feof (pFile) )
                {
-                  if ( fgets (buffer , 100 , pFile) == NULL ) break;
+                  if ( fgets (buffer , 100 , pFile) == NULL )
+                     break;
+                  else
+                     snip += buffer;
                }
                fclose (pFile);
             }
-
-            snip = buffer;
          }
 
          return new OnTheFlyResources( url, content, snip );
