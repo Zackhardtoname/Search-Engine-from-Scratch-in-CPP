@@ -35,6 +35,12 @@ struct OnTheFlyResources
          }
    };
 
-pthread_t SpawnFetchHtml( const scb::String & );
+struct onTheFlyDownloaderParams {
+   char *url;
+   char *query;
+   bool useSnippet;
+};
+
+pthread_t SpawnFetchHtml( void * params );
 
 #endif // SCOOBLE_SEARCH_ONTHEFLYLOADER_H

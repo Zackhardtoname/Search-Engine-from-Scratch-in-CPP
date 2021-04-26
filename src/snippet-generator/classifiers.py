@@ -37,8 +37,6 @@ class Classifier:
         self.componentDF['topic'] = self.componentDF[self.topics].idxmax(axis=1)
         self.componentDF['topic_score'] = self.componentDF[self.topics].max(axis=1)
 
-        del self.componentDF["words"]
-
         return self.componentDF
 
 
@@ -51,7 +49,7 @@ def summarize(df=None, topics=None,
     with open("w2v_model.pkl", "rb") as f:
         model = pickle.load(f)
 
-    df = df[df['para'].apply(lambda x: len(x) >= min_num_words)]
+    df = df[df['words'].apply(lambda x: len(x) >= min_num_words)]
     componentDF = pd.DataFrame()  # represents the final DF for output
     agg = df.groupby('topic')
 

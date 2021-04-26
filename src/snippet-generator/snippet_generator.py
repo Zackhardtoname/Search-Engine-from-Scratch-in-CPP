@@ -7,16 +7,12 @@ import requests
 import sys
 from bs4 import BeautifulSoup
 
-url = "\n".join(sys.argv[1:])
+url = sys.argv[1]
+keywords = sys.argv[2].split()
 response = requests.get(url)
 document = BeautifulSoup(response.content, "lxml").text
-
 documents = [document]
-
-length = 1
-keywords = ["covid", "vaccine"]
-document_titles = ["cnn_news_covid.txt", "cnn_news_covid_2.txt"]
-# documents = [open(title, "r").read() for title in document_titles]
+length = 3
 
 d = {'content': documents}
 df = pd.DataFrame(data=d)

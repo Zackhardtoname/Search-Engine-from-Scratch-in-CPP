@@ -40,6 +40,7 @@ using std::cout;
 using std::endl;
 
 char *rootDirectory;
+bool useSnippet;
 char **chunks;
 int numChunks;
 
@@ -218,9 +219,14 @@ void *Talk( void *talkSocket )
 
          curl_global_init( CURL_GLOBAL_DEFAULT );
          scb::Vector<pthread_t> onTheFlyLoaderThreads;
+
          for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
+         {
+            auto * params = new onTheFlyDownloaderParams {topMatches[ i ].URL.cstr(), query.cstr(), useSnippet};
             onTheFlyLoaderThreads.pushBack(
-               SpawnFetchHtml( topMatches[ i ].URL ) );
+               SpawnFetchHtml( params ) );
+         }
+
 
          for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
             {
@@ -321,18 +327,21 @@ void *Talk( void *talkSocket )
 
 int main( int argc, char **argv )
    {
-   if ( argc < 4 )
+   if ( argc < 5 )
       {
       cerr << "Usage:  " << argv[ 0 ]
-           << " [port] [rootdirectory] [index chunk 1] [index chunk 2] ..."
+           << " [port] [rootdirectory] [toUseSnippet (0 or 1)] [index chunk 1] [index chunk 2] ..."
            << endl;
       return 1;
       }
 
    int port = atoi( argv[ 1 ] );
    rootDirectory = argv[ 2 ];
-   numChunks = argc - 3;
-   chunks = ( argv + 3 );
+   useSnippet = atoi(argv[3]);
+   assert(useSnippet <= 1);
+
+   numChunks = argc - 4;
+   chunks = ( argv + 4 );
 
    // Discard any trailing slash.  (Any path specified in
    // an HTTP header will have to start with /.)
