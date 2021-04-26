@@ -35,7 +35,7 @@ void *onTheFlyDownloader( void *p )
 
          if (params->useSnippet)
          {
-            scb::String baseCommand = " ../snippet-generator/3_9_venv/bin/python3.9 -W ignore ../snippet-generator/snippet_generator.py ";
+            scb::String baseCommand = " ../snippet-generator/3_9_venv/bin/python -W ignore ../snippet-generator/snippet_generator.py ";
             scb::String errRedirect = " 2> /dev/null";
             scb::String command = baseCommand + url + " " + query + errRedirect;
             FILE *pFile = popen(command.cstr(), "r");
