@@ -2,104 +2,108 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <title>Scooble Search Engine</title>
-  <meta name="keywords" content="search engine, search, scooble, eecs 440, umich">
-  <meta name="description" content="A modern search engine">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <title>Scooble Search Engine</title>
+    <meta name="keywords" content="search engine, search, scooble, eecs 440, umich">
+    <meta name="description" content="A modern search engine">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-  <meta property="og:title" content="">
-  <meta property="og:type" content="">
-  <meta property="og:url" content="">
-  <meta property="og:image" content="">
+    <meta property="og:title" content="">
+    <meta property="og:type" content="">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
 
-  <link rel="icon" href="../img/favicon/favicon.ico">
-  <link rel="apple-touch-icon" href="img/favicon/apple-touch-icon.png">
-  <meta name="theme-color" content="#fafafa">
+    <link rel="icon" href="../img/favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="img/favicon/apple-touch-icon.png">
+    <meta name="theme-color" content="#fafafa">
 
-  <!-- CSS  -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+    <!-- CSS  -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
 </head>
 
 <body>
 
-  <!-- Main page content -->
-  <main>
+<!-- Main page content -->
+<main>
     <div class="section no-pad-bot" id="index-banner">
-      <div class="container">
-        <br><br>
+        <div class="container">
+            <br><br>
 
-        <img class="center scooble-logo" src="img/logo/IMG_0756.png">
+            <img class="center scooble-logo" src="img/logo/IMG_0756.png">
 
-        <div id="search-bar">
-          <div class="row center">
-            <form id="search-form" class="col s12">
-              <div class="row">
-                <div class="input-field col s12">
-                  <i class="material-icons prefix">search</i>
-                  <textarea id="icon_prefix2" name="query" required="" aria-required="true" class="materialize-textarea"></textarea>
-                  <label for="icon_prefix2">What's on your mind?</label>
+            <div id="search-bar">
+                <div class="row center">
+                    <form id="search-form" class="col s12">
+                        <div class="row">
+                            <div class="input-field col s12">
+                                <i class="material-icons prefix">search</i>
+                                <textarea id="icon_prefix2" name="query" required="" aria-required="true"
+                                          class="materialize-textarea"></textarea>
+                                <label for="icon_prefix2">What's on your mind?</label>
+                            </div>
+                        </div>
+                        <div class="row center">
+                            <button id="search-btn" class="btn-large waves-effect waves-light purple darken-3 submitbtn"
+                                    type="submit">Search
+                            </button>
+                            <div id="loading-container" class="loading-container" hidden>
+                                <div class="circle"></div>
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-              </div>
-              <div class="row center">
-                <button id="search-btn" class="btn-large waves-effect waves-light purple darken-3 submitbtn" type="submit">Submit</button>
-                <div id="loading-container" class="loading-container" hidden>
-            	  <div class="circle"></div>
-            	  <div class="circle"></div>
-                </div>
-              </div>
-            </form>
-          </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <!-- Search results - hidden by default -->
+    <div id="result-stats" class="center purple-text text-darken-1-1"></div>
     <div id="search-results" class="collection container" hidden>
     </div>
 
-  </main>
+</main>
 
-  <!-- Footer -->
-  <footer id="about" class="page-footer purple darken-4">
+<!-- Footer -->
+<footer id="about" class="page-footer purple darken-4">
     <div class="container">
-      <div class="row center">
-        <div class="col s2">
-          <a class="white-text" href="https://github.com/AnishGRao">Anish Rao</a>
+        <div class="row center">
+            <div class="col s2">
+                <a class="white-text" href="https://github.com/AnishGRao">Anish Rao</a>
+            </div>
+            <div class="col s2">
+                <a class="white-text" href="https://github.com/epfeiffe">Emerson Pfeiffer</a>
+            </div>
+            <div class="col s2">
+                <a class="white-text" href="https://github.com/sqd">Han You</a>
+            </div>
+            <div class="col s2">
+                <a class="white-text" href="https://github.com/wolfm">Michael Wolf</a>
+            </div>
+            <div class="col s2">
+                <a class="white-text" href="https://github.com/smikell">Sam Mikell</a>
+            </div>
+            <div class="col s2">
+                <a class="white-text" href="https://github.com/Zackhardtoname">Zack Light</a>
+            </div>
         </div>
-        <div class="col s2">
-          <a class="white-text" href="https://github.com/epfeiffe">Emerson Pfeiffer</a>
+        <div class="footer-copyright">
+            <div class="container center">
+                Made with ❤️ in Michigan in 2021
+            </div>
         </div>
-        <div class="col s2">
-          <a class="white-text" href="https://github.com/sqd">Han You</a>
-        </div>
-        <div class="col s2">
-          <a class="white-text" href="https://github.com/wolfm">Michael Wolf</a>
-        </div>
-        <div class="col s2">
-          <a class="white-text" href="https://github.com/smikell">Sam Mikell</a>
-        </div>
-        <div class="col s2">
-          <a class="white-text" href="https://github.com/Zackhardtoname">Zack Light</a>
-        </div>
-      </div>
-      <div class="footer-copyright">
-        <div class="container center">
-          Made with ❤️ in Michigan in 2021
-        </div>
-      </div>
     </div>
 
-  </footer>
+</footer>
 
 
 <!--  Scripts-->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="js/script.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="js/script.js"></script>
 </body>
 
 </html>
