@@ -13,9 +13,10 @@ struct OnTheFlyResources
    {
       scb::String Title;
       ParsedHtml Html;
+      scb::String snippet;
 
-      OnTheFlyResources( const scb::String &url, const scb::String &content )
-          : Html( content )
+      OnTheFlyResources( const scb::String &url, const scb::String &content, const scb::String &snippet )
+          : Html( content ), snippet( snippet)
          {
          Title = url;
          int titleTagStart = content.find( "<title" );
@@ -34,6 +35,12 @@ struct OnTheFlyResources
          }
    };
 
-pthread_t SpawnFetchHtml( const scb::String & );
+struct onTheFlyDownloaderParams {
+   char *url;
+   char *query;
+   bool useSnippet;
+};
+
+pthread_t SpawnFetchHtml( void * params );
 
 #endif // SCOOBLE_SEARCH_ONTHEFLYLOADER_H

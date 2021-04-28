@@ -3,11 +3,17 @@
 import pandas as pd
 import utilities
 import classifiers
+import requests
+import sys
+from bs4 import BeautifulSoup
 
-length = 2
-keywords = ["covid", "vaccine"]
-document_titles = ["cnn_news_covid.txt", "cnn_news_covid_2.txt"]
-documents = [open(title, "r").read() for title in document_titles]
+url = sys.argv[1]
+keywords = sys.argv[2].split()
+response = requests.get(url)
+document = BeautifulSoup(response.content, "lxml").text
+documents = [document]
+length = 3
+max_chars = 200
 
 d = {'content': documents}
 df = pd.DataFrame(data=d)
@@ -22,6 +28,5 @@ sent = classifiers.summarize(paraDF, keywords)
 
 for document_idx in range(len(documents)):
     best = sent[sent['document_idx'] == document_idx][:length]
-    print(f"snippet for {document_titles[document_idx]}:")
-    print(". ".join(best["component"]))
-    print("\n\n")
+    # print(f"snippet for {document_titles[document_idx]}:")
+    print(". ".join(best["component"])[:max_chars])

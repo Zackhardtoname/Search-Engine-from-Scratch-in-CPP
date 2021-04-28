@@ -23,6 +23,14 @@ main {
   flex: 1 0 auto;
 }
 
+.url {
+  color: grey;
+}
+
+.snippet {
+  font-size: 90%;
+}
+
 .scooble-logo {
   margin-top: 1em;
   margin-bottom: 2em;

@@ -37,8 +37,6 @@ class Classifier:
         self.componentDF['topic'] = self.componentDF[self.topics].idxmax(axis=1)
         self.componentDF['topic_score'] = self.componentDF[self.topics].max(axis=1)
 
-        del self.componentDF["words"]
-
         return self.componentDF
 
 
@@ -51,7 +49,7 @@ def summarize(df=None, topics=None,
     with open("w2v_model.pkl", "rb") as f:
         model = pickle.load(f)
 
-    df = df[df['para'].apply(lambda x: len(x) >= min_num_words)]
+    df = df[df['words'].apply(lambda x: len(x) >= min_num_words)]
     componentDF = pd.DataFrame()  # represents the final DF for output
     agg = df.groupby('topic')
 
@@ -61,7 +59,7 @@ def summarize(df=None, topics=None,
         top_paras.rename(columns={'index': 'para_idx'}, inplace=True)
         top_sentences = utilities.sentence_split(top_paras, 'para', mode='sentence')  # split into sentences
         top_sentences.rename(columns={'para': 'component'}, inplace=True)
-        top_sentences['component'] = top_sentences['component'].apply(lambda x: x.strip(' [],，‘’“”\'') + '。')
+        top_sentences['component'] = top_sentences['component'].apply(lambda x: x.strip(' [],，‘’“”。\''))
         top_sentences.drop_duplicates(subset='component', keep='first', inplace=True)
         top_sentences['words'] = top_sentences['component'].apply(
             lambda x: [w for w in x.lower().split() if w in model.key_to_index])
