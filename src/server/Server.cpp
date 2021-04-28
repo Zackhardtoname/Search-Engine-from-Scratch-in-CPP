@@ -238,7 +238,13 @@ void *Talk( void *talkSocket )
             json += "\n\t\t{\n\t\t\t\"title\": \"";
 
             void *threadRet = nullptr;
-            scb::String title = ParsedUrl(topMatches[ i ].URL).Host + "\",\n";
+            ParsedUrl parsedURL = ParsedUrl(topMatches[ i ].URL);
+            scb::String title = "";
+            title += parsedURL.Path.substr(1);
+            if (title.empty())
+               title += parsedURL.Host;
+
+            title += "\",\n";
             scb::String snippet = "";
 
             if (getTitle) {
@@ -253,6 +259,9 @@ void *Talk( void *talkSocket )
             }
 
             json += title;
+            json += "\t\t\t\"parseTitle\": \"";
+            json += getTitle? "0" : "1";
+            json += "\",\n";
             json += "\t\t\t\"url\": \"";
             json += CleanJsonString( topMatches[ i ].URL ) + "\",\n";
             json += "\t\t\t\"snippet\": \"";
