@@ -9,6 +9,7 @@ add_executable(server
         ../stl/utils.cpp
         ../indexer/VLQ.cpp
         ../crawler/Crawler.cpp
+        ../crawler/ParsedUrl.cpp
         ../parser/ParsedHtml.cpp
         OnTheFlyLoader.cpp OnTheFlyLoader.h JSON.h)
 
