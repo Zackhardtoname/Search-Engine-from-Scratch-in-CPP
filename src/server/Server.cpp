@@ -15,6 +15,7 @@
 
 #include "../constraint-solver/QuerySolver.h"
 #include "../parser/ParsedHtml.h"
+#include "../crawler/ParsedUrl.h"
 #include "../stl/Filesystem.h"
 #include "../stl/String.h"
 #include "../stl/Vector.h"
@@ -40,6 +41,7 @@ using std::cout;
 using std::endl;
 
 char *rootDirectory;
+bool getTitle;
 bool useSnippet;
 char **chunks;
 int numChunks;
@@ -220,13 +222,14 @@ void *Talk( void *talkSocket )
          curl_global_init( CURL_GLOBAL_DEFAULT );
          scb::Vector<pthread_t> onTheFlyLoaderThreads;
 
-         for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
-         {
-            auto * params = new onTheFlyDownloaderParams {topMatches[ i ].URL.cstr(), query.cstr(), useSnippet};
-            onTheFlyLoaderThreads.pushBack(
-               SpawnFetchHtml( params ) );
+         if (getTitle) {
+            for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
+            {
+               auto * params = new onTheFlyDownloaderParams {topMatches[ i ].URL.cstr(), query.cstr(), useSnippet};
+               onTheFlyLoaderThreads.pushBack(
+                  SpawnFetchHtml( params ) );
+            }
          }
-
 
          for ( int i = 0;  i < numberOfLinksToDisplay;  ++i )
             {
@@ -235,19 +238,21 @@ void *Talk( void *talkSocket )
             json += "\n\t\t{\n\t\t\t\"title\": \"";
 
             void *threadRet = nullptr;
-            pthread_join( onTheFlyLoaderThreads[ i ], &threadRet );
+            scb::String title = ParsedUrl(topMatches[ i ].URL).Host + "\",\n";
             scb::String snippet = "";
 
-            if ( threadRet )
+            if (getTitle) {
+               pthread_join( onTheFlyLoaderThreads[ i ], &threadRet );
+               if ( threadRet )
                {
-               auto *rsc = static_cast<OnTheFlyResources *>( threadRet );
-               json += CleanJsonString( rsc->Title ) + "\",\n";
-               snippet = CleanJsonString(rsc->snippet);
-               delete rsc;
+                  auto *rsc = static_cast<OnTheFlyResources *>( threadRet );
+                  title = CleanJsonString( rsc->Title ) + "\",\n";
+                  snippet = CleanJsonString(rsc->snippet);
+                  delete rsc;
                }
-            else
-               json += topMatches[ i ].URL + "\",\n";
+            }
 
+            json += title;
             json += "\t\t\t\"url\": \"";
             json += CleanJsonString( topMatches[ i ].URL ) + "\",\n";
             json += "\t\t\t\"snippet\": \"";
@@ -339,11 +344,15 @@ int main( int argc, char **argv )
 
    int port = atoi( argv[ 1 ] );
    rootDirectory = argv[ 2 ];
-   useSnippet = atoi(argv[3]);
+   getTitle = atoi(argv[3]);
+   assert(getTitle <= 1);
+   useSnippet = atoi(argv[4]);
    assert(useSnippet <= 1);
+   // You can only use snippet if you also get title since you are already accumulating network cost
+   assert(! (getTitle == 0 && useSnippet == 1));
 
-   numChunks = argc - 4;
-   chunks = ( argv + 4 );
+   numChunks = argc - 5;
+   chunks = ( argv + 5 );
 
    // Discard any trailing slash.  (Any path specified in
    // an HTTP header will have to start with /.)
