@@ -47,7 +47,7 @@ $(function () {
 
         // If the current query equals the one we just executed,
         // do nothing.
-        if($form.serialize() === lastQuery) {
+        if ($form.serialize() === lastQuery) {
             return;
         }
         lastQuery = $form.serialize();
@@ -58,7 +58,7 @@ $(function () {
             $btn.prop('type', 'button');
             $btn.prop('orig_label', $btn.text());
             $btn.text('Sending ...');
-			$('#loading-container').show();
+            $('#loading-container').show();
         });
 
         const searchTerms = $('#icon_prefix2').val();
@@ -68,8 +68,12 @@ $(function () {
             crossDomain: true,
             url: "/search",
             data: $form.serialize(),
+            start_time: new Date().getTime(),
+            complete: function(data) {
+                $("#result-stats")[0].innerText = 'Last request took '+ ((new Date().getTime() - this.start_time) / 1000 )+' sec';
+            },
             success: after_form_submitted,
-            error: function(XMLHttpRequest, textStatus, errorThrown) {
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
                 alert("Status: " + textStatus + "\nError: " + errorThrown);
             },
             dataType: 'json'
@@ -100,12 +104,11 @@ function insertResults(data) {
                 </div>
             </div>
         `
-    }
-    else {
+    } else {
         const deduplicatedPages = [];
         data.pages.forEach(page => {
             for (let i = 0; i < deduplicatedPages.length; i++) {
-                if(deduplicatedPages[i].title === page.title)
+                if (deduplicatedPages[i].title === page.title)
                     return;
             }
             deduplicatedPages.push(page);
@@ -117,7 +120,7 @@ function insertResults(data) {
             }
             toInsert += `
                 <div class="result collection-item">
-                    <a href="${val.url}" target="_blank">${val.title}</a> [Ranker score: ${ parseFloat(val.rank).toFixed(2)}]
+                    <a href="${val.url}" target="_blank">${val.title}</a> [Ranker score: ${parseFloat(val.rank).toFixed(2)}]
                     <div class="url">
                         ${val.url}
                     </div>
@@ -129,8 +132,8 @@ function insertResults(data) {
         });
     }
 
-    
-	$('#loading-container').hide();
+
+    $('#loading-container').hide();
 
     // Show search results
     $('#search-results').show();
