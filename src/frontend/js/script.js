@@ -88,6 +88,13 @@ $(function () {
     });
 });
 
+function parseTitle(candidate) {
+    var input = candidate;
+    var R =  /(\w|\s)*\w(?=")|\w+/g;
+    var output = input.match(R);
+    output = output.map( a => a.charAt(0).toUpperCase() + a.substr(1) );
+    return output.join(" ");
+}
 
 function insertResults(data) {
     let toInsert = ``;
@@ -120,7 +127,7 @@ function insertResults(data) {
             }
             toInsert += `
                 <div class="result collection-item">
-                    <a href="${val.url}" target="_blank">${val.title}</a> [Ranker score: ${parseFloat(val.rank).toFixed(2)}]
+                    <a href="${val.url}" target="_blank">${val.parseTitle == "1"? parseTitle(val.title) : val.title}</a> [Ranker score: ${parseFloat(val.rank).toFixed(2)}]
                     <div class="url">
                         ${val.url}
                     </div>
